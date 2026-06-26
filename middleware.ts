@@ -1,0 +1,68 @@
+// middleware.ts
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export async function middleware(req: NextRequest) {
+    const sessionCookie = req.cookies.get('token');
+    const url = req.nextUrl.clone();
+
+
+
+    const cookieStore = await cookies();
+    const token = cookieStore.get("token")?.value;
+    const res = await fetch(
+        "http://localhost:5000/api/auth/me",
+        {
+            headers: {
+                Cookie: `token=${token}`
+            }
+        }
+    );
+    const data = await res.json();
+
+
+    const hasActiveSubscription = data.user?.hasActiveSubscription
+   
+
+
+    if (url.pathname === '/subscription' && !sessionCookie) {
+
+        url.pathname = '/login'
+        return NextResponse.redirect(url);
+    }
+
+    if (url.pathname === '/' && sessionCookie || url.pathname === "/login" && sessionCookie || url.pathname === "/register" && sessionCookie) {
+
+        url.pathname = '/home';
+        return NextResponse.redirect(url);
+    }
+    if (url.pathname === '/home' && !sessionCookie) {
+
+        url.pathname = '/login'
+        return NextResponse.redirect(url);
+    }
+
+
+    if (url.pathname.startsWith('/movies') && !sessionCookie) {
+        url.pathname = '/login';
+        return NextResponse.redirect(url);
+    }
+
+
+    if (url.pathname === '/account' && !sessionCookie) {
+
+        url.pathname = '/login'
+        return NextResponse.redirect(url);
+    }
+
+    if (url.pathname.startsWith('/movies') && !hasActiveSubscription) {
+        url.pathname = '/subscription';
+        return NextResponse.redirect(url);
+    }
+    return NextResponse.next();
+}
+
+export const config = {
+    matcher: ['/', '/login', '/register', '/subscription', '/home', '/account', '/movies/:path*'],
+};
