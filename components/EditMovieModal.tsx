@@ -1,6 +1,5 @@
-import { log } from "console";
+import type { Movie } from "@/types/movies";
 import { useEffect, useState } from "react";
-import type { Movie} from "@/types/movies";
 
 interface EditMovieModalProps {
     isOpen: boolean;
@@ -10,7 +9,8 @@ interface EditMovieModalProps {
 }
 const updateMovieOnServer = async (movieId: string, movieData: Movie) => {
     try {
-        const response = await fetch(`http://localhost:5000/api/movies/${movieId}`, {
+        const response = await fetch(`http://localhost:5000/api/admin/movies/${movieId}`, {
+            credentials: "include",
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',

@@ -1,23 +1,33 @@
 import { AdminMainComponent } from "@/components/AdminMainComponent";
+import { cookies } from "next/headers";
 
 
 
 export default async function AdminDashboard() {
+    const cookieStore = await cookies();
 
-    const resMovie = await fetch("http://localhost:5000/api/movies", {
-        cache: "no-store"
+
+    const resMovie = await fetch("http://localhost:5000/api/admin/movies", {
+        cache: "no-store",
+        headers: {
+            Cookie: cookieStore.toString(),
+        },
     });
 
     if (!resMovie.ok) {
         throw new Error(` فیلم خطا در دریافت داده: ${resMovie.status}`);
     }
-    
+
     const moviesList = await resMovie.json();
 
 
 
-    const resUser = await fetch("http://localhost:5000/api/users", {
-        cache: "no-store"
+
+    const resUser = await fetch("http://localhost:5000/api/admin/users", {
+        cache: "no-store",
+        headers: {
+            Cookie: cookieStore.toString(),
+        },
     });
 
     if (!resUser.ok) {
@@ -28,7 +38,7 @@ export default async function AdminDashboard() {
     return (
         <div>
             <AdminMainComponent
-                moviesList={moviesList}
+                moviesList={moviesList.movies}
                 userList={userList} />
         </div>
     );

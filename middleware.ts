@@ -23,7 +23,7 @@ export async function middleware(req: NextRequest) {
 
 
     const hasActiveSubscription = data.user?.hasActiveSubscription
-   
+    const role = data.user?.role
 
 
     if (url.pathname === '/subscription' && !sessionCookie) {
@@ -56,6 +56,17 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(url);
     }
 
+    if (url.pathname.startsWith("/admin") && !sessionCookie) {
+
+        url.pathname = '/login'
+        return NextResponse.redirect(url);
+    }
+    if (url.pathname.startsWith("/admin") && role === "user") {
+
+        url.pathname = '/'
+        return NextResponse.redirect(url);
+    }
+
     if (url.pathname.startsWith('/movies') && !hasActiveSubscription) {
         url.pathname = '/subscription';
         return NextResponse.redirect(url);
@@ -64,5 +75,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/', '/login', '/register', '/subscription', '/home', '/account', '/movies/:path*'],
+    matcher: ['/', '/login', '/register', '/subscription', '/home', '/account', '/movies/:path*', '/admin'],
 };

@@ -22,7 +22,7 @@ const addedUser = z.object({
     subscriptionExpireDate: z.string().min(1, 'تاریخ الزامی است'),
     country: z.string().min(1, 'کشور الزامی است'),
     city: z.string().min(1, 'شهر الزامی است'),
-    password:z.string().min(1,'رشته کوتاه است'),
+    password: z.string().min(1, 'رشته کوتاه است'),
     role: z.string().min(1, 'نقش الزامی است'),
 });
 
@@ -37,8 +37,9 @@ const CreateUserModal: React.FC<EditUserModalProps> = ({ isOpen, user, onClose }
         console.log('آبجکت نهایی:', data);
 
         try {
-            const response = await fetch('http://localhost:5000/api/users', {
+            const response = await fetch('http://localhost:5000/api/admin/users', {
                 method: 'POST',
+                credentials: "include",
                 headers: {
                     'Content-Type': 'application/json',
                 },

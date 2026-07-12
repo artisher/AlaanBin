@@ -15,8 +15,9 @@ interface EditUserModalProps {
 // ۲. تابع ارسال به سرور (همون‌هایی که داشتی، فقط کمی تمیزتر)
 const updateUserOnServer = async (userId: string, userData: User) => {
     try {
-        const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
+        const response = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
             method: 'PUT',
+            credentials: "include",
             headers: {
                 'Content-Type': 'application/json',
             },

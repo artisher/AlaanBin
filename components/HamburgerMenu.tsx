@@ -9,13 +9,14 @@ export const HamburgerMenu = ({ isLoggedIn }: { isLoggedIn: boolean }) => {
 
     const toggleMenu = () => setIsOpen(prev => !prev)
 
-    
+
     const loginHandler = () => {
         router.push("/login")
         router.refresh()
     };
 
     const accountHandler = () => router.push("/account")
+    console.log(isLoggedIn,"asasasasa");
 
     return (
         <div>
@@ -108,28 +109,10 @@ export const HamburgerMenu = ({ isLoggedIn }: { isLoggedIn: boolean }) => {
                 {isLoggedIn ? (
                     <div className="flex gap-10 items-center">
                         <h1 className="text-white font-bold text-2xl">خوش آمدید</h1>
-                        <button onClick={()=>accountHandler()} className="text-white font-bold text-2xl cursor-pointer">
+                        <button onClick={() => accountHandler()} className="text-white font-bold text-2xl cursor-pointer">
                             <UserCircle />
                         </button>
-                        {/* {isOpen && (
-                            <div>
-                                <div className="mt-8 flex flex-col gap-3">
-                                    <button
-                                        onClick={() => {
-                                            setIsOpen(false)
-                                            accountHandler()
-                                        }}
-                                        className="flex items-center justify-center gap-2 bg-white
-                                         text-gray-800 px-4 py-3 rounded-lg font-medium cursor-pointer"
-                                    >
-                                        <UserCircle size={18} />
-                                        حساب کاربری
-                                    </button>
 
-                                   
-                                </div>
-                            </div>
-                        )} */}
                     </div>
 
                 ) : (

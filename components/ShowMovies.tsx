@@ -1,11 +1,14 @@
 "use client";
 import Image from 'next/image';
 import Link from "next/link";
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import type { Movie } from "@/types/movies";
+import { Film, Heart, Play } from 'lucide-react';
+import { MovieModal } from './MovieMedal';
+import { MovieCard } from './MovieCard';
 
-export const ShowMovies = ({ movies }: Movie) => {
+export const ShowMovies = () => {
 
     const [genre, setGenre] = useState("");
     const [rating, setRating] = useState(0);
@@ -14,43 +17,98 @@ export const ShowMovies = ({ movies }: Movie) => {
     const [hoveredMovieId, setHoveredMovieId] = useState<string | null>(null);
     const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const moviesList = movies;
+    const [movies, setMovies] = useState<Movie[]>([]);
+    const [search, setSearch] = useState("");
+
+    //pagination
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [loading, setLoading] = useState(true);
+    const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+    const fetchFavorites = async () => {
+        const res = await fetch("http://localhost:5000/api/favorites", {
+            credentials: "include",
+        });
+
+        const data = await res.json();
+
+        
+
+        setFavoriteIds(
+            data.favoriteMovies.map((movie: Movie) => movie._id)
+        );
+    };
+    const favoriteHandler = async (id: string) => {
+        try {
+            const res = await fetch(
+                `http://localhost:5000/api/favorites/${id}`,
+                {
+                    method: "POST",
+                    credentials: "include",
+                }
+            );
+
+            const data = await res.json();
+            if (!res.ok) return;
+            setFavoriteIds(prev =>
+                prev.includes(id)
+                    ? prev.filter(x => x !== id)
+                    : [...prev, id]
+            );
+        } catch (err) {
+            console.error(err);
+        }
+    };
+    const fetchMovies = async () => {
+        try {
+            setLoading(true);
+
+            const params = new URLSearchParams({
+                page: currentPage.toString(),
+                limit: "20",
+            });
+
+            if (search) params.append("search", search);
+
+            if (genre) params.append("genre", genre);
+            if (product) params.append("product", product);
+            if (rating > 0) params.append("rating", rating.toString());
+            if (sort) params.append("sort", sort);
+
+            const res = await fetch(
+                `http://localhost:5000/api/movies?${params.toString()}`
+            );
+
+            const data = await res.json();
+
+            setMovies(data.movies);
+            setTotalPages(data.totalPages);
+            
+        } finally {
+            setLoading(false);
+
+        }
+    };
+
 
 
     // فیلتر + سورت
-    const filteredMovies = useMemo(() => {
-        let list = [...moviesList];
 
-        if (genre) list = list.filter((m) => m.genre?.includes(genre));
-        if (rating > 0) list = list.filter((m) => m.rating >= Number(rating));
-        if (product) list = list.filter((m) => m.product?.includes(product));
-
-        switch (sort) {
-            case "newest":
-                list.sort((a, b) => b.year - a.year);
-                break;
-            case "oldest":
-                list.sort((a, b) => a.year - b.year);
-                break;
-            case "lowRating":
-                list.sort((a, b) => a.rating - b.rating);
-                break;
-            case "highRating":
-                list.sort((a, b) => b.rating - a.rating);
-                break;
-        }
-
-        return list;
-    }, [moviesList, genre, rating, sort, product]);
-
-
+    useEffect(() => {
+        fetchMovies();
+    }, [genre, product, rating, sort, currentPage, search]);
+    useEffect(() => {
+        fetchFavorites();
+    }, []);
+ 
     return (
         <div className="overflow-x-hidden bg-linear-to-br from-[#11171f] bg-[#05070a] flex flex-col min-h-screen  text-gray-200">
-            
+
             <h1 className="text-4xl font-bold mb-8 text-primary text-center">
                 الان‌بین 🎬
             </h1>
-         
+
             {/* Sidebar */}
             <aside className="flex flex-wrap justify-evenly items-center gap-2 p-3 rounded-xl z-0 
              bg-white/5 backdrop-blur-sm ">
@@ -60,7 +118,10 @@ export const ShowMovies = ({ movies }: Movie) => {
                      text-gray-200 hover:bg-white/10 focus:outline-none
                       focus:border-white/20 transition-all duration-200"
                     value={product}
-                    onChange={(e) => setProduct(e.target.value)}
+                    onChange={(e) => {
+                        setProduct(e.target.value);
+                        setCurrentPage(1);
+                    }}
                 >
                     <option value="">محصول :</option>
                     <option value="IR">ایرانی</option>
@@ -71,7 +132,10 @@ export const ShowMovies = ({ movies }: Movie) => {
                 <select
                     className="p-2 rounded-md border border-white/10 bg-white/5 text-sm text-gray-200 hover:bg-white/10 focus:outline-none focus:border-white/20 transition-all duration-200"
                     value={genre}
-                    onChange={(e) => setGenre(e.target.value)}
+                    onChange={(e) => {
+                        setGenre(e.target.value);
+                        setCurrentPage(1);
+                    }}
                 >
                     <option value="">ژانر :</option>
                     <option value="Drama">درام</option>
@@ -91,7 +155,10 @@ export const ShowMovies = ({ movies }: Movie) => {
                 <select
                     className="p-2 rounded-md border border-white/10 bg-white/5 text-sm text-gray-200 hover:bg-white/10 focus:outline-none focus:border-white/20 transition-all duration-200"
                     value={sort}
-                    onChange={(e) => setSort(e.target.value)}
+                    onChange={(e) => {
+                        setSort(e.target.value);
+                        setCurrentPage(1);
+                    }}
                 >
                     <option value="">مرتب سازی :</option>
                     <option value="newest">جدیدترین</option>
@@ -107,10 +174,57 @@ export const ShowMovies = ({ movies }: Movie) => {
                         min="0"
                         max="10"
                         value={rating}
-                        onChange={(e) => setRating(e.target.value)}
+                        onChange={(e) => {
+                            setRating(e.target.value);
+                            setCurrentPage(1);
+                        }}
                         className="accent-yellow-500 cursor-pointer w-32"
                     />
                     <div className="text-xs text-gray-400 mt-1">{rating}+</div>
+                </div>
+                <div className="relative">
+                    <input
+                        type="text"
+                        placeholder="جستجوی فیلم..."
+                        value={search}
+                        onChange={(e) => {
+                            setSearch(e.target.value);
+                            setCurrentPage(1);
+                        }}
+                        className="
+        w-56
+        rounded-xl
+        border
+        border-[#14c78b]/20
+        bg-[#14c78b]/10
+        py-2
+        pr-10
+        pl-4
+        text-sm
+        text-white
+        placeholder:text-gray-400
+        outline-none
+        transition-all
+        duration-300
+        focus:border-[#14c78b]
+        focus:shadow-[0_0_20px_rgba(20,199,139,.25)]
+        "
+                    />
+
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#14c78b]"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                    </svg>
                 </div>
             </aside>
 
@@ -121,173 +235,106 @@ export const ShowMovies = ({ movies }: Movie) => {
 
                 {/* Movies Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                    {filteredMovies.map((movie: Movie) => {
+                    {movies.map((movie: Movie) => (
 
-                        const isHovered = hoveredMovieId === movie.id;
-
-                        return (
-                            <div key={movie.id}>
-                                <div
-                                    onClick={() => {
-                                        setSelectedMovie(movie);
-                                        setIsModalOpen(true)
-                                    }}
-                                    onMouseEnter={() => setHoveredMovieId(movie.id)}
-                                    onMouseLeave={() => setHoveredMovieId(null)}
-                                    className="rounded-xl h-75 cursor-pointer w-53 shadow-lg lg:w-45 hover:scale-105
-                                                   transition duration-300 bg-cover
-                                                    bg-center flex items-end relative"
-
-                                >
-                                    <Image
-                                        src={movie.poster}
-                                        alt={movie.title}
-                                        fill
-                                        className="object-cover rounded-xl"
-                                    />
-                                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-linear-to-t
-                                                   from-black/70 to-transparent rounded-xl flex justify-center bg-"
-                                    >
-                                        <h1 className="text-white font-bold text-lg">
-                                            {movie.title}
-                                        </h1>
-                                    </div>
-                                    {/* باکس توضیحات */}
-                                    <div
-                                        className={`
-                      mt-15
-                      bg-[#0f0f0f]
-                      w-full h-75
-                      p-2
-                      items-start 
-                      transition-all duration-500 ease-out
-                      absolute bottom-0 left-0 right-0
-                      
-                      flex flex-col justify-between 
-                      ${isHovered ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"}
-                    `}
-                                    >
-                                        {/* متن توضیحات بالا */}
-                                        <p className="text-gray-300 text-center text-sm my-3 item">
-                                            {movie.description}
-                                        </p>
-
-
-                                        {/* بلاک امتیاز، سال، ژانر */}
-                                        <div className="w-full flex flex-col items-center gap-3">
-                                            <p className="text-yellow-400 mt-1 text-centerw-full ">
-                                                {movie.rating} / 10 ⭐
-                                            </p>
-                                            <div className="flex flex-col border-t w-full border-gray-500 p-2">
-
-                                                <div className="flex justify-between">
-                                                    <p className="text-white text-right w-full ">
-                                                        {movie.year}
-                                                    </p>
-                                                    <div className="flex  gap-1  mt-1">
-                                                        {movie.genre.map((genre, i) => (
-                                                            <p key={i} className="text-white text-xs text-right">
-                                                                {genre}
-                                                            </p>
-                                                        ))}
-                                                    </div>
-                                                </div>
-
-
-                                                {/* بخش ژانرها */}
-
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                </div>
-                            </div>
-                        );
-
-                    })}
+                        <MovieCard
+                            key={movie._id}
+                            movie={movie}
+                            onClick={() => {
+                                setSelectedMovie(movie);
+                                setIsModalOpen(true);
+                            }}
+                            favoriteHandler={favoriteHandler}
+                        />
+                    ))}
+                    {/* modal */}
                     {isModalOpen && selectedMovie && (
-                        <div
-                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
-                            onClick={() => setIsModalOpen(false)} // کلیک روی بک‌دراپ → بستن
-                        >
-                            {/* خود باکس مودال */}
-                            <div
-                                className="bg-[#0f0f0f] text-white rounded-2xl shadow-2xl 
-                                  w-[90vw] max-w-5xl max-h-[90vh] 
-                                 flex flex-col md:flex-row overflow-hidden p-10"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-
-                                <Link href={`/movies/${selectedMovie.id}`}>
-                                    مشاهده فیلم
-                                </Link>
-                                {/* ستون چپ: پوستر */}
-
-                                {/* ستون راست: اطلاعات فیلم */}
-                                <div className="w-full md:w-1/2 p-5 flex flex-col gap-20">
-                                    {/* دکمه بستن */}
-                                    <div className="flex justify-between items-center">
-                                        <h2 className="text-2xl font-bold">{selectedMovie.title}</h2>
-                                        <button
-                                            onClick={() => setIsModalOpen(false)}
-                                            className="text-gray-300  text-2xl leading-none cursor-pointer
-                                             hover:text-[#14c78b] hover:scale-105 "
-                                        >
-                                            ×
-                                        </button>
-                                    </div>
-
-
-                                    <p className="text-sm text-gray-300 leading-relaxed">
-                                        {selectedMovie.description}
-                                    </p>
-
-                                    {/* امتیاز، سال، ژانرها */}
-                                    <div className="flex flex-col border-t border-gray-700 pt-3  gap-10">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-yellow-400 font-semibold">
-                                                {selectedMovie.rating} / 10 ⭐
-                                            </span>
-                                            <span className="text-gray-300">{selectedMovie.year}</span>
-                                        </div>
-
-                                        <div className="flex flex-wrap gap-3 mt-2">
-                                            {selectedMovie.genre.map((g, i) => (
-                                                <span
-                                                    key={i}
-                                                    className="text-xs bg-gray-800 px-2 py-1 rounded-full"
-                                                >
-                                                    {g}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col gap-2 border-t border-gray-700 pt-3">
-                                        <p>مدت زمان: {selectedMovie.duration} دقیقه</p>
-                                    </div>
-                                    {/* هر دیتای اضافه‌ای که دوست داری */}
-                                    {/* مثال: طول فیلم، کارگردان، ... اگه توی Movie داری */}
-                                    {/* 
-                                      <div className="text-sm text-gray-400">
-                                      <p>مدت زمان: {selectedMovie.runtime} دقیقه</p>
-                                      <p>کارگردان: {selectedMovie.director}</p>
-                                      </div>
-                                      */}
-                                </div>
-
-                                <div className="relative w-full md:w-1/2 h-64 md:h-auto">
-                                    <Image
-                                        src={selectedMovie.poster}
-                                        alt={selectedMovie.title}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                </div>
-
-
-                            </div>
-                        </div>
+                        <MovieModal
+                            movie={selectedMovie}
+                            isOpen={isModalOpen}
+                            onClose={() => setIsModalOpen(false)}
+                            isFavorite={favoriteIds.includes(selectedMovie._id)}
+                            favoriteHandler={favoriteHandler}
+                        />
                     )}
+
+                </div>
+                <div className="mt-12 flex items-center justify-center gap-6">
+                    <button
+                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage(prev => prev + 1)}
+                        className="
+        rounded-xl
+        border
+        border-[#14c78b]/30
+        bg-[#14c78b]/10
+        px-5
+        py-2.5
+        font-semibold
+        text-[#14c78b]
+        transition-all
+        duration-300
+        hover:bg-[#14c78b]
+        hover:text-black
+        hover:shadow-[0_0_20px_rgba(20,199,139,.4)]
+        disabled:cursor-not-allowed
+        disabled:border-zinc-700
+        disabled:bg-zinc-900
+        disabled:text-zinc-600
+        disabled:shadow-none
+        "
+                    >
+                        بعدی →
+                    </button>
+                    <div
+                        className="
+        flex
+        h-12
+        min-w-12
+        items-center
+        justify-center
+        rounded-xl
+        border
+        border-[#14c78b]/30
+        bg-[#14c78b]/10
+        px-5
+        font-bold
+        text-[#14c78b]
+        shadow-[0_0_15px_rgba(20,199,139,.15)]
+        "
+                    >
+                        {currentPage} / {totalPages}
+                    </div>
+                    <button
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(prev => prev - 1)}
+                        className="
+        rounded-xl
+        border
+        border-[#14c78b]/30
+        bg-[#14c78b]/10
+        px-5
+        py-2.5
+        font-semibold
+        text-[#14c78b]
+        transition-all
+        duration-300
+        hover:bg-[#14c78b]
+        hover:text-black
+        hover:shadow-[0_0_20px_rgba(20,199,139,.4)]
+        disabled:cursor-not-allowed
+        disabled:border-zinc-700
+        disabled:bg-zinc-900
+        disabled:text-zinc-600
+        disabled:shadow-none
+        "
+                    >
+                        ← قبلی
+                    </button>
+
+
+
+
 
                 </div>
             </main>

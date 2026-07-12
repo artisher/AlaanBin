@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { EditMovieModal } from "./EditMovieModal";
 import { CreateMovieModal } from "./CreateMovieModal";
-import type { Movie} from "@/types/movies";
+import type { Movie } from "@/types/movies";
 
 interface ManageMovieProps {
     moviesList: Movie[];
@@ -10,7 +10,6 @@ interface ManageMovieProps {
 export const MangeFilms = ({ moviesList }: ManageMovieProps) => {
 
     const [movies, setMovies] = useState<Movie[]>(moviesList ?? []);
-    console.log(moviesList);
 
     const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
     const [addMovie, setAddMovie] = useState<boolean | null>(false);
@@ -22,7 +21,7 @@ export const MangeFilms = ({ moviesList }: ManageMovieProps) => {
         setAddMovie(null);
     };
     const handleSaveEdit = (updatedMovie: Movie) => {
-        setMovies(movies.map(movie => (movie.id === updatedMovie.id ? updatedMovie : movie)));
+        setMovies(movies.map(movie => (movie._id === updatedMovie._id ? updatedMovie : movie)));
         alert('تغییرات کاربر با موفقیت ذخیره شد (فقط در نمایش محلی).');
         setEditingMovie(null);
     };
@@ -41,9 +40,10 @@ export const MangeFilms = ({ moviesList }: ManageMovieProps) => {
     };
 
     const handleDelete = (id: string) => {
-        if (confirm('آیا از حذف این کاربر مطمئن هستید؟')) {
+        if (confirm('آیا از حذف این فیلم مطمئن هستید؟')) {
 
-            fetch(`http://localhost:5000/api/movies/${id}`, {
+            fetch(`http://localhost:5000/api/admin/movies/${id}`, {
+                credentials: "include",
                 method: 'DELETE',
             })
                 .then(res => {

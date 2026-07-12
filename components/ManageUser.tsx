@@ -5,7 +5,7 @@ import EditUserModal from './EditUserModal';
 import CreateUserModal from './CreateUserModal';
 
 
-import type { User} from "@/types/user";
+import type { User } from "@/types/user";
 
 
 interface ManageUserProps {
@@ -20,7 +20,8 @@ export const ManageUser = ({ userList }: ManageUserProps) => {
     const handleDelete = (id: string) => {
         if (confirm('آیا از حذف این کاربر مطمئن هستید؟')) {
 
-            fetch(`http://localhost:5000/api/users/${id}`, {
+            fetch(`http://localhost:5000/api/admin/users/${id}`, {
+                credentials: "include",
                 method: 'DELETE',
             })
                 .then(res => {

@@ -31,7 +31,8 @@ export const CreateMovieModal: React.FC<EditMovieModalProps> = ({ isOpen, movie,
         console.log('آبجکت نهایی:', data);
 
         try {
-            const response = await fetch('http://localhost:5000/api/movies', {
+            const response = await fetch('http://localhost:5000/api/admin/movies', {
+                credentials: "include",
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -40,7 +41,8 @@ export const CreateMovieModal: React.FC<EditMovieModalProps> = ({ isOpen, movie,
             });
 
             const result = await response.json();
-
+            console.log(response.status);
+            console.log(result);
             if (response.ok) {
                 alert(result.message || 'فیلم با موفقیت اضافه شد');
                 onClose();
@@ -94,7 +96,7 @@ export const CreateMovieModal: React.FC<EditMovieModalProps> = ({ isOpen, movie,
                     <div className='w-full sm:w-75'>
                         <label htmlFor="description" className="block text-sm font-medium text-gray-300 mb-1">توضیحات</label>
                         <input
-                            type="description"
+                            type="text"
                             id="description"
                             {...register('description')}
                             className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
@@ -106,7 +108,7 @@ export const CreateMovieModal: React.FC<EditMovieModalProps> = ({ isOpen, movie,
                     <div className='w-full sm:w-75'>
                         <label htmlFor="poster" className="block text-sm font-medium text-gray-300 mb-1">عکس </label>
                         <input
-                            type="poster"
+                            type="text"
                             id="poster"
                             {...register('poster')}
                             className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
@@ -172,7 +174,7 @@ export const CreateMovieModal: React.FC<EditMovieModalProps> = ({ isOpen, movie,
                     <div className='w-full sm:w-75'>
                         <label htmlFor="product" className="block text-sm font-medium text-gray-300 mb-1">  ساخت کشور</label>
                         <input
-                            type="product"
+                            type="text"
                             id="product"
                             placeholder="مثال: 1403/12/30"
                             {...register('product')}

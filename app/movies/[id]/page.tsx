@@ -1,4 +1,5 @@
 import { VideoPlayer } from "@/components/VideoPlayer";
+import { cookies } from "next/headers";
 
 export default async function MoviePage({
     params,
@@ -7,18 +8,16 @@ export default async function MoviePage({
 }) {
     const { id } = await params;
 
-    const res = await fetch(
-        `http://localhost:5000/api/movies/${id}`,
-        { cache: "no-store" }
-    );
+    const cookieStore = await cookies();
 
-    if (!res.ok) {
-        return <div>خطا در دریافت فیلم</div>;
-    }
+    const res = await fetch(`http://localhost:5000/api/movies/${id}`, {
+        headers: {
+            Cookie: cookieStore.toString(),
+        },
+        cache: "no-store",
+    });
 
     const movie = await res.json();
 
-    return (
-        <VideoPlayer video={movie} />
-    );
+    return <VideoPlayer video={movie} />;
 }

@@ -20,13 +20,40 @@ async function getUserProfile() {
 
 
 
+
+    console.log(data);
+
+
+
+
     return data;
 
 
 }
+const getUserFavoritesMovie = async () => {
+    const cookieStore = await cookies();
 
+    const resfavorite = await fetch(
+        "http://localhost:5000/api/favorites",
+        {
+            cache: "no-store",
+            headers: {
+                Cookie: cookieStore.toString(),
+            },
+        }
+    );
+
+    const dataFavorite = await resfavorite.json();
+
+    return dataFavorite;
+};
 export default async function ProfilePage() {
-    const userProfile = await getUserProfile();
-
-    return <ProfileCard userProfile={userProfile} />;
+    const [userProfile, userFavorites] = await Promise.all([
+        getUserProfile(),
+        getUserFavoritesMovie(),
+    ]);
+    return <ProfileCard
+        userProfile={userProfile}
+        userFavorites={userFavorites}
+    />;
 }
