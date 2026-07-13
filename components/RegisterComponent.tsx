@@ -1,5 +1,5 @@
 "use client";
-
+import { UserPlus } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 export const RegisterComponent = () => {
@@ -49,129 +49,260 @@ export const RegisterComponent = () => {
         }
     };
     return (
-        <div className="min-h-screen bg-[#0B0F14] flex items-center justify-center px-4">
-            <div className="w-full  max-w-xl bg-[#111827] border border-white/10 rounded-2xl p-8 shadow-xl">
+        <div className="min-h-screen bg-[#0B0F14] flex items-center justify-center px-4 py-10">
+            <div
+                className="
+                w-full
+                max-w-3xl
+                rounded-3xl
+                border
+                border-[#14c78b]/20
+                bg-[#111827]
+                p-8
+                shadow-[0_0_40px_rgba(20,199,139,.12)]
+            "
+            >
+                {/* Header */}
+                <div className="text-center mb-10">
+                    <div
+                        className="
+                        mx-auto
+                        mb-5
+                        flex
+                        h-20
+                        w-20
+                        items-center
+                        justify-center
+                        rounded-full
+                        border
+                        border-[#14c78b]/30
+                        bg-[#14c78b]/10
+                    "
+                    >
+                        <UserPlus
+                            size={38}
+                            className="text-[#14c78b]"
+                        />
+                    </div>
 
-                {/* Title */}
-                <div className="mb-8 text-center">
-                    <h1 className="text-2xl font-semibold text-white mb-2">
+                    <h1 className="text-3xl font-bold text-white">
                         ثبت‌نام
                     </h1>
-                    <p className="text-gray-400 text-sm">
-                        برای دسترسی بیشتر ثبت نام کنید
+
+                    <p className="mt-3 text-gray-400">
+                        حساب کاربری خود را ایجاد کنید.
                     </p>
                 </div>
 
-                {/* Form */}
-                <form onSubmit={handleRegister} className="space-y-5  flex flex-wrap gap-x-3 justify-center">
+                <form
+                    onSubmit={handleRegister}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                >
+
                     <div>
-                        <label className="block text-sm text-gray-400 mb-2">
-                            نام
+                        <label className="block mb-2 text-sm text-gray-300">
+                            نام و نام خانوادگی
                         </label>
+
                         <input
-                            type="name"
+                            type="text"
                             required
                             value={fullName}
                             onChange={(e) => setFullName(e.target.value)}
-                            className="w-full bg-[#0B0F14] border  border-white/10 rounded-lg px-4 py-2
-                             text-white placeholder-gray-500 focus:outline-none focus:border-[#10B981]
-                              transition placeholder:text-left"
-                            placeholder="Jamshid"
+                            placeholder="Jamshid Ahmadi"
+                            className="
+                            w-full
+                            rounded-xl
+                            border
+                            border-[#14c78b]/20
+                            bg-[#0B0F14]
+                            px-4
+                            py-3
+                            text-white
+                            placeholder:text-gray-500
+                            outline-none
+                            transition
+                            focus:border-[#14c78b]
+                            focus:shadow-[0_0_20px_rgba(20,199,139,.2)]
+                        "
                         />
                     </div>
+
                     <div>
-                        <label className="block text-sm text-gray-400 mb-2">
-                            شماره
+                        <label className="block mb-2 text-sm text-gray-300">
+                            شماره موبایل
                         </label>
+
                         <input
-                            type="number"
+                            type="tel"
                             required
                             value={phoneNumber}
                             onChange={(e) => setPhoneNumber(e.target.value)}
-                            className="w-full bg-[#0B0F14] border border-white/10 rounded-lg px-4 py-2
-                             text-white placeholder-gray-500 focus:outline-none focus:border-[#10B981]
-                              transition placeholder:text-left"
                             placeholder="+43..."
+                            className="
+                            w-full
+                            rounded-xl
+                            border
+                            border-[#14c78b]/20
+                            bg-[#0B0F14]
+                            px-4
+                            py-3
+                            text-white
+                            placeholder:text-gray-500
+                            outline-none
+                            transition
+                            focus:border-[#14c78b]
+                            focus:shadow-[0_0_20px_rgba(20,199,139,.2)]
+                        "
                         />
                     </div>
+
                     <div>
-                        <label className="block text-sm text-gray-400 mb-2">
+                        <label className="block mb-2 text-sm text-gray-300">
                             ایمیل
                         </label>
+
                         <input
                             type="email"
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full bg-[#0B0F14] border border-white/10 rounded-lg px-4 py-2
-                             text-white placeholder-gray-500 focus:outline-none focus:border-[#10B981] 
-                             transition placeholder:text-left"
                             placeholder="example@email.com"
+                            className="
+                            w-full
+                            rounded-xl
+                            border
+                            border-[#14c78b]/20
+                            bg-[#0B0F14]
+                            px-4
+                            py-3
+                            text-white
+                            placeholder:text-gray-500
+                            outline-none
+                            transition
+                            focus:border-[#14c78b]
+                            focus:shadow-[0_0_20px_rgba(20,199,139,.2)]
+                        "
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm text-gray-400 mb-2">
+                        <label className="block mb-2 text-sm text-gray-300">
                             رمز عبور
                         </label>
+
                         <input
                             type="password"
                             required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full bg-[#0B0F14] border border-white/10 rounded-lg px-4 py-2
-                             text-white placeholder-gray-500 focus:outline-none focus:border-[#10B981] 
-                             transition  placeholder:text-left"
                             placeholder="••••••••"
+                            className="
+                            w-full
+                            rounded-xl
+                            border
+                            border-[#14c78b]/20
+                            bg-[#0B0F14]
+                            px-4
+                            py-3
+                            text-white
+                            placeholder:text-gray-500
+                            outline-none
+                            transition
+                            focus:border-[#14c78b]
+                            focus:shadow-[0_0_20px_rgba(20,199,139,.2)]
+                        "
                         />
                     </div>
+
                     <div>
-                        <label className="block text-sm text-gray-400 mb-2">
+                        <label className="block mb-2 text-sm text-gray-300">
                             کشور
                         </label>
+
                         <input
-                            type="country"
+                            type="text"
                             value={country}
                             onChange={(e) => setCountry(e.target.value)}
-                            className="w-full bg-[#0B0F14] border border-white/10 rounded-lg px-4 py-2 text-white
-                             placeholder-gray-500 focus:outline-none focus:border-[#10B981]
-                              transition placeholder:text-left"
-                            placeholder="Iran..."
+                            placeholder="Austria"
+                            className="
+                            w-full
+                            rounded-xl
+                            border
+                            border-[#14c78b]/20
+                            bg-[#0B0F14]
+                            px-4
+                            py-3
+                            text-white
+                            placeholder:text-gray-500
+                            outline-none
+                            transition
+                            focus:border-[#14c78b]
+                            focus:shadow-[0_0_20px_rgba(20,199,139,.2)]
+                        "
                         />
                     </div>
+
                     <div>
-                        <label className="block text-sm text-gray-400 mb-2">
+                        <label className="block mb-2 text-sm text-gray-300">
                             شهر
                         </label>
+
                         <input
-                            type="city"
+                            type="text"
                             value={city}
                             onChange={(e) => setCity(e.target.value)}
-                            className="w-full bg-[#0B0F14] border border-white/10 rounded-lg px-4 py-2 text-white
-                             placeholder-gray-500 focus:outline-none focus:border-[#10B981]
-                              transition placeholder:text-left"
-                            placeholder="Tehran..."
+                            placeholder="Vienna"
+                            className="
+                            w-full
+                            rounded-xl
+                            border
+                            border-[#14c78b]/20
+                            bg-[#0B0F14]
+                            px-4
+                            py-3
+                            text-white
+                            placeholder:text-gray-500
+                            outline-none
+                            transition
+                            focus:border-[#14c78b]
+                            focus:shadow-[0_0_20px_rgba(20,199,139,.2)]
+                        "
                         />
                     </div>
-                    <button
-                        type="submit"
-                        className="w-full bg-[#10B981] hover:bg-[#0ea371] text-black font-medium py-2.5 rounded-lg transition"
-                    >
-                        ثبت نام
-                    </button>
+
+                    <div className="md:col-span-2 mt-2">
+                        <button
+                            type="submit"
+                            className="
+                            w-full
+                            rounded-xl
+                            bg-[#14c78b]
+                            py-3
+                            font-semibold
+                            text-black
+                            transition-all
+                            duration-300
+                            hover:scale-[1.01]
+                            hover:shadow-[0_0_30px_rgba(20,199,139,.45)]
+                            cursor-pointer
+                        "
+                        >
+                            ثبت‌نام
+                        </button>
+                    </div>
                 </form>
 
-                {/* Footer */}
-                <div className="mt-6 text-center text-sm text-gray-400">
-                    حساب کاربری دارید؟{" "}
+                <div className="mt-8 border-t border-white/10 pt-6 text-center text-sm text-gray-400">
+                    قبلاً ثبت‌نام کرده‌اید؟{" "}
                     <a
                         href="/login"
-                        className="text-[#10B981] hover:underline"
+                        className="text-[#14c78b] font-medium hover:underline"
                     >
                         وارد شوید
                     </a>
                 </div>
             </div>
         </div>
-    )
+    );
 }
