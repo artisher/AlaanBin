@@ -2,17 +2,21 @@ import Image from "next/image";
 
 export const VideoPlayer = ({ video }) => {
     const movie = video;
+    console.log(movie.videoUrl);
+    console.log(`http://localhost:5000${movie.videoUrl}`);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#090909] via-[#111315] to-[#0b0b0b] text-white">
             <div className="max-w-7xl mx-auto px-5 py-8">
 
                 {/* Video */}
+
                 <div className="overflow-hidden rounded-3xl border border-[#14c78b]/20 shadow-[0_0_45px_rgba(20,199,139,.15)]">
                     <video
+                        controlsList="nodownload"
                         controls
                         className="w-full"
-                        src={`http://localhost:5000${movie.videoUrl}`}
+                        src={`http://localhost:5000${movie.videoUrl.toLowerCase()}`}
                     />
                 </div>
 

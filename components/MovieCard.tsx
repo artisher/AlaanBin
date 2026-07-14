@@ -7,7 +7,7 @@ import type { Movie } from "@/types/movies";
 type MovieCardProps = {
     movie: Movie;
     onClick: () => void;
-    favoriteHandler: (id: string) => void;
+    favoriteHandler?: (id: string) => void;
 
 };
 

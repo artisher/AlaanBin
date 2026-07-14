@@ -16,7 +16,7 @@ export const HamburgerMenu = ({ isLoggedIn }: { isLoggedIn: boolean }) => {
     };
 
     const accountHandler = () => router.push("/account")
-    console.log(isLoggedIn,"asasasasa");
+    
 
     return (
         <div>
