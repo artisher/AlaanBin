@@ -42,9 +42,10 @@ export const ManageUser = ({ userList }: ManageUserProps) => {
     const handleEdit = (id: string) => {
         console.log('جستجو برای کاربر با ID:', id);
         const userToEdit = users.find(u => u._id === id);
-
+        console.log(userToEdit,"INJAAAAAAA");
         if (userToEdit) {
             console.log('کاربر پیدا شد:', userToEdit);
+            console.log(userToEdit);
             setEditingUser(userToEdit);
         } else {
             console.error('کاربر با این ID پیدا نشد!');
@@ -66,7 +67,7 @@ export const ManageUser = ({ userList }: ManageUserProps) => {
     const handleCloseUserModal = () => {
         setAddUser(null);
     };
-
+ console.log("MANAGE USER", users[0]);
     return (
         <div>
             <div className="space-y-4 p-6">

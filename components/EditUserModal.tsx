@@ -15,29 +15,45 @@ interface EditUserModalProps {
 // ۲. تابع ارسال به سرور (همون‌هایی که داشتی، فقط کمی تمیزتر)
 const updateUserOnServer = async (userId: string, userData: User) => {
     try {
-        const response = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
-            method: 'PUT',
-            credentials: "include",
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(userData),
+        const payload: Partial<User> = {
+            fullName: userData.fullName,
+            phoneNumber: userData.phoneNumber,
+            email: userData.email,
+            country: userData.country,
+            city: userData.city,
+            hasActiveSubscription: userData.hasActiveSubscription,
+            subscriptionExpireDate: userData.subscriptionExpireDate,
+            favoriteTitle: userData.favoriteTitle,
+        };
 
-        });
+        // فقط اگر پسورد جدید وارد شده باشد
+        if (userData.password?.trim()) {
+            payload.password = userData.password;
+        }
+
+        const response = await fetch(
+            `http://localhost:5000/api/admin/users/${userId}`,
+            {
+                method: "PUT",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+            }
+        );
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.message || 'خطا در بروزرسانی اطلاعات');
+            throw new Error(errorData.message || "خطا در بروزرسانی اطلاعات");
         }
-
 
         return await response.json();
     } catch (error) {
-        console.error('Error updating user:', error);
+        console.error("Error updating user:", error);
         throw error;
     }
 };
-
 
 const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, user, onClose, onSave }) => {
 
@@ -161,7 +177,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, user, onClose, on
                             type="text"
                             id="password"
                             name="password"
-                            value={editedUser?.password || ""}
+
                             onChange={handleChange}
                             className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
                         />

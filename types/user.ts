@@ -4,7 +4,7 @@ export interface User {
     fullName: string;
     phoneNumber: string;
     email: string;
-    password: string;
+    password?: string;
     hasActiveSubscription: boolean;
     signUpDate: Date | string;
     subscriptionExpireDate: Date | string;
