@@ -20,10 +20,11 @@ export function MovieCard({
         <div
             onClick={onClick}
             className="
+            
                 group
                 relative
-                h-64
-                w-44
+                h-95
+                w-48
                 overflow-hidden
                 rounded-xl
                 cursor-pointer

@@ -1,13 +1,40 @@
 "use client"
-import { useRouter } from "next/navigation"
+
+import { Crown } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export const BuySub = () => {
-    const router = useRouter()
-    const homeHandler = () => router.push("/subscription")
 
-    return <button
-        onClick={homeHandler}
-        className="bg-[#10B981] py-2 px-4 text-white rounded-lg w-50
-    font-bold text-lg shadow-lg cursor-pointer
-     hover:bg-[#059669] hover:text-white"> خرید اشتراک</button>
-}
+    const router = useRouter();
+
+    return (
+
+        <button
+            onClick={() => router.push("/subscription")}
+            className="
+hidden
+md:flex
+items-center
+gap-2
+rounded-xl
+bg-[#14c78b]
+px-5
+h-11
+font-bold
+text-black
+transition
+hover:scale-105
+hover:shadow-[0_0_25px_rgba(20,199,139,.4)]
+cursor-pointer
+"
+        >
+
+            <Crown size={18} />
+
+            خرید اشتراک
+
+        </button>
+
+    );
+
+};

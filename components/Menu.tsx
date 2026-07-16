@@ -24,12 +24,25 @@ export const Menu = async () => {
     const isLoggedIn = data.isAuthenticated
 
     return (
-        <div className="bg-[#0B0F14] p-3  w-full mx-auto flex justify-between backdrop-blur border-b border-white/10 md:px-10 md:py-5">
-            <Logo />
+        <div className="
+sticky
+top-0
+z-50
+w-full
+border-b
+border-white/10
+bg-[#0B0F14]/90
+backdrop-blur-xl
+">
+            <div className="max-w-[1650px] mx-auto h-16 px-5 flex items-center justify-between">
 
-            {hasActiveSubscription ? null : <BuySub />}
+                <Logo />
 
-            <HamburgerMenu isLoggedIn={isLoggedIn} />
+                {!hasActiveSubscription && <BuySub />}
+
+                <HamburgerMenu isLoggedIn={isLoggedIn} />
+
+            </div>
         </div>
     )
 }

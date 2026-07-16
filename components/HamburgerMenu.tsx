@@ -1,127 +1,343 @@
-"use client"
-import { LogOut, UserCircle } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
+"use client";
 
-export const HamburgerMenu = ({ isLoggedIn }: { isLoggedIn: boolean }) => {
-    const [isOpen, setIsOpen] = useState(false)
-    const router = useRouter()
+import {
+    Home,
+    Film,
+    CreditCard,
+    UserCircle,
+    LogOut,
+    Menu,
+    X
+} from "lucide-react";
 
-    const toggleMenu = () => setIsOpen(prev => !prev)
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
+export const HamburgerMenu = ({
+    isLoggedIn,
+}: {
+    isLoggedIn: boolean;
+}) => {
+    const logoutHandler = async () => {
+
+
+        await fetch("http://localhost:5000/api/auth/logout", {
+            method: "POST",
+            credentials: "include",
+        });
+        router.refresh()
+        router.push("/")
+    }
+    const [isOpen, setIsOpen] = useState(false);
+
+    const router = useRouter();
 
     const loginHandler = () => {
-        router.push("/login")
-        router.refresh()
+        router.push("/login");
+        router.refresh();
     };
 
-    const accountHandler = () => router.push("/account")
-    
+    const accountHandler = () => {
+        router.push("/account");
+        setIsOpen(false);
+    };
+
+    const closeMenu = () => setIsOpen(false);
 
     return (
-        <div>
-            {/* Hamburger Icon */}
-            <button onClick={toggleMenu} className="flex flex-col gap-1 md:hidden z-50 relative">
-                <span className="w-7 h-1 bg-white" />
-                <span className="w-7 h-1 bg-white" />
-                <span className="w-7 h-1 bg-white" />
+        <>
+
+            {/* Mobile */}
+
+            <button
+                onClick={() => setIsOpen(true)}
+                className="md:hidden"
+            >
+                <Menu
+                    size={30}
+                    className="text-white"
+                />
             </button>
 
-            {/* Mobile Menu: overlay + panel */}
             {isOpen && (
-                <div className="md:hidden fixed inset-0 z-50">
-                    {/* Overlay: z-40 تا پنل روی اون بیاد */}
+
+                <div className="fixed inset-0 z-9999">
+                    {/* Overlay */}
+
                     <div
-                        className="absolute inset-0 bg-black/40 z-40"
-                        onClick={() => setIsOpen(false)}
+                        onClick={closeMenu}
+                        className="absolute inset-0 bg-[#000]/85 backdrop-blur-sm"
                     />
 
-                    {/* Sliding Panel: z-50 و اصلاح gradient */}
+                    {/* Panel */}
+
                     <div
-                        className={`
-                                     absolute left-0 top-0 h-full w-2/4 
-                                     bg-gradient-to-br from-[#11171f] to-[#05070a]
-                                     transition-transform ease-in-out duration-400
-                                     translate-x-0
-                                     p-4
-                                     z-50
-                                     shadow-xl
-                                 `}>
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-white font-bold">Menu</h2>
-                            <button onClick={() => setIsOpen(false)} className="text-white text-xl">
-                                ✕
+                        className="
+    absolute
+    right-0
+    top-0
+    h-screen
+    w-[300px]
+    bg-[#0B0F14]
+    border-l
+    border-white/10
+    shadow-2xl
+    flex
+    flex-col
+    overflow-y-auto
+    z-[9999]
+"
+                    >
+
+                        {/* Header */}
+
+                        <div className="flex items-center justify-between p-6 border-b border-white/10">
+
+                            <div>
+
+                                <h2 className="text-2xl font-bold text-white">
+                                    Alan
+                                    <span className="text-[#14c78b]">
+                                        Bin
+                                    </span>
+                                </h2>
+
+                                <p className="text-xs text-gray-400 mt-1">
+                                    فیلم و سریال بدون محدودیت
+                                </p>
+
+                            </div>
+
+                            <button
+                                onClick={closeMenu}
+                            >
+                                <X
+                                    className="text-white"
+                                />
                             </button>
+
                         </div>
 
-                        <ul className="mt-4 flex flex-col gap-4">
-                            <li className="text-white text-lg">تست 1</li>
-                            <li className="text-white text-lg">تست 2</li>
-                            <li className="text-white text-lg">تست 3</li>
-                            <li className="text-white text-lg">تست 4</li>
-                        </ul>
+                        {/* Links */}
 
-                        {/* Account and Logout Options */}
-                        {isLoggedIn && (
-                            <div className="mt-8 flex flex-col gap-3">
-                                <button
-                                    onClick={() => {
-                                        setIsOpen(false)
-                                        accountHandler()
-                                    }}
-                                    className="flex items-center justify-center gap-2 bg-white text-gray-800 px-4 py-3 rounded-lg font-medium"
-                                >
-                                    <UserCircle size={18} />
-                                    حساب کاربری
-                                </button>
+                        <div className="flex flex-col p-5 gap-2">
 
-                                <button
-                                    onClick={() => {
-                                        setIsOpen(false)
-                                        logoutHandler()
-                                    }}
-                                    className="flex items-center justify-center gap-2 bg-red-500 text-white px-4 py-3 rounded-lg font-medium"
-                                >
-                                    <LogOut size={18} />
-                                    خروج
-                                </button>
-                            </div>
-                        )}
-
-                        {!isLoggedIn && (
-                            <button
-                                onClick={() => {
-                                    loginHandler()
-                                    setIsOpen(false)
-
-                                }}
-                                className="mt-8 w-full bg-white text-black px-4 py-3 rounded-lg font-bold text-lg hover:bg-gray-100 transition-colors"
+                            <Link
+                                href="/"
+                                onClick={closeMenu}
+                                className="
+flex
+items-center
+gap-3
+rounded-xl
+px-4
+py-3
+text-gray-300
+hover:bg-[#14c78b]/10
+hover:text-[#14c78b]
+transition
+"
                             >
-                                ورود
-                            </button>
-                        )}
+                                <Home size={20} />
+                                صفحه اصلی
+                            </Link>
+
+                            <Link
+                                href="/home"
+                                onClick={closeMenu}
+                                className="
+flex
+items-center
+gap-3
+rounded-xl
+px-4
+py-3
+text-gray-300
+hover:bg-[#14c78b]/10
+hover:text-[#14c78b]
+transition
+"
+                            >
+                                <Film size={20} />
+                                آرشیو فیلم‌ها
+                            </Link>
+
+                            <Link
+                                href="/subscription"
+                                onClick={closeMenu}
+                                className="
+flex
+items-center
+gap-3
+rounded-xl
+px-4
+py-3
+text-gray-300
+hover:bg-[#14c78b]/10
+hover:text-[#14c78b]
+transition
+"
+                            >
+                                <CreditCard size={20} />
+                                اشتراک
+                            </Link>
+
+                        </div>
+
+                        <div className="flex-1" />
+
+                        {/* Bottom */}
+
+                        <div className="border-t border-white/10 p-5">
+
+                            {isLoggedIn ? (
+
+                                <div className="flex flex-col gap-3">
+
+                                    <button
+                                        onClick={accountHandler}
+                                        className="
+flex
+items-center
+justify-center
+gap-2
+h-11
+rounded-xl
+bg-[#14c78b]/10
+border
+border-[#14c78b]/20
+text-[#14c78b]
+hover:bg-[#14c78b]
+hover:text-black
+transition
+cursor-pointer
+"
+                                    >
+                                        <UserCircle size={18} />
+                                        حساب کاربری
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            closeMenu();
+                                            logoutHandler();
+                                        }}
+                                        className="
+flex
+items-center
+justify-center
+gap-2
+h-11
+rounded-xl
+border
+border-red-500/20
+bg-red-500/10
+text-red-400
+hover:bg-red-500
+hover:text-white
+transition
+cursor-pointer
+"
+                                    >
+                                        <LogOut size={18} />
+                                        خروج
+                                    </button>
+
+                                </div>
+
+                            ) : (
+
+                                <button
+                                    onClick={() => {
+                                        loginHandler();
+                                        closeMenu();
+                                    }}
+                                    className="
+w-full
+h-11
+rounded-xl
+bg-[#14c78b]
+text-black
+font-bold
+hover:scale-[1.02]
+transition
+cursor-pointer
+"
+                                >
+                                    ورود به حساب
+                                </button>
+
+                            )}
+
+                            <div className="mt-6 text-center text-xs text-gray-500">
+                                AlanBin © 2026
+                            </div>
+
+                        </div>
+
                     </div>
+
                 </div>
+
             )}
 
-            {/* Desktop Menu */}
-            <div className="hidden md:flex gap-6 items-center">
-                {isLoggedIn ? (
-                    <div className="flex gap-10 items-center">
-                        <h1 className="text-white font-bold text-2xl">خوش آمدید</h1>
-                        <button onClick={() => accountHandler()} className="text-white font-bold text-2xl cursor-pointer">
-                            <UserCircle />
-                        </button>
+            {/* Desktop */}
 
-                    </div>
+            <div className="hidden md:flex items-center gap-4">
+
+                {isLoggedIn ? (
+
+                    <button
+                        onClick={accountHandler}
+                        className="
+flex
+items-center
+gap-3
+h-11
+px-5
+rounded-xl
+bg-white/5
+border
+border-white/10
+hover:border-[#14c78b]
+hover:bg-[#14c78b]/10
+transition
+cursor-pointer
+"
+                    >
+
+                        <UserCircle className="text-[#14c78b]" />
+
+                        <span className="text-white">
+                            حساب کاربری
+                        </span>
+
+                    </button>
 
                 ) : (
-                    <div onClick={loginHandler} className="text-black bg-white text-lg p-2 rounded-lg cursor-pointer hover:bg-[#14c78b] hover:text-white transition-all duration-400 flex justify-center items-center gap-2">
-                        <span className="mt-1"><UserCircle /></span>
-                        <span>ورود</span>
-                    </div>
+
+                    <button
+                        onClick={loginHandler}
+                        className="
+h-11
+px-6
+rounded-xl
+bg-[#14c78b]
+text-black
+font-bold
+hover:scale-105
+transition
+cursor-pointer
+"
+                    >
+                        ورود
+                    </button>
+
                 )}
+
             </div>
-        </div>
-    )
-}
+
+        </>
+    );
+};
