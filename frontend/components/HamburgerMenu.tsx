@@ -62,12 +62,12 @@ export const HamburgerMenu = ({
 
             {isOpen && (
 
-                <div className="fixed inset-0 z-9999">
+                <div className="fixed inset-0 z-9999 ">
                     {/* Overlay */}
 
                     <div
                         onClick={closeMenu}
-                        className="absolute inset-0 bg-[#000]/85 backdrop-blur-sm"
+                        className="absolute inset-0 bg-[#000]/85 backdrop-blur-sm h-screen"
                     />
 
                     {/* Panel */}

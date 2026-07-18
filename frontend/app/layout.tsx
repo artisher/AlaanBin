@@ -1,6 +1,7 @@
 import { Menu } from "@/components/Menu";
 import "./globals.css";
 import { Footer } from "@/components/Footer";
+import { vazirmatn, outfit } from "./fonts";
 
 
 export default function RootLayout({
@@ -10,7 +11,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fa" dir="rtl">
-      <body className="bg-[#0B0F14] overflow-x-hidden"
+      <body className={`${vazirmatn.variable} ${outfit.variable} ${vazirmatn.className} 
+      bg-[#0B0F14] overflow-x-hidden`}
       >
         <Menu />
         {children}

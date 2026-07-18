@@ -13,7 +13,7 @@ export const ShowTopMovie = ({ movies }: Movie) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <div className="flex flex-wrap gap-6 justify-center mt-10">
+    <div className="flex text-white flex-wrap gap-6 justify-center mt-10">
       {movies
         .filter((movie: Movie) => movie.topWeek)
         .map((movie: Movie, index) => (

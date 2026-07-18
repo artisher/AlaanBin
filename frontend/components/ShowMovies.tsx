@@ -26,6 +26,8 @@ export const ShowMovies = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(true);
+
+    
     const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
     const fetchFavorites = async () => {
         const res = await fetch("http://localhost:5000/api/favorites", {

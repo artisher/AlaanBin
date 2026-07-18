@@ -35,7 +35,7 @@ transition
 
             <div>
 
-                <h1 className="text-2xl font-black text-white">
+                <h1 className="text-3xl font-[var(--font-outfit)] font-extrabold text-white">
                     Alan
                     <span className="text-[#14c78b]">
                         Bin
