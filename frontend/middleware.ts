@@ -11,20 +11,21 @@ export async function middleware(req: NextRequest) {
 
 
     const token = req.cookies.get("token")?.value;
-    const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`,
-        {
-            headers: {
-                Cookie: `token=${token}`
-            }
-        }
-    );
-    const data = await res.json();
+    // const res = await fetch(
+    //     `${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`,
+    //     {
+    //         headers: {
+    //             Cookie: `token=${token}`
+    //         }
+    //     }
+    // );
+    // const data = await res.json();
 
 
-    const hasActiveSubscription = data.user?.hasActiveSubscription
-    const role = data.user?.role
-
+    // const hasActiveSubscription = data.user?.hasActiveSubscription
+    // const role = data.user?.role
+    const hasActiveSubscription = false;
+    const role = "user";
 
     if (url.pathname === '/subscription' && !sessionCookie) {
 
