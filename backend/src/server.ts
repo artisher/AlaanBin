@@ -30,8 +30,13 @@ app.use(
 );
 console.log(path.join(process.cwd(), "videos"));
 
+const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) {
+    throw new Error("MONGODB_URI is missing");
+}
 
-mongoose.connect(process.env.MONGODB_URI!)
+
+mongoose.connect(MONGODB_URI)
     .then(() => console.log('✅ دیتابیس وصل شد!'))
     .catch((err: any) => console.error('❌ خطای اتصال:', err));
 // --- API مربوط به یوزرها ---

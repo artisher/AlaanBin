@@ -27,7 +27,11 @@ app.use(express_1.default.json()); // خواندن داده‌های JSON
 app.use((0, cookie_parser_1.default)());
 app.use("/videos", express_1.default.static(path_1.default.join(process.cwd(), "videos")));
 console.log(path_1.default.join(process.cwd(), "videos"));
-mongoose_1.default.connect(process.env.MONGODB_URI)
+const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) {
+    throw new Error("MONGODB_URI is missing");
+}
+mongoose_1.default.connect(MONGODB_URI)
     .then(() => console.log('✅ دیتابیس وصل شد!'))
     .catch((err) => console.error('❌ خطای اتصال:', err));
 // --- API مربوط به یوزرها ---
