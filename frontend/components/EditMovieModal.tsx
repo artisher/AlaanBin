@@ -50,19 +50,23 @@ export const EditMovieModal: React.FC<EditMovieModalProps> = ({ isOpen, movie, o
     };
     const handleSave = async () => {
         if (!editedMovie) {
-            alert('اطلاعات کاربر یافت نشد')
+            alert("اطلاعات فیلم یافت نشد");
+            return;
         }
+
         try {
-            const updatedData = await updateMovieOnServer(editedMovie._id, editedMovie);
+            const updatedData = await updateMovieOnServer(
+                editedMovie._id,
+                editedMovie
+            );
 
-            console.log("اطلاعات ذخیره شد :", updatedData);
-            onSave(updatedData)
-            onClose()
-
+            console.log("اطلاعات ذخیره شد:", updatedData);
+            onSave(updatedData);
+            onClose();
         } catch (error: any) {
-            alert((error.message || 'خطای نا مشخص'))
+            alert(error.message || "خطای ناشناخته");
         }
-    }
+    };
     if (!isOpen || !editedMovie) return null
     return (
         <div className="fixed inset-0 bg-blacke/60 flex justify-center items-center z-50 "

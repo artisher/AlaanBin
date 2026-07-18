@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-export const VideoPlayer = ({ video }) => {
+export const VideoPlayer = ({ video }: any) => {
     const movie = video;
     console.log(movie.videoUrl);
     console.log(`http://localhost:5000${movie.videoUrl}`);

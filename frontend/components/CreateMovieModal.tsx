@@ -4,9 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-const addedMovie = z.object({
-    title: z.string().min(1, 'عنوان فیلم الزامی است'),
-    description: z.string().min(1, 'توضیحات الزامی است'),
+export const addedMovie = z.object({
+    title: z.string(),
+    description: z.string(),
     genre: z.string(),
     year: z.coerce.number(),
     rating: z.coerce.number().optional(),
@@ -20,14 +20,22 @@ interface EditMovieModalProps {
     onClose: () => void;
     onSave: (updatedMovie: Movie) => void;
 }
-type AddedMovie = z.infer<typeof addedMovie>;
+export type AddedMovie = z.infer<typeof addedMovie>;
 
 export const CreateMovieModal: React.FC<EditMovieModalProps> = ({ isOpen, movie, onClose }) => {
-    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<AddedMovie>({
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting },
+    } = useForm<
+        z.input<typeof addedMovie>,
+        any,
+        z.output<typeof addedMovie>
+    >({
         resolver: zodResolver(addedMovie),
     });
 
-    const onSubmit = async (data: AddedMovie) => {
+    const onSubmit = async (data: z.output<typeof addedMovie>) => {
         console.log('آبجکت نهایی:', data);
 
         try {

@@ -1,12 +1,13 @@
 'use client';
 import { useRouter } from "next/navigation"
 import { House, LogOut, UserCircle, X } from "lucide-react"
-
+import type { Movie } from "@/types/movies";
 import ProfileRow from './ProfileRow';
 import Image from "next/image";
 import { MovieModal } from "./MovieMedal";
 import { MovieCard } from "./MovieCard";
 import { useEffect, useState } from "react";
+
 interface Profile {
     _id: string;
     fullName: string;
@@ -15,9 +16,16 @@ interface Profile {
     country: string;
     city: string;
     subscriptionExpireDate: string;
+    hasActiveSubscription: boolean;
 }
-const ProfileCard = ({ userProfile, userFavorites }: { userProfile: Profile }) => {
-    const profile = userProfile.user;
+export const ProfileCard = ({
+    userProfile,
+    userFavorites,
+}: {
+    userProfile: Profile
+    userFavorites: any
+}) => {
+    const profile = userProfile;
     const favoritesMovie = userFavorites?.favoriteMovies ?? [];
     const router = useRouter();
     const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
@@ -234,7 +242,7 @@ const ProfileCard = ({ userProfile, userFavorites }: { userProfile: Profile }) =
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
 
                             {favoritesMovie.length > 0 ? (
-                                favoritesMovie.map((movie) => (
+                                favoritesMovie.map((movie: Movie) => (
 
                                     <MovieCard
                                         key={movie._id}

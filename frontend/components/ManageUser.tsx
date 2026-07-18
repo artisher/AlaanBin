@@ -15,7 +15,7 @@ interface ManageUserProps {
 export const ManageUser = ({ userList }: ManageUserProps) => {
     const [users, setUsers] = useState<User[]>(userList);
     const [editingUser, setEditingUser] = useState<User | null>(null); // کاربری که در حال ویرایشه
-    const [addUser, setAddUser] = useState<boolean>(false);
+    const [addUser, setAddUser] = useState<boolean | any>(false);
     // تابعی که وقتی دکمه حذف کلیک میشه اجرا میشه
     const handleDelete = (id: string) => {
         if (confirm('آیا از حذف این کاربر مطمئن هستید؟')) {
@@ -42,7 +42,7 @@ export const ManageUser = ({ userList }: ManageUserProps) => {
     const handleEdit = (id: string) => {
         console.log('جستجو برای کاربر با ID:', id);
         const userToEdit = users.find(u => u._id === id);
-        console.log(userToEdit,"INJAAAAAAA");
+        console.log(userToEdit, "INJAAAAAAA");
         if (userToEdit) {
             console.log('کاربر پیدا شد:', userToEdit);
             console.log(userToEdit);
@@ -67,7 +67,7 @@ export const ManageUser = ({ userList }: ManageUserProps) => {
     const handleCloseUserModal = () => {
         setAddUser(null);
     };
- console.log("MANAGE USER", users[0]);
+    console.log("MANAGE USER", users[0]);
     return (
         <div>
             <div className="space-y-4 p-6">

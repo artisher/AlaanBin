@@ -12,7 +12,7 @@ import { MovieCardSkeleton } from './MovieCardSkeleton';
 export const ShowMovies = () => {
 
     const [genre, setGenre] = useState("");
-    const [rating, setRating] = useState(0);
+    const [rating, setRating] = useState<any>(0);
     const [sort, setSort] = useState("newest");
     const [product, setProduct] = useState("")
     const [hoveredMovieId, setHoveredMovieId] = useState<string | null>(null);
@@ -27,7 +27,7 @@ export const ShowMovies = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(true);
 
-    
+
     const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
     const fetchFavorites = async () => {
         const res = await fetch("http://localhost:5000/api/favorites", {
@@ -244,7 +244,7 @@ export const ShowMovies = () => {
                             }}
                             className="
                     h-11
-                    min-w-[170px]
+                    min-w-42.5
                     rounded-xl
                     bg-[#0B0F14]
                     border

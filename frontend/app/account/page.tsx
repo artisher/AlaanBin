@@ -21,7 +21,7 @@ async function getUserProfile() {
 
 
 
-    console.log(data);
+    console.log(data,"sdsdsdsdsd");
 
 
 
@@ -53,7 +53,7 @@ export default async function ProfilePage() {
         getUserFavoritesMovie(),
     ]);
     return <ProfileCard
-        userProfile={userProfile}
+        userProfile={userProfile.user}
         userFavorites={userFavorites}
     />;
 }

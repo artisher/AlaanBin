@@ -1,4 +1,4 @@
-export default function ProfileRow({ label, value }) {
+export default function ProfileRow({ label, value }: any) {
 
     return (
 

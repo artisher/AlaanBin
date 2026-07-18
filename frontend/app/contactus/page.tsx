@@ -8,7 +8,7 @@ export default function ContactUs() {
     const [message, setMessage] = useState('');
     const [status, setStatus] = useState('');
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: any) => {
         e.preventDefault();
         setStatus('در حال ارسال...');
         try {
@@ -29,7 +29,7 @@ export default function ContactUs() {
             <div className="w-full max-w-2xl bg-linear-to-br from-[#272e38] bg-[#07090c] rounded-lg shadow-xl p-8">
                 <h1 className="text-4xl font-bold text-center mb-8 text-[#14c78b]">تماس با ما</h1>
                 <p className="text-center text-gray-300 mb-8 ">
-                   . مشتاق شنیدن نظرات، پیشنهادات و سوالات شما هستیم. لطفاً فرم زیر را پر کنید
+                    . مشتاق شنیدن نظرات، پیشنهادات و سوالات شما هستیم. لطفاً فرم زیر را پر کنید
                 </p>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
@@ -80,7 +80,7 @@ export default function ContactUs() {
                 {status && <p className="text-center mt-6 text-sm text-gray-400">{status}</p>}
                 <div className="mt-12 text-center text-gray-400">
                     <p className="mb-2">آدرس: تهران، خیابان آزادی، شرکت اینترنتی الان بین</p>
-                  
+
                     <p>ایمیل: support@alanbin.com</p>
                 </div>
             </div>

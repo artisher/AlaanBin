@@ -103,7 +103,7 @@ export const MangeFilms = ({ moviesList }: ManageMovieProps) => {
             <CreateMovieModal
                 isOpen={!!addMovie}
                 onClose={handleCloseUserModal}
-                movie={addMovie}
+                movie={null}
                 onSave={handleSaveEdit} />
         </div>
     )
