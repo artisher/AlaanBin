@@ -1,5 +1,5 @@
 // middleware.ts
-import { cookies } from 'next/headers';
+
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -9,8 +9,8 @@ export async function middleware(req: NextRequest) {
 
 
 
-    const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
+
+    const token = req.cookies.get("token")?.value;
     const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`,
         {
