@@ -33,7 +33,7 @@ export const ProfileCard = ({
     const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
 
     const fetchFavorites = async () => {
-        const res = await fetch("http://localhost:5000/api/favorites", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/favorites`, {
             credentials: "include",
         });
 
@@ -47,7 +47,7 @@ export const ProfileCard = ({
     const favoriteHandler = async (id: string) => {
         try {
             const res = await fetch(
-                `http://localhost:5000/api/favorites/${id}`,
+                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${id}`,
                 {
                     method: "POST",
                     credentials: "include",
@@ -69,7 +69,7 @@ export const ProfileCard = ({
     const logoutHandler = async () => {
 
 
-        await fetch("http://localhost:5000/api/auth/logout", {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
             method: "POST",
             credentials: "include",
         });

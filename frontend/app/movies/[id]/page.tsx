@@ -10,7 +10,7 @@ export default async function MoviePage({
 
     const cookieStore = await cookies();
 
-    const res = await fetch(`http://localhost:5000/api/movies/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/movies/${id}`, {
         headers: {
             Cookie: cookieStore.toString(),
         },

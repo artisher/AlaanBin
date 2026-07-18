@@ -20,7 +20,7 @@ export const ManageUser = ({ userList }: ManageUserProps) => {
     const handleDelete = (id: string) => {
         if (confirm('آیا از حذف این کاربر مطمئن هستید؟')) {
 
-            fetch(`http://localhost:5000/api/admin/users/${id}`, {
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/${id}`, {
                 credentials: "include",
                 method: 'DELETE',
             })

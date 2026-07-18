@@ -39,7 +39,7 @@ export const CreateMovieModal: React.FC<EditMovieModalProps> = ({ isOpen, movie,
         console.log('آبجکت نهایی:', data);
 
         try {
-            const response = await fetch('http://localhost:5000/api/admin/movies', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/admin/movies`, {
                 credentials: "include",
                 method: 'POST',
                 headers: {

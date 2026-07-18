@@ -37,7 +37,7 @@ const CreateUserModal: React.FC<EditUserModalProps> = ({ isOpen, user, onClose }
         console.log('آبجکت نهایی:', data);
 
         try {
-            const response = await fetch('http://localhost:5000/api/admin/users', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`, {
                 method: 'POST',
                 credentials: "include",
                 headers: {

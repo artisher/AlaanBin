@@ -10,7 +10,7 @@ export const Menu = async () => {
     const token = cookieStore.get("token")?.value;
 
     const res = await fetch(
-        "http://localhost:5000/api/auth/me",
+        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`,
         {
             headers: {
                 Cookie: `token=${token}`

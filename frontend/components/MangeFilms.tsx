@@ -42,7 +42,7 @@ export const MangeFilms = ({ moviesList }: ManageMovieProps) => {
     const handleDelete = (id: string) => {
         if (confirm('آیا از حذف این فیلم مطمئن هستید؟')) {
 
-            fetch(`http://localhost:5000/api/admin/movies/${id}`, {
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/movies/${id}`, {
                 credentials: "include",
                 method: 'DELETE',
             })

@@ -6,7 +6,7 @@ async function getUserProfile() {
 
     const cookieStore = await cookies();
 
-    const res = await fetch('http://localhost:5000/api/auth/me',
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`,
 
         {
             cache: "no-store",
@@ -21,7 +21,7 @@ async function getUserProfile() {
 
 
 
-    console.log(data,"sdsdsdsdsd");
+    console.log(data, "sdsdsdsdsd");
 
 
 
@@ -34,7 +34,7 @@ const getUserFavoritesMovie = async () => {
     const cookieStore = await cookies();
 
     const resfavorite = await fetch(
-        "http://localhost:5000/api/favorites",
+        `${process.env.NEXT_PUBLIC_API_URL}/api/favorites`,
         {
             cache: "no-store",
             headers: {

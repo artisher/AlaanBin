@@ -9,7 +9,7 @@ interface EditMovieModalProps {
 }
 const updateMovieOnServer = async (movieId: string, movieData: Movie) => {
     try {
-        const response = await fetch(`http://localhost:5000/api/admin/movies/${movieId}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/movies/${movieId}`, {
             credentials: "include",
             method: 'PUT',
             headers: {

@@ -7,7 +7,7 @@ export default async function AdminDashboard() {
     const cookieStore = await cookies();
 
 
-    const resMovie = await fetch("http://localhost:5000/api/admin/movies", {
+    const resMovie = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/movies`, {
         cache: "no-store",
         headers: {
             Cookie: cookieStore.toString(),
@@ -23,7 +23,7 @@ export default async function AdminDashboard() {
 
 
 
-    const resUser = await fetch("http://localhost:5000/api/admin/users", {
+    const resUser = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`, {
         cache: "no-store",
         headers: {
             Cookie: cookieStore.toString(),

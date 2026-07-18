@@ -3,7 +3,7 @@ import Image from "next/image";
 export const VideoPlayer = ({ video }: any) => {
     const movie = video;
     console.log(movie.videoUrl);
-    console.log(`http://localhost:5000${movie.videoUrl}`);
+    console.log(`${process.env.NEXT_PUBLIC_API_URL}${movie.videoUrl}`);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#090909] via-[#111315] to-[#0b0b0b] text-white">
@@ -16,7 +16,7 @@ export const VideoPlayer = ({ video }: any) => {
                         controlsList="nodownload"
                         controls
                         className="w-full"
-                        src={`http://localhost:5000${movie.videoUrl.toLowerCase()}`}
+                        src={`${process.env.NEXT_PUBLIC_API_URL}${movie.videoUrl.toLowerCase()}`}
                     />
                 </div>
 

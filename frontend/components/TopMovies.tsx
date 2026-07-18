@@ -4,7 +4,7 @@ import { ShowTopMovie } from "./ShowTopMovie";
 
 export const TopMovies = async () => {
     
-    const res = await fetch("http://localhost:3000/api/TopMovies", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/TopMovies`, {
         
         cache: "no-store"
     })
