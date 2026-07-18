@@ -4,19 +4,22 @@ import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import cors from 'cors';
 import mongoose from 'mongoose';
-import { Movie } from '../src/models/Movie';
-import { User } from '../src/models/User';
+import { Movie } from './models/Movie';
+import { User } from './models/User';
 import path from "path";
 import checkSubscription from './middleware/auth.middleware';
 import { adminMiddleware } from './middleware/admin';
+import dotenv from "dotenv";
+
+dotenv.config();
 const app = express();
 const PORT = 5000;
 
 // تنظیمات امنیتی و پارس کردن داده‌ها
 app.use(
     cors({
-        origin: "http://localhost:3000",
-        credentials: true
+        origin: process.env.CLIENT_URL,
+        credentials: true,
     })
 ); // اجازه دسترسی از فرانت
 app.use(express.json()); // خواندن داده‌های JSON
@@ -28,7 +31,7 @@ app.use(
 console.log(path.join(process.cwd(), "videos"));
 
 
-mongoose.connect('mongodb://127.0.0.1:27017/backend')
+mongoose.connect(process.env.MONGODB_URI!)
     .then(() => console.log('✅ دیتابیس وصل شد!'))
     .catch((err: any) => console.error('❌ خطای اتصال:', err));
 // --- API مربوط به یوزرها ---
@@ -335,7 +338,7 @@ app.post("/api/favorites/:movieId", async (req, res) => {
 
         const { movieId } = req.params;
 
-        const decoded = jwt.verify(token, "alanbin-secret-key") as {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
             id: string;
         };
 
@@ -381,7 +384,7 @@ app.get("/api/favorites", async (req, res) => {
             });
         }
 
-        const decoded = jwt.verify(token, "alanbin-secret-key") as {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
             id: string;
         };
 
@@ -480,7 +483,7 @@ app.post('/api/auth/login', async (req, res) => {
                 id: user._id,
                 role: user.role
             },
-            "alanbin-secret-key",
+            process.env.JWT_SECRET!,
             {
                 expiresIn: "30d"
             }
@@ -532,7 +535,7 @@ app.get("/api/auth/me", async (req, res) => {
 
         const decoded = jwt.verify(
             token,
-            "alanbin-secret-key"
+            process.env.JWT_SECRET!
         ) as {
             id: string;
             role: string;
