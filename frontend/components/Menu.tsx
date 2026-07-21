@@ -10,11 +10,11 @@ export const Menu = async () => {
     const token = cookieStore.get("token")?.value;
 
     const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`,
+        `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/me`,
         {
             headers: {
-                Cookie: `token=${token}`
-            }
+                Cookie: `token=${token}`,
+            },
         }
     );
     const data = await res.json();
