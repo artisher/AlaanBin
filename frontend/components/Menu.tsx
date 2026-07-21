@@ -18,7 +18,7 @@ export const Menu = async () => {
         }
     );
     const data = await res.json();
-    console.log(data); // delete this line
+    console.log(data);
 
     const hasActiveSubscription = data.user?.hasActiveSubscription
     const isLoggedIn = data.isAuthenticated

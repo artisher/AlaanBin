@@ -71,10 +71,6 @@ export async function middleware(req: NextRequest) {
 export const config = {
     matcher: ['/', '/login', '/register', '/subscription', '/home', '/account', '/movies/:path*', '/admin'],
 
-
-
-
-
 };
 
 
