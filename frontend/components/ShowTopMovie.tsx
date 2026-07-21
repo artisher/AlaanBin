@@ -1,8 +1,6 @@
 "use client"
-import Image from "next/image";
-import { useState } from "react";
 import type { Movie } from "@/types/movies";
-import Link from "next/link";
+import { useState } from "react";
 import { MovieCard } from "./MovieCard";
 import { MovieModal } from "./MovieMedal";
 type Props = {
