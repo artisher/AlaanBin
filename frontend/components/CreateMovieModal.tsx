@@ -36,7 +36,7 @@ export const CreateMovieModal: React.FC<EditMovieModalProps> = ({ isOpen, movie,
     });
 
     const onSubmit = async (data: z.output<typeof addedMovie>) => {
-        console.log('آبجکت نهایی:', data);
+       
 
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/admin/movies`, {
@@ -49,8 +49,7 @@ export const CreateMovieModal: React.FC<EditMovieModalProps> = ({ isOpen, movie,
             });
 
             const result = await response.json();
-            console.log(response.status);
-            console.log(result);
+        
             if (response.ok) {
                 alert(result.message || 'فیلم با موفقیت اضافه شد');
                 onClose();

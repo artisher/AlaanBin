@@ -21,7 +21,7 @@ async function getUserProfile() {
 
 
 
-    console.log(data, "sdsdsdsdsd");
+    
 
 
 

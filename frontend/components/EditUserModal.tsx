@@ -95,7 +95,6 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, user, onClose, on
             // فراخوانی تابع ارسال به سرور
             const updatedData = await updateUserOnServer(editedUser._id, editedUser);
 
-            console.log('اطلاعات با موفقیت ذخیره شد:', updatedData);
 
 
             onSave(updatedData);

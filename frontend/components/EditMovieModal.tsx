@@ -18,8 +18,7 @@ const updateMovieOnServer = async (movieId: string, movieData: Movie) => {
             },
             body: JSON.stringify(movieData)
         })
-        console.log(response.status);
-        console.log(await response.clone().text());
+       
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || "خطا در بروزرسانی اطلاعات ")
@@ -60,7 +59,7 @@ export const EditMovieModal: React.FC<EditMovieModalProps> = ({ isOpen, movie, o
                 editedMovie
             );
 
-            console.log("اطلاعات ذخیره شد:", updatedData);
+           
             onSave(updatedData);
             onClose();
         } catch (error: any) {

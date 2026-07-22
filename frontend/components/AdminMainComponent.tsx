@@ -17,7 +17,7 @@ export const AdminMainComponent = ({ moviesList = [], userList = [] }:
         { id: 'users', label: 'کاربران' },
         { id: 'payments', label: 'پرداخت‌ها' },
     ];
-    console.log("admin page", moviesList);
+    
 
     return (
         <div>

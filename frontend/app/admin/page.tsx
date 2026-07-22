@@ -35,7 +35,7 @@ export default async function AdminDashboard() {
     }
 
     const userList = await resUser.json();
-    console.log("SERVER USERLIST", userList[0]);
+    
     return (
         <div>
             <AdminMainComponent

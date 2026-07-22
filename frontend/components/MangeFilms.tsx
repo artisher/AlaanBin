@@ -28,11 +28,11 @@ export const MangeFilms = ({ moviesList }: ManageMovieProps) => {
 
 
     const handleEdit = (id: string) => {
-        console.log('جستجو برای فیلم با ID:', id);
+        
         const movieToEdit = movies.find(m => m._id === id);
 
         if (movieToEdit) {
-            console.log('کاربر پیدا شد:', movieToEdit);
+            
             setEditingMovie(movieToEdit);
         } else {
             console.error('فیلم با این ID پیدا نشد!');

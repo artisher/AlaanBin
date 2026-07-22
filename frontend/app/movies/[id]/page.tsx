@@ -18,7 +18,7 @@ export default async function MoviePage({
     });
 
     const movie = await res.json();
-    console.log(movie, "test");
+    
 
     return <VideoPlayer video={movie} />;
 }

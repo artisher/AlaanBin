@@ -34,7 +34,7 @@ const CreateUserModal: React.FC<EditUserModalProps> = ({ isOpen, user, onClose }
     });
 
     const onSubmit = async (data: AddedUser) => {
-        console.log('آبجکت نهایی:', data);
+       
 
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`, {
