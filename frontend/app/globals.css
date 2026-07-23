@@ -40,3 +40,12 @@ select option {
 
     animation: shimmer 1.5s infinite;
 }
+::selection {
+  background: #14c78b;
+  color: #ffffff;
+}
+
+::-moz-selection {
+  background: #14c78b;
+  color: #ffffff;
+}

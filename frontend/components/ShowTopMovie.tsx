@@ -17,9 +17,7 @@ export const ShowTopMovie = ({ movies }: Props) => {
 
   return (
     <div className="flex text-white flex-wrap gap-6 justify-center mt-10">
-      {movies
-        .filter((movie: Movie) => movie.topWeek)
-        .map((movie: Movie, index: number) => (
+      {movies.map((movie: Movie, index: number) => (
           <div key={index}>
             <MovieCard
 

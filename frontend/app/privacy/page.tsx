@@ -1,109 +1,140 @@
-// app/privacy/page.tsx
-
 export const dynamic = "force-dynamic";
 
 export default function PrivacyPage() {
     return (
-        <div className="bg-linear-to-br from-[#11171f] bg-[#05070a]">
+        <div className="min-h-screen bg-[#0B0F14] text-white">
 
+            <div className="max-w-6xl mx-auto px-6 py-20">
 
-            <div className="container mx-auto px-4 py-12 text-gray-200 ">
-                <h1 className="text-3xl font-extrabold mb-8 text-[#14c78b]">
-                    سیاست حفظ حریم خصوصی
-                </h1>
+                {/* Header */}
 
-                {/* Intro Box */}
-                <div className="p-5 rounded-lg bg-gray-900/50 border border-gray-700 mb-10">
-                    <p className="leading-7">
-                        این سند توضیح می‌دهد که سرویس <span className="text-primary font-bold text-lg">الان بین</span> چگونه داده‌های کاربران را جمع‌آوری،
-                        ذخیره و محافظت می‌کند. هدف ما ایجاد تجربه‌ای امن، روان و قابل اعتماد
-                        برای شما در هنگام تماشای فیلم و سریال است.
+                <div className="text-center max-w-3xl mx-auto">
+
+                    <span className="inline-block px-5 py-2 rounded-full bg-[#14c78b]/10 border border-[#14c78b]/20 text-[#14c78b] font-semibold">
+                        Privacy Policy
+                    </span>
+
+                    <h1 className="mt-7 text-5xl font-extrabold">
+                        حریم خصوصی کاربران
+                    </h1>
+
+                    <p className="mt-6 text-gray-400 leading-8">
+                        حفظ اطلاعات شخصی کاربران یکی از مهم‌ترین اولویت‌های
+                        AlanBin است. اطلاعات شما فقط برای ارائه بهتر خدمات
+                        استفاده می‌شود و بدون رضایت شما در اختیار شخص یا سازمان
+                        دیگری قرار نخواهد گرفت.
                     </p>
+
                 </div>
 
-                {/* Section: Types of Data */}
-                <section className="mb-12">
-                    <h2 className="text-xl font-bold mb-4 text-[#14c78b]">چه داده‌هایی جمع‌آوری می‌کنیم؟</h2>
+                {/* Cards */}
 
-                    <div className="grid sm:grid-cols-2 gap-6">
-                        <div className="p-5 rounded-lg bg-gray-800/50 border border-gray-700">
-                            <h3 className="font-semibold text-[#14c78b] mb-2">۱. داده‌های حساب کاربری</h3>
-                            <ul className="space-y-2 text-sm list-disc pr-4">
-                                <li>ایمیل و رمز عبور رمزنگاری‌شده</li>
-                                <li>مشخصات پروفایل</li>
-                                <li>کشور، شهر و اطلاعات منطقه‌ای</li>
-                            </ul>
-                        </div>
+                <div className="grid lg:grid-cols-2 gap-8 mt-20">
 
-                        <div className="p-5 rounded-lg bg-gray-800/50 border border-gray-700">
-                            <h3 className="font-semibold text-[#14c78b] mb-2">۲. داده‌های فنی</h3>
-                            <ul className="space-y-2 text-sm list-disc pr-4">
-                                <li>آدرس IP و Device ID</li>
-                                <li>اطلاعات مرورگر و سیستم عامل</li>
-                                <li>کوکی‌ها و session tokens</li>
-                            </ul>
-                        </div>
+                    <div className="rounded-3xl border border-white/10 bg-[#111827] p-8">
 
-                        <div className="p-5 rounded-lg bg-gray-800/50 border border-gray-700">
-                            <h3 className="font-semibold text-[#14c78b] mb-2">۳. تعاملات و رفتار کاربر</h3>
-                            <ul className="space-y-2 text-sm list-disc pr-4">
-                                <li>تاریخچه تماشا</li>
-                                <li>ترجیح ژانرها و بازیگران</li>
-                                <li>سرعت اینترنت برای بهینه‌سازی پخش</li>
-                            </ul>
-                        </div>
+                        <h2 className="text-2xl font-bold text-[#14c78b] mb-6">
+                            اطلاعاتی که ذخیره می‌کنیم
+                        </h2>
 
-                        <div className="p-5 rounded-lg bg-gray-800/50 border border-gray-700">
-                            <h3 className="font-semibold text-[#14c78b] mb-2">۴. داده‌های پرداخت</h3>
-                            <ul className="space-y-2 text-sm list-disc pr-4">
-                                <li>تراکنش‌ها و وضعیت اشتراک</li>
-                                <li>شناسه پرداخت</li>
-                                <li>سابقه خرید</li>
-                            </ul>
-                        </div>
+                        <ul className="space-y-5 text-gray-300 leading-8">
+
+                            <li>• ایمیل حساب کاربری</li>
+
+                            <li>• رمز عبور به صورت رمزنگاری‌شده (Hash)</li>
+
+                            <li>• وضعیت اشتراک شما</li>
+
+                            <li>• اطلاعات موردنیاز برای ورود امن به حساب</li>
+
+                        </ul>
+
                     </div>
-                </section>
 
-                {/* Section: Why */}
-                <section className="mb-12">
-                    <h2 className="text-xl font-bold mb-4 text-[#14c78b]">چرا این داده‌ها را جمع‌آوری می‌کنیم؟</h2>
+                    <div className="rounded-3xl border border-white/10 bg-[#111827] p-8">
 
-                    <div className="space-y-4">
-                        <div className="p-4 border border-gray-700 bg-gray-900/40 rounded-lg">
-                            ارائه تجربه تماشای پایدار، سریع و شخصی‌سازی‌شده.
-                        </div>
-                        <div className="p-4 border border-gray-700 bg-gray-900/40 rounded-lg">
-                            جلوگیری از سوءاستفاده، اشتراک غیرمجاز و جلوگیری از مسدود شدن سرویس.
-                        </div>
-                        <div className="p-4 border border-gray-700 bg-gray-900/40 rounded-lg">
-                            تحلیل کیفیت سرویس و بهبود امکانات آینده.
-                        </div>
+                        <h2 className="text-2xl font-bold text-[#14c78b] mb-6">
+                            دلیل جمع‌آوری اطلاعات
+                        </h2>
+
+                        <ul className="space-y-5 text-gray-300 leading-8">
+
+                            <li>• ایجاد و مدیریت حساب کاربری</li>
+
+                            <li>• فعال‌سازی و مدیریت اشتراک</li>
+
+                            <li>• افزایش امنیت حساب کاربران</li>
+
+                            <li>• بهبود کیفیت خدمات سایت</li>
+
+                        </ul>
+
                     </div>
-                </section>
 
-                {/* Rights */}
-                <section className="mb-12">
-                    <h2 className="text-xl font-bold mb-4 text-[#14c78b]">حقوق کاربران</h2>
+                    <div className="rounded-3xl border border-white/10 bg-[#111827] p-8">
 
-                    <ul className="space-y-3 list-disc pr-4">
-                        <li>درخواست دریافت اطلاعات ذخیره‌شده</li>
-                        <li>حذف حساب و داده‌ها</li>
-                        <li>تغییر مشخصات حساب</li>
-                    </ul>
-                </section>
+                        <h2 className="text-2xl font-bold text-[#14c78b] mb-6">
+                            امنیت اطلاعات
+                        </h2>
 
-                {/* Contact */}
-                <section className="mb-20">
-                    <h2 className="text-xl font-bold mb-4 text-[#14c78b]">راه‌های ارتباط</h2>
+                        <p className="text-gray-300 leading-8">
 
-                    <p className="leading-7 text-gray-300">
-                        برای درخواست‌های حقوقی، گزارش مشکلات و مسائل مربوط به امنیت داده
-                        می‌توانید با ایمیل زیر در تماس باشید:
+                            ما از روش‌های استاندارد امنیتی برای محافظت از
+                            اطلاعات کاربران استفاده می‌کنیم تا از دسترسی
+                            غیرمجاز، سوءاستفاده یا افشای اطلاعات جلوگیری شود.
+
+                        </p>
+
+                    </div>
+
+                    <div className="rounded-3xl border border-white/10 bg-[#111827] p-8">
+
+                        <h2 className="text-2xl font-bold text-[#14c78b] mb-6">
+                            حقوق کاربران
+                        </h2>
+
+                        <ul className="space-y-5 text-gray-300 leading-8">
+
+                            <li>• ویرایش اطلاعات حساب کاربری</li>
+
+                            <li>• حذف حساب کاربری در صورت درخواست</li>
+
+                            <li>• ارتباط با تیم پشتیبانی در صورت وجود سؤال یا مشکل</li>
+
+                        </ul>
+
+                    </div>
+
+                </div>
+
+                {/* Footer */}
+
+                <div className="mt-20 rounded-3xl border border-[#14c78b]/20 bg-[#111827] p-10 text-center">
+
+                    <h2 className="text-3xl font-bold">
+                        احترام به حریم خصوصی شما
+                    </h2>
+
+                    <p className="mt-5 text-gray-400 leading-9 max-w-3xl mx-auto">
+
+                        اطلاعات کاربران تنها برای ارائه خدمات AlanBin استفاده
+                        می‌شود و بدون رضایت شما در اختیار شخص یا مجموعه دیگری
+                        قرار نخواهد گرفت، مگر در مواردی که قانون الزام کرده باشد.
+
                     </p>
 
-                    <p className="mt-4 text-[#14c78b] font-semibold">support@alanbin.com</p>
-                </section>
+                    <div className="mt-8">
+
+                        <span className="text-[#14c78b] font-bold text-lg">
+                            support@alanbin.com
+                        </span>
+
+                    </div>
+
+                </div>
+
             </div>
+
         </div>
     );
 }

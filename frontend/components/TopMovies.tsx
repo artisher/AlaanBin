@@ -4,13 +4,15 @@ import { ShowTopMovie } from "./ShowTopMovie";
 
 export const TopMovies = async () => {
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/movies`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/movies/top`, {
 
         cache: "no-store"
     })
 
 
     const data = await res.json()
+    console.log(data,"sdsd");
+    
 
     return (
         <div className="border-y border-white/10 py-16">
@@ -25,7 +27,7 @@ export const TopMovies = async () => {
                 <div className="w-24 h-1 bg-[#14c78b] rounded-full mx-auto mt-4" />
 
             </div>
-            <ShowTopMovie movies={data.movies} />
+            <ShowTopMovie movies={data} />
 
         </div>
     )

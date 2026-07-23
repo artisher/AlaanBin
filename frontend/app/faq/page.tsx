@@ -1,52 +1,328 @@
+"use client";
+
+import { useState } from "react";
+import { ChevronDown, HelpCircle, ShieldCheck, CreditCard, Tv2, UserPlus } from "lucide-react";
 
 export default function FAQ() {
+    const [openIndex, setOpenIndex] = useState<number | null>(0);
+
     const faqItems = [
         {
-            question: "این سایت مخصوص کدوم کشورهاست؟ آیا فقط برای کاربرهای مقیم اروپا فعاله؟",
-            answer: "اینجا خونه‌ی فیلم و سریال ایرانی برای همه‌ی شماست، چه تو اروپا باشین چه هر جای دیگه دنیا! 🌍 ما تلاش کردیم تا بهترین تجربه رو برای همه فراهم کنیم. البته، به خاطر نزدیکی سرورها، کاربرهای مقیم اروپا ممکنه سرعت بالاتری رو تجربه کنن، ولی این به این معنی نیست که بقیه نتونن لذت ببرن! 😉"
+            icon: <ShieldCheck size={22} />,
+            question: "الان بین در چه کشورهایی قابل استفاده است؟",
+            answer:
+                "الان بین برای کاربران سراسر دنیا در دسترس است، اما به دلیل قرار گرفتن سرورها در اروپا، کاربران این منطقه بهترین کیفیت و سرعت پخش را تجربه خواهند کرد.",
         },
         {
-            question: " آیا برای استفاده از سایت باید حتماً حساب کاربری بسازم؟",
-            answer: "برای اینکه بتونی از تمام امکانات سایت، از جمله دسترسی به آرشیو کامل فیلم‌ها و سریال‌ها، ساخت لیست علاقه‌مندی‌ها و دریافت پیشنهادهای شخصی‌سازی شده لذت ببری، ساخت حساب کاربری لازمه. اما نگران نباش، فرآیند ساخت اکانت خیلی ساده و سریع انجام می‌شه! کافیه روی دکمه “ورود/ثبت‌نام” در بالای صفحه کلیک کنی و با چند مرحله‌ی کوتاه، عضو خانواده‌ی ما بشی. 😊"
+            icon: <UserPlus size={22} />,
+            question: "برای استفاده از سایت باید ثبت‌نام کنم؟",
+            answer:
+                "بله. برای تماشای فیلم‌ها، مدیریت اشتراک و استفاده از امکانات سایت، ایجاد حساب کاربری الزامی است. ثبت‌نام فقط چند دقیقه زمان می‌برد.",
         },
         {
-            question: "چطور باید اشتراک بخرم؟",
-            answer: "خرید اشتراک خیلی ساده‌ست! کافیه به قسمت “خرید اشتراک” در سایت مراجعه کنی و اونجا می‌تونی مستقیماً از طریق واتساپ با تیم پشتیبانی ما در ارتباط باشی. دوستان ما در اسرع وقت راهنماییت می‌کنن تا اشتراک مورد نظرت رو فعال کنی و به دنیای فیلم و سریال ایرانی وارد بشی. 🚀"
+            icon: <CreditCard size={22} />,
+            question: "چطور اشتراک تهیه کنم؟",
+            answer:
+                "از طریق صفحه خرید اشتراک می‌توانید مستقیماً با پشتیبانی واتساپ ارتباط بگیرید تا اشتراک شما در کوتاه‌ترین زمان فعال شود.",
         },
         {
-            question: " آیا می‌تونم با PayPal یا رمز ارز پرداخت کنم؟ ",
-            answer: "ما گزینه‌های پرداخت متنوعی رو برای راحتی شما فراهم کردیم. خوشبختانه، پرداخت از طریق PayPal و اکثر کارت‌های بانکی بین‌المللی امکان‌پذیره. فقط در حال حاضر، پرداخت با رمز ارز مقدور نیست، اما به محض اضافه شدن این امکان، حتماً شما رو مطلع خواهیم کرد"
+            icon: <CreditCard size={22} />,
+            question: "چه روش‌های پرداختی پشتیبانی می‌شود؟",
+            answer:
+                "در حال حاضر پرداخت از طریق PayPal و کارت‌های بانکی بین‌المللی امکان‌پذیر است. پشتیبانی از ارزهای دیجیتال نیز به‌زودی اضافه خواهد شد.",
         },
-
         {
-            question: " آیا می‌تونم روی تلویزیون هوشمند یا Chromecast ببینم؟",
-            answer: "قطعاً! ما می‌دونیم که تماشای فیلم روی صفحه بزرگ چقدر لذت‌بخشه. 😊 سایت ما کاملاً بهینه شده تا بتونی تجربه‌ی تماشای بی‌نقصی رو روی انواع دستگاه‌ها، از گوشی موبایل و تبلت گرفته تا تلویزیون‌های هوشمند و از طریق Chromecast داشته باشی. فقط کافیه وارد سایت بشی و لذت ببری!"
+            icon: <Tv2 size={22} />,
+            question: "آیا روی تلویزیون هوشمند هم کار می‌کند؟",
+            answer:
+                "بله. الان بین روی موبایل، تبلت، لپ‌تاپ، تلویزیون‌های هوشمند و Chromecast بدون نیاز به نصب نرم‌افزار قابل استفاده است.",
         },
-
-
     ];
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white p-8">
-            <header className="text-center mb-12">
-                <h1 className="text-5xl font-bold text-[#14c78b] mb-4">سوالات متداول</h1>
-                <p className="text-lg text-gray-300">پاسخ سوالات پرتکرار شما</p>
-            </header>
+        <section className="min-h-screen bg-[#0B0F14] py-24">
 
-            <main className="max-w-4xl mx-auto text-center">
-                {faqItems.map((item, index) => (
-                    <details key={index} className="bg-gray-800 rounded-lg shadow-lg mb-6 cursor-pointer">
-                        <summary className="flex justify-between  items-center p-6 text-xl font-semibold focus:outline-none hover:bg-gray-700 rounded-lg transition duration-300 ease-in-out">
-                            <h1 className="text-center">{item.question}</h1>
-                            <svg className="w-6 h-6 transform transition duration-200 ease-in-out" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </summary>
-                        <div className="p-6 pt-0 text-gray-300">
-                            <h1 className="mt-3">{item.answer}</h1>
+            <div className="max-w-5xl mx-auto px-6">
+
+                {/* Header */}
+
+                <div className="text-center mb-16">
+
+                    <div className="flex justify-center mb-5">
+
+                        <div className="w-18 h-18 rounded-3xl bg-[#14c78b]/10 flex items-center justify-center">
+
+                            <HelpCircle
+                                size={36}
+                                className="text-[#14c78b]"
+                            />
+
                         </div>
-                    </details>
-                ))}
-            </main>
 
-        </div>
+                    </div>
+
+                    <span className="tracking-[6px] text-[#14c78b] font-semibold uppercase">
+                        FAQ
+                    </span>
+
+                    <h1 className="text-5xl font-extrabold mt-5 text-white">
+                        سوالات متداول
+                    </h1>
+
+                    <p className="mt-6 text-gray-400 max-w-2xl mx-auto leading-8">
+                        پاسخ سوالاتی که بیشتر کاربران قبل از خرید اشتراک یا استفاده
+                        از الان بین از ما می‌پرسند.
+                    </p>
+
+                </div>
+
+                {/* FAQ */}
+
+                <div className="space-y-5">
+
+                    {faqItems.map((item, index) => {
+
+                        const isOpen = openIndex === index;
+
+                        return (
+
+                            <div
+                                key={index}
+                                className="
+                                rounded-3xl
+                                bg-[#111827]
+                                border
+                                border-white/10
+                                overflow-hidden
+                                transition-all
+                                duration-300
+                                hover:border-[#14c78b]/40
+                                "
+                            >
+
+                                <button
+                                    onClick={() =>
+                                        setOpenIndex(isOpen ? null : index)
+                                    }
+                                    className="
+                                    w-full
+                                    flex
+                                    items-center
+                                    justify-between
+                                    gap-5
+                                    px-7
+                                    py-6
+                                    cursor-pointer
+                                    "
+                                >
+
+                                    <div className="flex items-center gap-4">
+
+                                        <div
+                                            className="
+                                            w-12
+                                            h-12
+                                            rounded-2xl
+                                            bg-[#14c78b]/10
+                                            flex
+                                            items-center
+                                            justify-center
+                                            text-[#14c78b]
+                                            "
+                                        >
+                                            {item.icon}
+                                        </div>
+
+                                        <h2 className="text-lg font-bold text-right text-white">
+                                            {item.question}
+                                        </h2>
+
+                                    </div>
+
+                                    <ChevronDown
+                                        className={`text-[#14c78b] transition-all duration-300 ${isOpen ? "rotate-180" : ""
+                                            }`}
+                                    />
+
+                                </button>
+
+                                <div
+                                    className={`
+                                    transition-all
+                                    duration-300
+                                    overflow-hidden
+                                    ${isOpen
+                                            ? "max-h-96 opacity-100"
+                                            : "max-h-0 opacity-0"
+                                        }
+                                    `}
+                                >
+
+                                    <div
+                                        className="
+                                        border-t
+                                        border-white/10
+                                        px-7
+                                        py-6
+                                        text-gray-400
+                                        leading-8
+                                        "
+                                    >
+                                        {item.answer}
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        );
+                    })}
+
+                </div>
+
+                {/* Bottom Section */}
+
+                <div
+                    className="
+    mt-24
+    rounded-[32px]
+    border
+    border-[#14c78b]/20
+    bg-gradient-to-br
+    from-[#111827]
+    to-[#0F172A]
+    p-10
+    overflow-hidden
+    relative
+    "
+                >
+
+                    {/* Glow */}
+
+                    <div className="absolute -top-24 -left-24 w-64 h-64 rounded-full bg-[#14c78b]/10 blur-3xl" />
+                    <div className="absolute -bottom-20 -right-20 w-56 h-56 rounded-full bg-[#14c78b]/5 blur-3xl" />
+
+                    <div className="relative">
+
+                        <h2 className="text-3xl font-bold text-center text-white">
+                            پاسخ سؤال خودت رو پیدا نکردی؟
+                        </h2>
+
+                        <p
+                            className="
+            mt-5
+            text-gray-400
+            leading-8
+            text-center
+            max-w-2xl
+            mx-auto
+            "
+                        >
+                            تیم پشتیبانی الان بین آماده است تا در سریع‌ترین زمان ممکن
+                            به تمام سوالات مربوط به اشتراک، پرداخت، حساب کاربری و مشکلات
+                            فنی پاسخ دهد.
+                        </p>
+
+                        <div className="grid md:grid-cols-3 gap-6 mt-12">
+
+                            <div
+                                className="
+                rounded-2xl
+                border
+                border-white/10
+                bg-white/5
+                p-6
+                text-center
+                hover:border-[#14c78b]
+                transition
+                "
+                            >
+
+                                <h3 className="text-xl font-bold text-white">
+                                    پاسخ سریع
+                                </h3>
+
+                                <p className="text-gray-400 mt-3 leading-7">
+                                    معمولاً کمتر از چند ساعت پاسخگوی شما هستیم.
+                                </p>
+
+                            </div>
+
+                            <div
+                                className="
+                rounded-2xl
+                border
+                border-white/10
+                bg-white/5
+                p-6
+                text-center
+                hover:border-[#14c78b]
+                transition
+                "
+                            >
+
+                                <h3 className="text-xl font-bold text-white">
+                                    پشتیبانی واقعی
+                                </h3>
+
+                                <p className="text-gray-400 mt-3 leading-7">
+                                    با یک انسان صحبت می‌کنید، نه ربات.
+                                </p>
+
+                            </div>
+
+                            <div
+                                className="
+                rounded-2xl
+                border
+                border-white/10
+                bg-white/5
+                p-6
+                text-center
+                hover:border-[#14c78b]
+                transition
+                "
+                            >
+
+                                <h3 className="text-xl font-bold text-white">
+                                    همه روزه
+                                </h3>
+
+                                <p className="text-gray-400 mt-3 leading-7">
+                                    آماده پاسخگویی به سوالات کاربران هستیم.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        <div className="flex justify-center mt-12">
+
+                            <a
+                                href="https://wa.me/436764479470"
+                                className="
+                rounded-2xl
+                bg-[#14c78b]
+                text-black
+                font-bold
+                px-10
+                py-4
+                hover:scale-105
+                transition-all
+                duration-300
+                hover:shadow-[0_0_35px_rgba(20,199,139,.45)]
+                "
+                            >
+                                ارتباط با پشتیبانی
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
     );
-};
+}

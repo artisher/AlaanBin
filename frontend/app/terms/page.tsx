@@ -1,95 +1,143 @@
-// app/terms/page.tsx
-
-
-
 export default function TermsPage() {
     return (
+        <div className="bg-[#0B0F14] text-white min-h-screen">
 
+            <div className="max-w-6xl mx-auto px-6 py-20">
 
-        <div className="bg-linear-to-br from-[#11171f] bg-[#05070a]">
+                {/* Header */}
 
+                <div className="text-center max-w-3xl mx-auto">
 
-            <div className="container mx-auto px-4 py-12 text-gray-200 " >
+                    <span className="inline-block px-5 py-2 rounded-full bg-[#14c78b]/10 border border-[#14c78b]/20 text-[#14c78b] font-semibold">
+                        قوانین استفاده
+                    </span>
 
-                <h1 className="text-3xl font-extrabold mb-8 ">
-                    قوانین و مقررات استفاده از سرویس <span className="text-primary text-3xl font-extrabold">الان بین</span>
-                </h1>
+                    <h1 className="mt-7 text-5xl font-extrabold">
+                        قوانین و مقررات
+                    </h1>
 
+                    <p className="mt-6 text-gray-400 leading-8">
+                        هدف این قوانین ایجاد تجربه‌ای امن، منظم و باکیفیت برای
+                        تمام کاربران AlanBin است. استفاده از سرویس به منزله
+                        پذیرش موارد زیر خواهد بود.
+                    </p>
 
-                <div className="bg-red-900/30 border border-red-700 text-red-300 p-4 rounded-lg mb-10">
-                    استفاده از سرویس به معنای پذیرش تمام قوانین زیر است. مطالعه کامل این صفحه
-                    قبل از ایجاد حساب توصیه می‌شود.
                 </div>
 
-                {/* Use Legally */}
-                <section className="mb-14">
-                    <h2 className="text-xl font-bold mb-4 text-[#14c78b]">قوانین استفاده صحیح</h2>
+                {/* Cards */}
 
-                    <div className="grid sm:grid-cols-2 gap-6">
-                        <div className="p-5 bg-gray-800/50 border border-gray-700 rounded-lg">
-                            <h3 className="font-semibold text-[#14c78b] mb-2">محل مجاز استفاده</h3>
-                            <p className="text-sm leading-6">
-                                استفاده از سرویس تنها برای کاربران مقیم **اروپا** مجاز است.
-                                استفاده از VPN یا هر ابزار تغییر IP برای دور زدن محدودیت‌ها تخلف محسوب می‌شود.
-                            </p>
-                        </div>
+                <div className="grid lg:grid-cols-2 gap-8 mt-20">
 
-                        <div className="p-5 bg-gray-800/50 border border-gray-700 rounded-lg">
-                            <h3 className="font-semibold text-[#14c78b] mb-2">ممنوعیت‌های کپی‌رایت</h3>
-                            <p className="text-sm leading-6">
-                                ضبط، دانلود، اشتراک‌گذاری و پخش غیرقانونی محتوا به هر شکل ممنوع است
-                                و violator ممکن است طبق قانون با محدودیت‌های شدید روبه‌رو شود.
-                            </p>
-                        </div>
+                    <div className="rounded-3xl border border-white/10 bg-[#111827] p-8">
 
-                        <div className="p-5 bg-gray-800/50 border border-gray-700 rounded-lg">
-                            <h3 className="font-semibold text-[#14c78b] mb-2">قوانین حساب کاربری</h3>
-                            <ul className="list-disc pr-4 text-sm space-y-2">
-                                <li>هر حساب فقط برای **استفاده شخصی** است.</li>
-                                <li>اشتراک‌گذاری رمز عبور ممنوع است.</li>
-                                <li>در صورت تخلف، حساب مسدود می‌شود.</li>
-                            </ul>
-                        </div>
+                        <h2 className="text-2xl font-bold text-[#14c78b] mb-6">
+                            استفاده از حساب کاربری
+                        </h2>
 
-                        <div className="p-5 bg-gray-800/50 border border-gray-700 rounded-lg">
-                            <h3 className="font-semibold text-[#14c78b] mb-2">پرداخت و اشتراک</h3>
-                            <ul className="list-disc pr-4 text-sm space-y-2">
-                                <li>اشتراک به‌صورت ماهانه تمدید می‌شود.</li>
-                                <li>در صورت کنسل‌کردن، دوره فعلی فعال می‌ماند.</li>
-                                <li>ریفاند فقط در موارد خاص ارائه می‌شود.</li>
-                            </ul>
-                        </div>
+                        <ul className="space-y-5 text-gray-300 leading-8">
+
+                            <li>
+                                • هر حساب کاربری فقط برای استفاده شخصی ایجاد می‌شود.
+                            </li>
+
+                            <li>
+                                • اشتراک‌گذاری اطلاعات ورود با دیگران مجاز نیست.
+                            </li>
+
+                            <li>
+                                • در صورت مشاهده استفاده غیرعادی، حساب ممکن است
+                                به صورت موقت بررسی یا مسدود شود.
+                            </li>
+
+                        </ul>
+
                     </div>
-                </section>
 
-                {/* Liability */}
-                <section className="mb-12">
-                    <h2 className="text-xl font-bold mb-4 text-[#14c78b]">محدودیت مسئولیت</h2>
+                    <div className="rounded-3xl border border-white/10 bg-[#111827] p-8">
 
-                    <p className="leading-7 mb-4">
-                        در صورتی که سرویس به دلیل مشکلات اینترنتی، قطعی سرور، مشکلات شبکه و یا
-                        محدودیت‌های فنی دچار اختلال شود، Bein تلاش خود را برای رفع سریع مشکل
-                        انجام می‌دهد اما مسئولیت حقوقی کامل بر عهده سرویس نخواهد بود.
+                        <h2 className="text-2xl font-bold text-[#14c78b] mb-6">
+                            اشتراک و پرداخت
+                        </h2>
+
+                        <ul className="space-y-5 text-gray-300 leading-8">
+
+                            <li>
+                                • دسترسی به محتوای سایت تنها با اشتراک فعال امکان‌پذیر است.
+                            </li>
+
+                            <li>
+                                • با پایان اعتبار اشتراک، دسترسی به فیلم‌ها متوقف خواهد شد.
+                            </li>
+
+                            <li>
+                                • برای تمدید کافی است دوباره اشتراک تهیه کنید.
+                            </li>
+
+                        </ul>
+
+                    </div>
+
+                    <div className="rounded-3xl border border-white/10 bg-[#111827] p-8">
+
+                        <h2 className="text-2xl font-bold text-[#14c78b] mb-6">
+                            حفظ حقوق محتوا
+                        </h2>
+
+                        <ul className="space-y-5 text-gray-300 leading-8">
+
+                            <li>
+                                • دانلود، ضبط یا انتشار مجدد محتوای سایت بدون مجوز مجاز نیست.
+                            </li>
+
+                            <li>
+                                • تمامی فیلم‌ها و سریال‌ها صرفاً برای تماشای آنلاین ارائه می‌شوند.
+                            </li>
+
+                        </ul>
+
+                    </div>
+
+                    <div className="rounded-3xl border border-white/10 bg-[#111827] p-8">
+
+                        <h2 className="text-2xl font-bold text-[#14c78b] mb-6">
+                            مسئولیت سرویس
+                        </h2>
+
+                        <ul className="space-y-5 text-gray-300 leading-8">
+
+                            <li>
+                                • ما همواره تلاش می‌کنیم سرویس بدون قطعی و با بهترین کیفیت در دسترس باشد.
+                            </li>
+
+                            <li>
+                                • در صورت بروز اختلال‌های خارج از کنترل مانند مشکلات اینترنت یا زیرساخت،
+                                تیم AlanBin در سریع‌ترین زمان ممکن مشکل را برطرف خواهد کرد.
+                            </li>
+
+                        </ul>
+
+                    </div>
+
+                </div>
+
+                {/* Footer */}
+
+                <div className="mt-20 rounded-3xl border border-[#14c78b]/20 bg-[#111827] p-10 text-center">
+
+                    <h2 className="text-3xl font-bold">
+                        هدف ما تجربه‌ای ساده و مطمئن است
+                    </h2>
+
+                    <p className="mt-5 text-gray-400 leading-9 max-w-3xl mx-auto">
+                        قوانین بالا تنها برای حفظ کیفیت سرویس و احترام به حقوق
+                        تمام کاربران تدوین شده‌اند. در صورت داشتن هرگونه سؤال،
+                        می‌توانید از طریق صفحه تماس با ما با تیم AlanBin در ارتباط باشید.
                     </p>
 
-                    <p className="leading-7">
-                        همچنین در برابر محتوای شخص ثالث (فیلم‌ها، سریال‌ها، تریلرها) مسئولیتی
-                        ندارد و مسئولیت کپی‌رایت متعلق به صاحبان اثر است.
-                    </p>
-                </section>
+                </div>
 
-                {/* Termination */}
-                <section className="mb-20">
-                    <h2 className="text-xl font-bold mb-4 text-[#14c78b]">لغو حساب و تعلیق</h2>
+            </div>
 
-                    <ul className="list-disc pr-4 space-y-3">
-                        <li>سوءاستفاده از سرویس → مسدودسازی بدون هشدار</li>
-                        <li>نقض قوانین کپی‌رایت → حذف دائمی حساب</li>
-                        <li>ورود مشکوک یا چند حساب همزمان → تعلیق تا بررسی امنیتی</li>
-                    </ul>
-                </section>
-            </div >
         </div>
-
     );
 }

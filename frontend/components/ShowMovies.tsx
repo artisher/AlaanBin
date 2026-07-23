@@ -447,12 +447,11 @@ export const ShowMovies = () => {
 
             {/* pagination */}
             <div className="mt-20 flex justify-center items-center gap-3 mb-5">
-
                 <button
 
-                    disabled={currentPage === 1}
+                    disabled={currentPage === totalPages}
 
-                    onClick={() => setCurrentPage(prev => prev - 1)}
+                    onClick={() => setCurrentPage(prev => prev + 1)}
 
                     className="
         h-11
@@ -468,7 +467,7 @@ export const ShowMovies = () => {
 
                 >
 
-                    ← قبلی
+                    بعدی
 
                 </button>
 
@@ -492,9 +491,9 @@ export const ShowMovies = () => {
 
                 <button
 
-                    disabled={currentPage === totalPages}
+                    disabled={currentPage === 1}
 
-                    onClick={() => setCurrentPage(prev => prev + 1)}
+                    onClick={() => setCurrentPage(prev => prev - 1)}
 
                     className="
         h-11
@@ -510,9 +509,10 @@ export const ShowMovies = () => {
 
                 >
 
-                    بعدی →
+                    قبلی
 
                 </button>
+
 
             </div>
         </div>
