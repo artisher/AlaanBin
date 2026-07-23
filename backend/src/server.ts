@@ -19,6 +19,7 @@ const PORT = process.env.PORT || 5000;
 app.use(
     cors({
         origin: process.env.CLIENT_URL,
+        // origin: "http://localhost:3000",
         credentials: true,
     })
 ); // اجازه دسترسی از فرانت
@@ -329,7 +330,15 @@ app.get('/api/movies', async (req, res) => {
     }
 });
 
+app.get("/api/movies/top", async (req, res) => {
+    try {
+        const topMovies = await Movie.find({ topWeek: true });
 
+        res.json(topMovies);
+    } catch (error) {
+        res.status(500).json({ message: "خطا در دریافت فیلم‌های برتر" });
+    }
+});
 //فیلم مورد علاقه اضافه کردن یا حذف کردن
 app.post("/api/favorites/:movieId", async (req, res) => {
     try {
