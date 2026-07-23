@@ -10,9 +10,14 @@ export const TopMovies = async () => {
     })
 
 
-    const data = await res.json()
-    console.log(data,"sdsd");
-    
+    console.log("status:", res.status);
+    console.log("ok:", res.ok);
+
+    const data = await res.json();
+
+    console.log("data:", data);
+    console.log("isArray:", Array.isArray(data));
+
 
     return (
         <div className="border-y border-white/10 py-16">
