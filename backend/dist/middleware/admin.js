@@ -14,7 +14,7 @@ const adminMiddleware = async (req, res, next) => {
                 message: "احراز هویت نشده",
             });
         }
-        const decoded = jsonwebtoken_1.default.verify(token, "alanbin-secret-key");
+        const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
         const user = await User_1.User.findById(decoded.id);
         if (!user) {
             return res.status(404).json({

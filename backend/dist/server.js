@@ -21,6 +21,7 @@ const PORT = process.env.PORT || 5000;
 // تنظیمات امنیتی و پارس کردن داده‌ها
 app.use((0, cors_1.default)({
     origin: process.env.CLIENT_URL,
+    // origin: "http://localhost:3000",
     credentials: true,
 })); // اجازه دسترسی از فرانت
 app.use(express_1.default.json()); // خواندن داده‌های JSON
@@ -267,6 +268,16 @@ app.get('/api/movies', async (req, res) => {
         res.status(500).json({
             message: "خطا در دریافت فیلم‌ها"
         });
+    }
+});
+app.get("/api/movies/top", async (req, res) => {
+    console.log("🔥 TOP ROUTE HIT");
+    try {
+        const topMovies = await Movie_1.Movie.find({ topWeek: true });
+        res.json(topMovies);
+    }
+    catch (error) {
+        res.status(500).json({ message: "خطا در دریافت فیلم‌های برتر" });
     }
 });
 //فیلم مورد علاقه اضافه کردن یا حذف کردن

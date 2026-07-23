@@ -18,7 +18,7 @@ export const adminMiddleware = async (
 
         const decoded = jwt.verify(
             token,
-            "alanbin-secret-key"
+            process.env.JWT_SECRET!
         ) as {
             id: string;
             role: string;

@@ -331,6 +331,9 @@ app.get('/api/movies', async (req, res) => {
 });
 
 app.get("/api/movies/top", async (req, res) => {
+    console.log("🔥 TOP ROUTE HIT");
+
+
     try {
         const topMovies = await Movie.find({ topWeek: true });
 
