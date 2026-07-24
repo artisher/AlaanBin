@@ -33,6 +33,7 @@ export const MovieModal = ({
             <div
                 onClick={(e) => e.stopPropagation()}
                 className="
+                text-white
                 relative
                 w-full
                 max-w-6xl
@@ -106,7 +107,7 @@ export const MovieModal = ({
                                 {movie.title}
                             </h1>
 
-                            <div className="mt-3 h-1 w-24 rounded-full bg-[#14c78b]" />
+                            <div className="mt-3 h-1 w-full rounded-full bg-[#14c78b]" />
 
                         </div>
 
@@ -246,7 +247,7 @@ export const MovieModal = ({
                         <h3 className="font-semibold mb-4">
                             ژانرها
                         </h3>
-
+mt-3 h-1 w-24 rounded-full bg-[#14c78b]
                         <div className="flex flex-wrap gap-3">
 
                             {movie.genre.map((item, index) => (

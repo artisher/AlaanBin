@@ -103,6 +103,7 @@ export default function ContactUs() {
                                         className="
                                         w-full
                                         h-14
+                                        text-white
                                         rounded-xl
                                         bg-[#0B0F14]
                                         border
@@ -153,6 +154,7 @@ export default function ContactUs() {
                                         pl-4
                                         outline-none
                                         transition
+                                        text-white
                                         focus:border-[#14c78b]
                                         "
                                     />
@@ -183,6 +185,7 @@ export default function ContactUs() {
 
                                         className="
                                         w-full
+                                        text-white
                                         rounded-xl
                                         bg-[#0B0F14]
                                         border

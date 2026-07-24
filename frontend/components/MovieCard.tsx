@@ -51,6 +51,7 @@ export function MovieCard({
             {/* Overlay */}
             <div
                 className="
+                
                     absolute
                     inset-0
                     flex

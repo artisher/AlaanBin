@@ -1,69 +1,253 @@
-"use client"
+"use client";
+
+import { useState } from "react";
+import {
+    Film,
+    Tv,
+    Clapperboard,
+    Send,
+    MessageSquare,
+    CheckCircle2,
+} from "lucide-react";
+
 export default function Request() {
+    const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
+
+    const submitHandler = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        setStatus("loading");
+
+        await new Promise((r) => setTimeout(r, 1800));
+
+        setStatus("success");
+    };
+
     return (
-        <div className="min-h-screen bg-gray-900 text-gray-100 p-4 sm:p-8 flex items-start justify-center">
-            <div className="w-full max-w-2xl bg-gray-800 p-6 sm:p-10 rounded-xl shadow-2xl border border-gray-700 mt-10">
+        <section className="min-h-screen bg-[#0B0F14] py-20 px-6">
 
-                <h1 className="text-4xl font-extrabold text-center text-white mb-3">
-                    <span className="text-primary">الان بین</span> - درخواست محتوا
-                </h1>
-                <p className="text-center text-gray-400 mb-10">
-                    اگر فیلم یا سریالی را می‌خواهید که در حال حاضر در پلتفرم ما موجود نیست، از اینجا درخواست دهید.
-                </p>
+            <div className="max-w-3xl mx-auto">
 
-                <div className="space-y-6">
-                    <div>
-                        <label htmlFor="request-type" className="block text-lg font-medium mb-2 text-gray-300">
-                            نوع درخواست
-                        </label>
-                        <select
-                            id="request-type"
-                            className="w-full p-4 rounded-lg bg-gray-700 border border-gray-600 focus:ring-4 focus:ring-[${primaryColor}] focus:border-transparent text-gray-100 transition duration-200 appearance-none"
-                        >
-                            <option value="select">------- یک موضوع انتخاب کنید ---------</option>
-                            <option value="movie">فیلم جدید</option>
-                            <option value="series">سریال جدید</option>
-                            <option value="classic-movie">فیلم کلاسیک/قدیمی</option>
-                            <option value="season-update">درخواست فصل جدید سریال</option>
-                        </select>
-                    </div>
+                {/* Header */}
 
-                    <div>
-                        <label htmlFor="request-title" className="block text-lg font-medium mb-2 text-gray-300">
-                            نام دقیق محتوا (الزامی)
-                        </label>
-                        <input
-                            type="text"
-                            id="request-title"
-                            className="w-full p-4 rounded-lg bg-gray-700 border border-gray-600 focus:ring-4 focus:ring-[${primaryColor}] focus:border-transparent text-gray-100 placeholder-gray-400 transition duration-200"
-                            placeholder="مثال: Dune: Part Two یا سریال The Last of Us"
-                        />
-                    </div>
+                <div className="text-center mb-14">
 
-                    <div>
-                        <label htmlFor="request-details" className="block text-lg font-medium mb-2 text-gray-300">
-                            اطلاعات بیشتر (مثلاً لینک تیزر، نسخه زبان درخواستی)
-                        </label>
-                        <textarea
-                            id="request-details"
+                    <span className="tracking-[5px] text-[#14c78b] font-semibold">
+                        REQUEST CONTENT
+                    </span>
 
-                            className="w-full p-4 rounded-lg bg-gray-700 border border-gray-600 focus:ring-4 focus:ring-[${primaryColor}] focus:border-transparent text-gray-100 placeholder-gray-400 resize-none transition duration-200"
-                            placeholder="هر جزئیاتی که فکر می‌کنید به تیم محتوا کمک می‌کند."
-                        ></textarea>
-                    </div>
+                    <h1 className="mt-4 text-5xl font-extrabold text-white">
+                        درخواست فیلم یا سریال
+                    </h1>
 
-                    <div className="text-center pt-6">
-                        <button
-                            onClick={() => alert('درخواست شما با موفقیت ثبت شد! به زودی بررسی خواهد شد.')}
-                            className={`w-full sm:w-auto px-12 py-4 rounded-xl font-bold text-xl transition-all duration-300 shadow-lg 
-                         hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-offset-gray-900 bg-primary`}
+                    <p className="mt-5 text-gray-400 leading-8 max-w-2xl mx-auto">
+                        اگر محتوای مورد نظر شما در آرشیو الان بین وجود ندارد،
+                        درخواست خود را ثبت کنید. تیم ما پس از بررسی، در صورت
+                        امکان آن را به آرشیو اضافه خواهد کرد.
+                    </p>
 
-                        >
-                            ثبت درخواست
-                        </button>
-                    </div>
                 </div>
+
+                {/* Card */}
+
+                <div
+                    className="
+                    rounded-3xl
+                    border
+                    border-white/10
+                    bg-[#111827]
+                    p-8
+                    shadow-[0_0_40px_rgba(20,199,139,.08)]
+                    "
+                >
+
+                    <form
+                        onSubmit={submitHandler}
+                        className="space-y-7"
+                    >
+
+                        {/* Type */}
+
+                        <div>
+
+                            <label className="block mb-3 text-white font-medium">
+                                نوع درخواست
+                            </label>
+
+                            <div className="relative">
+
+                                <Clapperboard
+                                    size={20}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#14c78b]"
+                                />
+
+                                <select
+                                    className="
+                                    w-full
+                                    h-14
+                                    rounded-xl
+                                    bg-[#0B0F14]
+                                    border
+                                    border-white/10
+                                    pr-12
+                                    pl-4
+                                    text-white
+                                    outline-none
+                                    focus:border-[#14c78b]
+                                    cursor-pointer
+                                    "
+                                >
+                                    <option>انتخاب کنید</option>
+                                    <option>فیلم</option>
+                                    <option>سریال</option>
+                                    <option>فصل جدید سریال</option>
+                                    <option>انیمیشن</option>
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                        {/* Title */}
+
+                        <div>
+
+                            <label className="block mb-3 text-white font-medium">
+                                نام فیلم یا سریال
+                            </label>
+
+                            <div className="relative">
+
+                                <Film
+                                    size={20}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#14c78b]"
+                                />
+
+                                <input
+                                    type="text"
+                                    placeholder="مثلاً: The Last of Us"
+                                    className="
+                                    w-full
+                                    h-14
+                                    rounded-xl
+                                    bg-[#0B0F14]
+                                    border
+                                    border-white/10
+                                    pr-12
+                                    pl-4
+                                    text-white
+                                    placeholder:text-gray-500
+                                    outline-none
+                                    focus:border-[#14c78b]
+                                    "
+                                />
+
+                            </div>
+
+                        </div>
+
+                        {/* Details */}
+
+                        <div>
+
+                            <label className="block mb-3 text-white font-medium">
+                                توضیحات (اختیاری)
+                            </label>
+
+                            <div className="relative">
+
+                                <MessageSquare
+                                    size={20}
+                                    className="absolute right-4 top-5 text-[#14c78b]"
+                                />
+
+                                <textarea
+                                    rows={5}
+                                    placeholder="اگر نسخه خاص، دوبله، زیرنویس یا فصل مشخصی مدنظر دارید بنویسید..."
+                                    className="
+                                    w-full
+                                    rounded-xl
+                                    bg-[#0B0F14]
+                                    border
+                                    border-white/10
+                                    pr-12
+                                    pl-4
+                                    pt-4
+                                    resize-none
+                                    text-white
+                                    placeholder:text-gray-500
+                                    outline-none
+                                    focus:border-[#14c78b]
+                                    "
+                                />
+
+                            </div>
+
+                        </div>
+
+                        {/* Button */}
+
+                        <button
+                            type="submit"
+                            className="
+                            w-full
+                            h-14
+                            rounded-xl
+                            bg-[#14c78b]
+                            text-black
+                            font-bold
+                            flex
+                            items-center
+                            justify-center
+                            gap-3
+                            cursor-pointer
+                            transition
+                            hover:scale-[1.02]
+                            hover:shadow-[0_0_30px_rgba(20,199,139,.35)]
+                            "
+                        >
+
+                            <Send size={20} />
+
+                            ثبت درخواست
+
+                        </button>
+
+                        {status === "loading" && (
+                            <p className="text-center text-gray-400">
+                                در حال ثبت درخواست...
+                            </p>
+                        )}
+
+                        {status === "success" && (
+                            <div
+                                className="
+                                flex
+                                items-center
+                                justify-center
+                                gap-2
+                                rounded-xl
+                                border
+                                border-[#14c78b]/30
+                                bg-[#14c78b]/10
+                                py-4
+                                text-[#14c78b]
+                                "
+                            >
+
+                                <CheckCircle2 size={20} />
+
+                                درخواست شما با موفقیت ثبت شد.
+
+                            </div>
+                        )}
+
+                    </form>
+
+                </div>
+
             </div>
-        </div>
+
+        </section>
     );
 }
