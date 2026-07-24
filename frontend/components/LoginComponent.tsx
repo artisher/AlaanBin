@@ -29,10 +29,10 @@ export const LoginComponent = () => {
             alert(data.message);
             return;
         }
-
+        console.log("Login success");
         router.refresh();
         router.push("/");
-
+        console.log("Push done");
     };
 
     return (
