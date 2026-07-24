@@ -18,8 +18,11 @@ const PORT = process.env.PORT || 5000;
 // تنظیمات امنیتی و پارس کردن داده‌ها
 app.use(
     cors({
-        origin: process.env.CLIENT_URL,
-        // origin: "http://localhost:3000",
+        origin: [
+            "http://localhost:3000",
+            "https://alanbin.com",
+            "https://www.alanbin.com"
+        ],
         credentials: true,
     })
 ); // اجازه دسترسی از فرانت
