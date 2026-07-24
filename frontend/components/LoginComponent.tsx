@@ -29,10 +29,9 @@ export const LoginComponent = () => {
             alert(data.message);
             return;
         }
-        console.log("Login success");
-        router.refresh();
-        router.push("/");
-        console.log("Push done");
+
+        window.location.href = "/home";
+
     };
 
     return (
