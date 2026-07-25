@@ -40,9 +40,19 @@ if (!MONGODB_URI) {
 }
 const isProduction = process.env.APP_ENV === "production";
 
-mongoose.connect(MONGODB_URI)
-    .then(() => console.log('✅ دیتابیس وصل شد!'))
-    .catch((err: any) => console.error('❌ خطای اتصال:', err));
+mongoose
+    .connect(MONGODB_URI)
+    .then(() => {
+        console.log("✅ دیتابیس وصل شد!");
+
+        app.listen(PORT, () => {
+            console.log(`🚀 سرور روی پورت ${PORT}`);
+        });
+    })
+    .catch((err) => {
+        console.error("❌ خطای اتصال:", err);
+        process.exit(1);
+    });
 // --- API مربوط به یوزرها ---
 //admin API
 // 1. دریافت همه یوزرها
@@ -334,19 +344,15 @@ app.get('/api/movies', async (req, res) => {
 });
 
 app.get("/api/movies/top", async (req, res) => {
-
-
+    console.log("readyState:", mongoose.connection.readyState);
 
     try {
         const topMovies = await Movie.find({ topWeek: true });
 
         res.json(topMovies);
-    } catch (error) {
-        console.error("TOP MOVIES ERROR:", error);
-
-        res.status(500).json({
-            message: "خطا در دریافت فیلم‌های برتر"
-        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: "error" });
     }
 });
 //فیلم مورد علاقه اضافه کردن یا حذف کردن
@@ -628,8 +634,4 @@ app.get("/api/movies/:id",
         }
     });
 // شروع سرور
-app.listen(PORT, () => {
-    console.log(`🚀 سرور روی پورت ${PORT} در حال اجراست!`);
-    console.log(`📍 آدرس API: http://localhost:${PORT}/api/users`);
 
-});
