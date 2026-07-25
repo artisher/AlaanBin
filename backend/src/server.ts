@@ -14,7 +14,7 @@ import dotenv from "dotenv";
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
-
+app.set("trust proxy", 1);
 // تنظیمات امنیتی و پارس کردن داده‌ها
 app.use(
     cors({
@@ -334,7 +334,7 @@ app.get('/api/movies', async (req, res) => {
 });
 
 app.get("/api/movies/top", async (req, res) => {
-    console.log("🔥 TOP ROUTE HIT");
+
 
 
     try {
@@ -508,12 +508,12 @@ app.post('/api/auth/login', async (req, res) => {
                 expiresIn: "30d"
             }
         );
-
         res.cookie("token", token, {
             httpOnly: true,
+            secure: true,
+            sameSite: "lax",
+            path: "/",
             maxAge: 1000 * 60 * 60 * 24 * 30,
-            sameSite: "lax", // یا "none" اگر https داری
-            secure: false, // در prod باید true بشه
         });
         res.json({
             message: "ورود موفق",
