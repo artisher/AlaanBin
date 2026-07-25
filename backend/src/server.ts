@@ -342,7 +342,11 @@ app.get("/api/movies/top", async (req, res) => {
 
         res.json(topMovies);
     } catch (error) {
-        res.status(500).json({ message: "خطا در دریافت فیلم‌های برتر" });
+        console.error("TOP MOVIES ERROR:", error);
+
+        res.status(500).json({
+            message: "خطا در دریافت فیلم‌های برتر"
+        });
     }
 });
 //فیلم مورد علاقه اضافه کردن یا حذف کردن
