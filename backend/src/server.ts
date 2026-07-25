@@ -38,7 +38,7 @@ const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) {
     throw new Error("MONGODB_URI is missing");
 }
-
+const isProduction = process.env.APP_ENV === "production";
 
 mongoose.connect(MONGODB_URI)
     .then(() => console.log('✅ دیتابیس وصل شد!'))
@@ -501,16 +501,16 @@ app.post('/api/auth/login', async (req, res) => {
         const token = jwt.sign(
             {
                 id: user._id,
-                role: user.role
+                role: user.role,
             },
             process.env.JWT_SECRET!,
             {
-                expiresIn: "30d"
+                expiresIn: "30d",
             }
         );
         res.cookie("token", token, {
             httpOnly: true,
-            secure: true,
+            secure: isProduction,
             sameSite: "lax",
             path: "/",
             maxAge: 1000 * 60 * 60 * 24 * 30,
@@ -595,7 +595,7 @@ app.get("/api/auth/me", async (req, res) => {
         });
     }
 });
-
+console.log(process.env.NODE_ENV);
 // movie 
 app.get("/api/movies/:id",
     checkSubscription,
