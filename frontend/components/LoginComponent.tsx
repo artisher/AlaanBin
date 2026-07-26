@@ -30,7 +30,8 @@ export const LoginComponent = () => {
             return;
         }
 
-        window.location.href = "/home";
+        router.refresh();
+        router.push("/");
 
     };
 

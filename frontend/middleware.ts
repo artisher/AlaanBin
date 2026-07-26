@@ -7,11 +7,8 @@ export async function middleware(req: NextRequest) {
     const sessionCookie = req.cookies.get('token');
     const url = req.nextUrl.clone();
 
-    console.log("=== Middleware ===");
-    console.log("PATH:", req.nextUrl.pathname);
 
     const token = req.cookies.get("token")?.value;
-    console.log("TOKEN:", token ? "YES" : "NO");
     const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`,
         {
@@ -24,8 +21,6 @@ export async function middleware(req: NextRequest) {
 
     const hasActiveSubscription = data.user?.hasActiveSubscription
     const role = data.user?.role
-
-
 
     if (url.pathname === '/subscription' && !sessionCookie) {
 
