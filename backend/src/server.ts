@@ -14,7 +14,7 @@ import dotenv from "dotenv";
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
-app.set("trust proxy", 1);
+
 // تنظیمات امنیتی و پارس کردن داده‌ها
 app.use(
     cors({
@@ -38,23 +38,11 @@ const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) {
     throw new Error("MONGODB_URI is missing");
 }
-const isProduction = process.env.APP_ENV === "production";
-console.log("URI =", process.env.MONGODB_URI);
-console.log("PORT =", process.env.PORT);
-console.log("JWT =", !!process.env.JWT_SECRET);
-mongoose
-    .connect(MONGODB_URI)
-    .then(() => {
-        console.log("✅ دیتابیس وصل شد!");
 
-        app.listen(PORT, () => {
-            console.log(`🚀 سرور روی پورت ${PORT}`);
-        });
-    })
-    .catch((err) => {
-        console.error("❌ خطای اتصال:", err);
-        process.exit(1);
-    });
+
+mongoose.connect(MONGODB_URI)
+    .then(() => console.log('✅ دیتابیس وصل شد!'))
+    .catch((err: any) => console.error('❌ خطای اتصال:', err));
 // --- API مربوط به یوزرها ---
 //admin API
 // 1. دریافت همه یوزرها
@@ -346,15 +334,15 @@ app.get('/api/movies', async (req, res) => {
 });
 
 app.get("/api/movies/top", async (req, res) => {
-    console.log("readyState:", mongoose.connection.readyState);
+    console.log("🔥 TOP ROUTE HIT");
+
 
     try {
         const topMovies = await Movie.find({ topWeek: true });
 
         res.json(topMovies);
-    } catch (err) {
-        console.log(err);
-        res.status(500).json({ message: "error" });
+    } catch (error) {
+        res.status(500).json({ message: "خطا در دریافت فیلم‌های برتر" });
     }
 });
 //فیلم مورد علاقه اضافه کردن یا حذف کردن
@@ -513,19 +501,19 @@ app.post('/api/auth/login', async (req, res) => {
         const token = jwt.sign(
             {
                 id: user._id,
-                role: user.role,
+                role: user.role
             },
             process.env.JWT_SECRET!,
             {
-                expiresIn: "30d",
+                expiresIn: "30d"
             }
         );
+
         res.cookie("token", token, {
             httpOnly: true,
-            secure: isProduction,
-            sameSite: "lax",
-            path: "/",
             maxAge: 1000 * 60 * 60 * 24 * 30,
+            sameSite: "lax", // یا "none" اگر https داری
+            secure: false, // در prod باید true بشه
         });
         res.json({
             message: "ورود موفق",
@@ -607,7 +595,7 @@ app.get("/api/auth/me", async (req, res) => {
         });
     }
 });
-console.log(process.env.NODE_ENV);
+
 // movie 
 app.get("/api/movies/:id",
     checkSubscription,
@@ -636,4 +624,8 @@ app.get("/api/movies/:id",
         }
     });
 // شروع سرور
+app.listen(PORT, () => {
+    console.log(`🚀 سرور روی پورت ${PORT} در حال اجراست!`);
+    console.log(`📍 آدرس API: http://localhost:${PORT}/api/users`);
 
+});
