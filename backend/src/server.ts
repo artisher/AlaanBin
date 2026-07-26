@@ -39,7 +39,9 @@ if (!MONGODB_URI) {
     throw new Error("MONGODB_URI is missing");
 }
 const isProduction = process.env.APP_ENV === "production";
-
+console.log("URI =", process.env.MONGODB_URI);
+console.log("PORT =", process.env.PORT);
+console.log("JWT =", !!process.env.JWT_SECRET);
 mongoose
     .connect(MONGODB_URI)
     .then(() => {
