@@ -1,84 +1,29 @@
-// // middleware.ts
+import { NextRequest, NextResponse } from "next/server";
 
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 
-export async function middleware(req: NextRequest) {
-    const sessionCookie = req.cookies.get('token');
-    const url = req.nextUrl.clone();
 
-    console.log("=== Middleware ===");
-    console.log("PATH:", req.nextUrl.pathname);
-
+export function middleware(req: NextRequest) {
     const token = req.cookies.get("token")?.value;
-    console.log("TOKEN:", token ? "YES" : "NO");
-    const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`,
-        {
-            headers: {
-                Cookie: `token=${token}`
-            }
-        }
-    );
-    const data = await res.json();
+    const { pathname } = req.nextUrl;
 
-    const hasActiveSubscription = data.user?.hasActiveSubscription
-    const role = data.user?.role
+    const publicRoutes = ["/", "/login", "/register"];
 
-
-
-    if (url.pathname === '/subscription' && !sessionCookie) {
-
-        url.pathname = '/login'
-        return NextResponse.redirect(url);
+    if (token && publicRoutes.includes(pathname)) {
+        return NextResponse.redirect(new URL("/home", req.url));
     }
 
-    if (url.pathname === '/' && sessionCookie || url.pathname === "/login" && sessionCookie || url.pathname === "/register" && sessionCookie) {
-
-        url.pathname = '/home';
-        return NextResponse.redirect(url);
-    }
-    if (url.pathname === '/home' && !sessionCookie) {
-
-        url.pathname = '/login'
-        return NextResponse.redirect(url);
-    }
-
-    if (url.pathname.startsWith('/movies') && !sessionCookie) {
-        url.pathname = '/login';
-        return NextResponse.redirect(url);
+    if (
+        !token &&
+        (
+            pathname === "/home" ||
+            pathname === "/account" ||
+            pathname === "/subscription" ||
+            pathname.startsWith("/movies") ||
+            pathname.startsWith("/admin")
+        )
+    ) {
+        return NextResponse.redirect(new URL("/login", req.url));
     }
 
-    if (url.pathname === '/account' && !sessionCookie) {
-
-        url.pathname = '/login'
-        return NextResponse.redirect(url);
-    }
-
-    if (url.pathname.startsWith("/admin") && !sessionCookie) {
-
-        url.pathname = '/login'
-        return NextResponse.redirect(url);
-    }
-    if (url.pathname.startsWith("/admin") && role === "user") {
-
-        url.pathname = '/'
-        return NextResponse.redirect(url);
-    }
-
-    if (url.pathname.startsWith('/movies') && !hasActiveSubscription) {
-        url.pathname = '/subscription';
-        return NextResponse.redirect(url);
-    }
     return NextResponse.next();
 }
-
-export const config = {
-    matcher: ['/', '/login', '/register', '/subscription', '/home', '/account', '/movies/:path*', '/admin'],
-
-};
-
-
-// export async function middleware() {
-//     return NextResponse.next();
-// }
