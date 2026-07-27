@@ -336,13 +336,17 @@ app.get('/api/movies', async (req, res) => {
 app.get("/api/movies/top", async (req, res) => {
     console.log("🔥 TOP ROUTE HIT");
 
-
     try {
         const topMovies = await Movie.find({ topWeek: true });
 
         res.json(topMovies);
     } catch (error) {
-        res.status(500).json({ message: "خطا در دریافت فیلم‌های برتر" });
+        console.error("TOP MOVIES ERROR:", error);
+
+        res.status(500).json({
+            message: "خطا در دریافت فیلم‌های برتر",
+            error,
+        });
     }
 });
 //فیلم مورد علاقه اضافه کردن یا حذف کردن
