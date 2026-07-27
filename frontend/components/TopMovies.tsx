@@ -15,7 +15,7 @@ export const TopMovies = async () => {
 
     const data = await res.json();
 
-    console.log("data:", data);
+    console.log(JSON.stringify(data, null, 2));
     console.log("isArray:", Array.isArray(data));
 
 
