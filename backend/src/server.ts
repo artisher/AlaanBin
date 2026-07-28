@@ -43,7 +43,9 @@ console.log(process.env.MONGODB_URI);
 
 mongoose.connect(MONGODB_URI).then(async () => {
     console.log("Connected");
-
+    if (!mongoose.connection.db) {
+        throw new Error("Database connection not established");
+    }
     console.log("DB Name:", mongoose.connection.db.databaseName);
 
     const collections = await mongoose.connection.db
