@@ -1,39 +1,52 @@
-
 import { ShowTopMovie } from "./ShowTopMovie";
 
-
 export const TopMovies = async () => {
+    try {
+        const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/movies/top`,
+            {
+                cache: "no-store",
+            }
+        );
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/movies/top`, {
+        if (!res.ok) {
+            return (
+                <div className="py-16 text-center text-gray-400">
+                    فیلمی برای نمایش وجود ندارد.
+                </div>
+            );
+        }
 
-        cache: "no-store"
-    })
+        const data = await res.json();
 
+        if (!Array.isArray(data) || data.length === 0) {
+            return (
+                <div className="py-16 text-center text-gray-400">
+                    فیلمی برای نمایش وجود ندارد.
+                </div>
+            );
+        }
 
-    console.log("status:", res.status);
-    console.log("ok:", res.ok);
+        return (
+            <div className="border-y border-white/10 py-16">
+                <div className="text-center mb-10">
+                    <h2 className="mt-3 text-4xl font-bold text-white">
+                        محبوب‌ترین‌های این هفته
+                    </h2>
 
-    const data = await res.json();
+                    <div className="w-24 h-1 bg-[#14c78b] rounded-full mx-auto mt-4" />
+                </div>
 
-    console.log(JSON.stringify(data, null, 2));
-    console.log("isArray:", Array.isArray(data));
-
-
-    return (
-        <div className="border-y border-white/10 py-16">
-            <div className="text-center mb-10">
-
-
-
-                <h2 className="mt-3 text-4xl font-bold text-white">
-                    محبوب‌ترین‌های این هفته
-                </h2>
-
-                <div className="w-24 h-1 bg-[#14c78b] rounded-full mx-auto mt-4" />
-
+                <ShowTopMovie movies={data} />
             </div>
-            <ShowTopMovie movies={data} />
+        );
+    } catch (error) {
+        console.error("TopMovies Error:", error);
 
-        </div>
-    )
-}
+        return (
+            <div className="py-16 text-center text-gray-400">
+                فیلمی برای نمایش وجود ندارد.
+            </div>
+        );
+    }
+};
