@@ -41,26 +41,20 @@ if (!MONGODB_URI) {
 
 console.log(process.env.MONGODB_URI);
 
-mongoose.connect(MONGODB_URI).then(async () => {
-    console.log("Connected");
-    if (!mongoose.connection.db) {
-        throw new Error("Database connection not established");
-    }
-    console.log("DB Name:", mongoose.connection.db.databaseName);
+mongoose.connect(MONGODB_URI)
+    .then(async () => {
+        console.log("✅ Mongo connected");
 
-    const collections = await mongoose.connection.db
-        .listCollections()
-        .toArray();
+        if (!mongoose.connection.db) {
+            throw new Error("DB undefined");
+        }
 
-    console.log(
-        collections.map((c) => c.name)
-    );
-
-    console.log(
-        "Movies:",
-        await Movie.countDocuments()
-    );
-});
+        console.log("DB Name:", mongoose.connection.db.databaseName);
+    })
+    .catch((err) => {
+        console.error("❌ Mongo connection failed:");
+        console.error(err);
+    });
 // --- API مربوط به یوزرها ---
 //admin API
 // 1. دریافت همه یوزرها
