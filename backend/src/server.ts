@@ -39,10 +39,26 @@ if (!MONGODB_URI) {
     throw new Error("MONGODB_URI is missing");
 }
 
+console.log(process.env.MONGODB_URI);
 
-mongoose.connect(MONGODB_URI)
-    .then(() => console.log('✅ دیتابیس وصل شد!'))
-    .catch((err: any) => console.error('❌ خطای اتصال:', err));
+mongoose.connect(MONGODB_URI).then(async () => {
+    console.log("Connected");
+
+    console.log("DB Name:", mongoose.connection.db.databaseName);
+
+    const collections = await mongoose.connection.db
+        .listCollections()
+        .toArray();
+
+    console.log(
+        collections.map((c) => c.name)
+    );
+
+    console.log(
+        "Movies:",
+        await Movie.countDocuments()
+    );
+});
 // --- API مربوط به یوزرها ---
 //admin API
 // 1. دریافت همه یوزرها
