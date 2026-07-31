@@ -3,6 +3,7 @@ import { useState } from "react";
 import { EditMovieModal } from "./EditMovieModal";
 import { CreateMovieModal } from "./CreateMovieModal";
 import type { Movie } from "@/types/movies";
+import toast from "react-hot-toast";
 
 interface ManageMovieProps {
     moviesList: Movie[];
@@ -22,17 +23,17 @@ export const MangeFilms = ({ moviesList }: ManageMovieProps) => {
     };
     const handleSaveEdit = (updatedMovie: Movie) => {
         setMovies(movies.map(movie => (movie._id === updatedMovie._id ? updatedMovie : movie)));
-        alert('تغییرات کاربر با موفقیت ذخیره شد (فقط در نمایش محلی).');
+        toast.success("Successfully Edited.");
         setEditingMovie(null);
     };
 
 
     const handleEdit = (id: string) => {
-        
+
         const movieToEdit = movies.find(m => m._id === id);
 
         if (movieToEdit) {
-            
+
             setEditingMovie(movieToEdit);
         } else {
             console.error('فیلم با این ID پیدا نشد!');
@@ -50,12 +51,13 @@ export const MangeFilms = ({ moviesList }: ManageMovieProps) => {
                     if (res.ok) {
                         setMovies(prev => prev.filter(movie => movie._id !== id));
                     } else {
-                        alert('خطا در حذف فیلم');
+
+                        toast.error("An error occurred while deleting the Film.");
                     }
                 })
                 .catch(err => {
                     console.error('Error:', err);
-                    alert('مشکلی پیش آمد.');
+                    toast.error("An error occurred. Check the console.");
                 });
         }
     };

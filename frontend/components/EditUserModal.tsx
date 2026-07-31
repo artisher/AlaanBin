@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import type { User } from "@/types/user";
+import toast from 'react-hot-toast';
 // ۱. اینترفیس‌ها (همون‌هایی که داشتی)
 
 
@@ -87,7 +88,8 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, user, onClose, on
 
     const handleSave = async () => {
         if (!editedUser) {
-            alert('خطا: اطلاعات کاربر یافت نشد.');
+            toast.error("Couldn't find the user.");
+
             return;
         }
 
@@ -103,7 +105,8 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, user, onClose, on
             onClose();
 
         } catch (error: any) {
-            alert('متاسفانه خطایی رخ داد: ' + (error.message || 'خطای نامشخص'));
+            toast.error("An error occurred. Check the console .");
+          
             console.error(error);
         }
     };

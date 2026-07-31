@@ -21,18 +21,35 @@ export function MovieCard({
             onClick={onClick}
             className="
             
-                group
-                relative
-                h-95
-                w-48
-                overflow-hidden
-                rounded-xl
-                cursor-pointer
-                shadow-lg
-                transition-all
-                duration-300
-                hover:scale-105
-                hover:shadow-[0_0_30px_rgba(20,199,139,0.25)]
+               group
+    relative
+
+    w-36
+    h-92
+
+    sm:w-40
+    sm:h-[25rem]
+
+    md:w-44
+    md:h-[27rem]
+
+    lg:w-48
+    lg:h-[29rem]
+
+    xl:w-52
+    xl:h-[31rem]
+
+    2xl:w-56
+    2xl:h-[33rem]
+
+    overflow-hidden
+    rounded-xl
+    cursor-pointer
+    shadow-lg
+    transition-all
+    duration-300
+    hover:scale-105
+    hover:shadow-[0_0_30px_rgba(20,199,139,0.25)]
             "
         >
             {/* Poster */}

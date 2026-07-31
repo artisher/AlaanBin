@@ -129,7 +129,7 @@ export const ShowMovies = () => {
                     <div className="flex flex-wrap items-center gap-4">
 
                         {/* Search */}
-                        <div className="relative flex-1 min-w-[320px]">
+                        <div className="relative flex-1 min-w-55">
 
                             <input
                                 type="text"
@@ -407,7 +407,8 @@ export const ShowMovies = () => {
 
                     ) : (
 
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
+                        <div className="   grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-26
+        justify-items-center">
                             {movies.map((movie: Movie) => (
 
                                 <MovieCard

@@ -40,12 +40,18 @@ select option {
 
     animation: shimmer 1.5s infinite;
 }
+
 ::selection {
-  background: #14c78b;
-  color: #ffffff;
+    background: #14c78b;
+    color: #ffffff;
 }
 
 ::-moz-selection {
-  background: #14c78b;
-  color: #ffffff;
+    background: #14c78b;
+    color: #ffffff;
+}
+
+html,
+body {
+    overflow-x: hidden;
 }

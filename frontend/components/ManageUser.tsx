@@ -6,6 +6,7 @@ import CreateUserModal from './CreateUserModal';
 
 
 import type { User } from "@/types/user";
+import toast from 'react-hot-toast';
 
 
 interface ManageUserProps {
@@ -28,23 +29,25 @@ export const ManageUser = ({ userList }: ManageUserProps) => {
                     if (res.ok) {
                         setUsers(prev => prev.filter(user => user._id !== id));
                     } else {
-                        alert('خطا در حذف کاربر');
+                        toast.error("An error occurred while deleting the user.");
+
                     }
                 })
                 .catch(err => {
+                    toast.error("An error occurred. Check the console.");
                     console.error('Error:', err);
-                    alert('مشکلی پیش آمد.');
+
                 });
         }
     };
 
     // تابعی که وقتی دکمه ویرایش کلیک میشه اجرا میشه
     const handleEdit = (id: string) => {
-        
+
         const userToEdit = users.find(u => u._id === id);
-        
+
         if (userToEdit) {
-           
+
             setEditingUser(userToEdit);
         } else {
             console.error('کاربر با این ID پیدا نشد!');
@@ -56,7 +59,7 @@ export const ManageUser = ({ userList }: ManageUserProps) => {
     const handleSaveEdit = (updatedUser: User) => {
 
         setUsers(users.map(user => (user._id === updatedUser._id ? updatedUser : user)));
-        alert('تغییرات کاربر با موفقیت ذخیره شد (فقط در نمایش محلی).');
+        toast.success("Successfully Edited.");
         setEditingUser(null);
     };
 
@@ -66,7 +69,7 @@ export const ManageUser = ({ userList }: ManageUserProps) => {
     const handleCloseUserModal = () => {
         setAddUser(null);
     };
-   
+
     return (
         <div>
             <div className="space-y-4 p-6">

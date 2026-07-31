@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 export const LoginComponent = () => {
 
     const router = useRouter();
@@ -26,10 +27,12 @@ export const LoginComponent = () => {
         const data = await res.json();
 
         if (!res.ok) {
-            alert(data.message);
+            toast.error("An error occurred. Check the console");
+            console.log(data.message);;
+
             return;
         }
-
+        toast.success("  successfully Logged in. ");
         router.refresh();
         router.push("/");
 

@@ -2,6 +2,7 @@
 import { UserPlus } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 export const RegisterComponent = () => {
     const router = useRouter();
     const [fullName, setFullName] = useState("");
@@ -36,15 +37,18 @@ export const RegisterComponent = () => {
             const data = await res.json();
 
             if (!res.ok) {
-                alert(data.message)
+                toast.error("An error occurred. Check the console.");
+                console.log(data.message);
+
 
             } else {
-                alert("ثبت نام انجام شد , وارد شوید")
+                toast.success("Account created successfully. Now you can log in.");
                 router.push("/home");
             }
 
 
         } catch (err) {
+            toast.error("Something went wrong. Check the console for more information.");
             console.error(err);
         }
     };

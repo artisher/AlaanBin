@@ -2,6 +2,7 @@ import { Menu } from "@/components/Menu";
 import "./globals.css";
 import { Footer } from "@/components/Footer";
 import { vazirmatn, outfit } from "./fonts";
+import { Toaster } from "react-hot-toast";
 
 
 export default function RootLayout({
@@ -17,7 +18,11 @@ export default function RootLayout({
         <Menu />
         {children}
         <Footer />
-
+        
+        <Toaster
+          position="top-center"
+          reverseOrder={false}
+        />
 
       </body>
     </html>

@@ -1,5 +1,6 @@
 import type { Movie } from "@/types/movies";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 interface EditMovieModalProps {
     isOpen: boolean;
@@ -18,7 +19,7 @@ const updateMovieOnServer = async (movieId: string, movieData: Movie) => {
             },
             body: JSON.stringify(movieData)
         })
-       
+
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || "خطا در بروزرسانی اطلاعات ")
@@ -49,7 +50,8 @@ export const EditMovieModal: React.FC<EditMovieModalProps> = ({ isOpen, movie, o
     };
     const handleSave = async () => {
         if (!editedMovie) {
-            alert("اطلاعات فیلم یافت نشد");
+            toast.error("Couldn't find the film.");
+
             return;
         }
 
@@ -59,11 +61,13 @@ export const EditMovieModal: React.FC<EditMovieModalProps> = ({ isOpen, movie, o
                 editedMovie
             );
 
-           
+
             onSave(updatedData);
             onClose();
         } catch (error: any) {
-            alert(error.message || "خطای ناشناخته");
+            toast.error("An error occurred. Check the console.");
+            console.log(error.message || "خطای ناشناخته");
+        
         }
     };
     if (!isOpen || !editedMovie) return null

@@ -3,6 +3,7 @@ import type { Movie } from "@/types/movies";
 import { zodResolver } from '@hookform/resolvers/zod';
 import React from 'react';
 import { useForm } from 'react-hook-form';
+import toast from "react-hot-toast";
 import * as z from 'zod';
 export const addedMovie = z.object({
     title: z.string(),
@@ -36,7 +37,7 @@ export const CreateMovieModal: React.FC<EditMovieModalProps> = ({ isOpen, movie,
     });
 
     const onSubmit = async (data: z.output<typeof addedMovie>) => {
-       
+
 
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/admin/movies`, {
@@ -49,16 +50,18 @@ export const CreateMovieModal: React.FC<EditMovieModalProps> = ({ isOpen, movie,
             });
 
             const result = await response.json();
-        
+
             if (response.ok) {
-                alert(result.message || 'فیلم با موفقیت اضافه شد');
+                toast.success("Successfully created.");
                 onClose();
             } else {
-                alert(result.message || 'خطا در افزودن فیلم');
+                toast.error("Something went wrong. Check the console for more information.");
+                console.log(result.message || 'خطا در افزودن فیلم');
+
             }
         } catch (error) {
             console.error('خطا در ارسال:', error);
-            alert('خطای شبکه، لطفاً دوباره تلاش کنید');
+            toast.error("Something went wrong. Check the console for more information.");
         }
     };
 

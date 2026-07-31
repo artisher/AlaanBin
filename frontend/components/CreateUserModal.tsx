@@ -5,6 +5,7 @@ import * as z from 'zod';
 import React, { useState } from 'react';
 
 import type { User } from "@/types/user";
+import toast from 'react-hot-toast';
 
 interface EditUserModalProps {
     isOpen: boolean;
@@ -34,7 +35,7 @@ const CreateUserModal: React.FC<EditUserModalProps> = ({ isOpen, user, onClose }
     });
 
     const onSubmit = async (data: AddedUser) => {
-       
+
 
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`, {
@@ -49,14 +50,19 @@ const CreateUserModal: React.FC<EditUserModalProps> = ({ isOpen, user, onClose }
             const result = await response.json();
 
             if (response.ok) {
-                alert(result.message || 'کاربر با موفقیت اضافه شد');
-                onClose(); // بستن مودال بعد از موفقیت
+                toast.success("Successfully created.");
+
+                onClose();
             } else {
-                alert(result.message || 'خطا در افزودن کاربر');
+                toast.error("Something went wrong. Please try again.");
+
+                console.log(result.message || 'خطا در افزودن کاربر');
+
             }
         } catch (error) {
-            console.error('خطا در ارسال:', error);
-            alert('خطای شبکه، لطفاً دوباره تلاش کنید');
+            toast.error("Something went wrong. Please try again.");
+
+            console.log(error);
         }
     };
 
