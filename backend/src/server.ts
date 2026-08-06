@@ -549,11 +549,17 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 //لاگ اوت 
-app.post('/api/auth/logout', (req, res) => {
-    res.clearCookie("token");
+app.post("/api/auth/logout", (req, res) => {
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        domain: ".alanbin.com",
+        path: "/",
+    });
 
     res.json({
-        message: "خروج موفق"
+        message: "خروج موفق",
     });
 });
 //دیتای منو و اکانت 
