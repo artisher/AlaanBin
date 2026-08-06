@@ -528,8 +528,9 @@ app.post('/api/auth/login', async (req, res) => {
         res.cookie("token", token, {
             httpOnly: true,
             maxAge: 1000 * 60 * 60 * 24 * 30,
-            sameSite: "lax", // یا "none" اگر https داری
-            secure: false, // در prod باید true بشه
+            sameSite: "lax",
+            secure: true,
+            domain: ".alanbin.com",
         });
         res.json({
             message: "ورود موفق",
