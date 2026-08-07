@@ -1,5 +1,5 @@
 // // middleware.ts
-
+import { jwtVerify } from "jose";
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -8,20 +8,16 @@ export async function middleware(req: NextRequest) {
     const url = req.nextUrl.clone();
 
 
-    const token = req.cookies.get("token")?.value;
-    const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`,
-        {
-            headers: {
-                Cookie: `token=${token}`
-            }
-        }
-    );
-    const data = await res.json();
 
-    const hasActiveSubscription = data.user?.hasActiveSubscription
-    const role = data.user?.role
+    // if (url.pathname.startsWith("/admin") && role === "user") {
 
+    //     url.pathname = '/'
+    //     return NextResponse.redirect(url);
+    // }
+     // if (url.pathname.startsWith('/movies') && !hasActiveSubscription) {
+    //     url.pathname = '/subscription';
+    //     return NextResponse.redirect(url);
+    // }
     if (url.pathname === '/subscription' && !sessionCookie) {
 
         url.pathname = '/login'
@@ -55,16 +51,9 @@ export async function middleware(req: NextRequest) {
         url.pathname = '/login'
         return NextResponse.redirect(url);
     }
-    if (url.pathname.startsWith("/admin") && role === "user") {
 
-        url.pathname = '/'
-        return NextResponse.redirect(url);
-    }
 
-    if (url.pathname.startsWith('/movies') && !hasActiveSubscription) {
-        url.pathname = '/subscription';
-        return NextResponse.redirect(url);
-    }
+   
     return NextResponse.next();
 }
 

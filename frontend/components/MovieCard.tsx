@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Play, X } from "lucide-react";
+import { Play, Star, X } from "lucide-react";
 import type { Movie } from "@/types/movies";
 
 type MovieCardProps = {
@@ -17,159 +17,264 @@ export function MovieCard({
     favoriteHandler,
 }: MovieCardProps) {
     return (
+
         <div
             onClick={onClick}
             className="
-            
-               group
-    relative
+            group
+            relative
 
-    w-36
-    h-92
+            w-[155px]
+            h-[250px]
 
-    sm:w-40
-    sm:h-[25rem]
+            sm:w-[170px]
+            sm:h-[275px]
 
-    md:w-44
-    md:h-[27rem]
+            md:w-[185px]
+            md:h-[300px]
 
-    lg:w-48
-    lg:h-[29rem]
+            lg:w-[205px]
+            lg:h-[330px]
 
-    xl:w-52
-    xl:h-[31rem]
+            xl:w-[215px]
+            xl:h-[345px]
 
-    2xl:w-56
-    2xl:h-[33rem]
+            overflow-hidden
+            rounded-2xl
+            bg-[#191d24]
+            border
+            border-white/10
+            cursor-pointer
 
-    overflow-hidden
-    rounded-xl
-    cursor-pointer
-    shadow-lg
-    transition-all
-    duration-300
-    hover:scale-105
-    hover:shadow-[0_0_30px_rgba(20,199,139,0.25)]
+            transition-all
+            duration-500
+
+            hover:-translate-y-2
+            hover:border-[#14c78b]
+            hover:shadow-[0_0_35px_rgba(20,199,139,.18)]
             "
         >
+
             {/* Poster */}
+
             <Image
                 src={movie.poster}
                 alt={movie.title}
                 fill
+                sizes="(max-width:768px) 155px, 215px"
                 className="
-                    object-cover
-                    transition-transform
-                    duration-500
-                    group-hover:scale-110
+                object-cover
+                transition-transform
+                duration-700
+                group-hover:scale-110
                 "
             />
 
-            {/* Overlay */}
+            {/* Dark Overlay */}
+
             <div
                 className="
-                
-                    absolute
-                    inset-0
+                absolute
+                inset-0
+                bg-black/10
+                group-hover:bg-black/35
+                transition-all
+                duration-500
+                "
+            />
+
+            {/* Rating */}
+
+            <div
+                className="
+                absolute
+                top-3
+                right-3
+
+                flex
+                items-center
+                gap-1
+
+                rounded-full
+
+                bg-[#07130f]/90
+                backdrop-blur-xl
+
+                border
+                border-[#14c78b]/25
+
+                px-3
+                py-1
+                "
+            >
+
+                <span
+                    className="
+                    text-[#14c78b]
+                    font-bold
+                    text-sm
+                    "
+                >
+                    {movie.rating}
+                </span>
+
+                <Star
+                    size={14}
+                    fill="#14c78b"
+                    className="text-[#14c78b]"
+                />
+
+            </div>
+
+            {/* Play Button */}
+
+            <div
+                className="
+                absolute
+                inset-0
+
+                flex
+                items-center
+                justify-center
+
+                opacity-0
+                group-hover:opacity-100
+
+                transition-all
+                duration-500
+                "
+            >
+
+                <div
+                    className="
+                    w-16
+                    h-16
+
+                    rounded-full
+
+                    bg-[#14c78b]
+
                     flex
                     items-center
                     justify-center
-                    bg-black/0
+
+                    shadow-[0_0_30px_rgba(20,199,139,.45)]
+
+                    scale-75
+                    group-hover:scale-100
+
                     transition-all
-                    duration-300
-                    group-hover:bg-black/50
-                "
-            >
-                <button
-                    className="
-                        opacity-0
-                        group-hover:opacity-100
-                        translate-y-5
-                        group-hover:translate-y-0
-                        transition-all
-                        duration-300
-                        bg-[#14c78b]
-                        hover:bg-[#10b37c]
-                        text-black
-                        font-semibold
-                        px-5
-                        py-2
-                        rounded-lg
-                        flex
-                        items-center
-                        gap-2
-                        shadow-lg
-                        cursor-pointer
+                    duration-500
                     "
                 >
-                    <Play size={18} color='white' fill='white' />
-                    Watch
-                </button>
-            </div>
 
-            {/* Rating */}
-            <div
-                className="
-                    absolute
-                    top-3
-                    right-3
-                    bg-black/70
-                    backdrop-blur-md
-                    px-3
-                    py-1
-                    rounded-full
-                    text-[#14c78b]
-                    text-sm
-                    font-semibold
-                "
-            >
-                ⭐ {movie.rating}
-            </div>
+                    <Play
+                        size={26}
+                        fill="white"
+                        className="border-white ml-1"
+                    />
 
+                </div>
+
+            </div>
             {/* Bottom */}
+
             <div
                 className="
-                    absolute
-                    bottom-0
-                    left-0
-                    right-0
-                    p-4
-                    bg-gradient-to-t
-                    from-black
-                    via-black/80
-                    to-transparent
+                absolute
+                bottom-0
+                left-0
+                right-0
+
+                p-4
+
+                bg-gradient-to-t
+                from-[#05070a]
+                via-[#05070ad9]
+                to-transparent
                 "
             >
-                <h2 className="text-white font-bold truncate">
+
+                {/* Title */}
+
+                <h2
+                    className="
+                    text-white
+                    font-bold
+
+                    text-sm
+                    sm:text-base
+
+                    line-clamp-1
+                    "
+                >
                     {movie.title}
                 </h2>
 
-                <div className="flex justify-between items-center mt-2">
-                    <span className="text-gray-300 text-sm">
-                        {movie.year}
-                    </span>
+                {/* Year */}
 
-                    <div className="flex gap-1">
-                        {movie.genre.slice(0, 2).map((genre, index) => (
+                <p
+                    className="
+                    mt-1
+                    text-xs
+                    text-gray-400
+                    "
+                >
+                    {movie.year}
+                </p>
+
+                {/* Genres */}
+
+                <div
+                    className="
+                    mt-3
+
+                    flex
+                    flex-wrap
+
+                    gap-2
+                    "
+                >
+
+                    {movie.genre
+                        .slice(0, 2)
+                        .map((genre, index) => (
+
                             <span
                                 key={index}
+
                                 className="
-                                    bg-[#14c78b]/20
-                                    border
-                                    border-[#14c78b]/40
-                                    text-[#14c78b]
-                                    text-[10px]
-                                    px-2
-                                    py-1
-                                    rounded-full
+                                rounded-full
+
+                                border
+                                border-[#14c78b]/30
+
+                                bg-[#14c78b]/10
+
+                                px-2.5
+                                py-1
+
+                                text-[10px]
+                                font-medium
+
+                                text-[#14c78b]
+
+                                whitespace-nowrap
                                 "
                             >
+
                                 {genre}
+
                             </span>
+
                         ))}
-                    </div>
+
                 </div>
+
             </div>
+
         </div>
+
     );
-};
+
+}

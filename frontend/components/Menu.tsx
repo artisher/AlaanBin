@@ -1,28 +1,15 @@
+"use client";
 import { BuySub } from "./BuySub";
 import { HamburgerMenu } from "./HamburgerMenu";
 import { Logo } from "./Logo";
-import { cookies } from "next/headers";
+import { useAuth } from "@/app/providers/AuthProvider";
 
 
-export const Menu = async () => {
-    const cookieStore = await cookies();
+export const Menu = () => {
+    const { user, loading } = useAuth();
 
-    const token = cookieStore.get("token")?.value;
-
-    const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`,
-        {
-            headers: {
-                Cookie: `token=${token}`,
-            },
-        }
-    );
-    const data = await res.json();
-
-
-    const hasActiveSubscription = data.user?.hasActiveSubscription
-    const isLoggedIn = data.isAuthenticated
-
+    const hasActiveSubscription = user?.hasActiveSubscription;
+    const isLoggedIn = !!user;
     return (
         <div className="
 sticky
