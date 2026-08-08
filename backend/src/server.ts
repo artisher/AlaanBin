@@ -14,7 +14,7 @@ import dotenv from "dotenv";
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
-
+const isProduction = process.env.APP_ENV === "production";
 // تنظیمات امنیتی و پارس کردن داده‌ها
 app.use(
     cors({
@@ -529,8 +529,10 @@ app.post('/api/auth/login', async (req, res) => {
             httpOnly: true,
             maxAge: 1000 * 60 * 60 * 24 * 30,
             sameSite: "lax",
-            secure: true,
-            domain: ".alanbin.com",
+            secure: isProduction,
+            ...(isProduction && {
+                domain: ".alanbin.com",
+            }),
         });
         res.json({
             message: "ورود موفق",
@@ -552,9 +554,12 @@ app.post('/api/auth/login', async (req, res) => {
 app.post("/api/auth/logout", (req, res) => {
     res.clearCookie("token", {
         httpOnly: true,
-        secure: false,
+
         sameSite: "lax",
-        // domain: ".alanbin.com",
+        secure: isProduction,
+        ...(isProduction && {
+            domain: ".alanbin.com",
+        }),
         path: "/",
     });
 
