@@ -449,11 +449,8 @@ export const ShowMovies = () => {
             {/* pagination */}
             <div className="mt-20 flex justify-center items-center gap-3 mb-5">
                 <button
-
-                    disabled={currentPage === totalPages}
-
+                    disabled={currentPage >= totalPages}
                     onClick={() => setCurrentPage(prev => prev + 1)}
-
                     className="
         h-11
         px-5
@@ -464,12 +461,9 @@ export const ShowMovies = () => {
         hover:border-[#14c78b]
         transition
         disabled:opacity-40
-        "
-
+    "
                 >
-
                     بعدی
-
                 </button>
 
                 <div
