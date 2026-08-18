@@ -6,7 +6,7 @@ export const Cta = () => {
         <section className="relative overflow-hidden border-y border-white/10">
 
             {/* Background */}
-            {/* <div className="absolute inset-0 bg-[url('/Images/CtaImg.png')] bg-cover bg-center opacity-25" /> */}
+            <div className="absolute inset-0 bg-[url('/Images/CtaImg.png')] bg-cover bg-center opacity-25" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#0B0F14]/95 via-[#0B0F14]/80 to-[#0B0F14]/95" />
 
             {/* Glow */}

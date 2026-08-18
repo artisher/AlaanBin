@@ -10,15 +10,13 @@ export default function Home() {
   return (
     <div className="overflow-x-hidden">
       <HeroSection />
-      {/* <Suspense fallback={<TopMovieSkeleton />}>
+      <Suspense fallback={<TopMovieSkeleton />}>
         <TopMovies />
-      </Suspense> */}
+      </Suspense>
       <WhyAlanbin />
       <Step />
       <Cta />
-      <div className="test-var">
-        TEST VAR
-      </div>
+     
     </div>
   );
 }
