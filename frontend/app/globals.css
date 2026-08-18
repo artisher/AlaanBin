@@ -57,8 +57,15 @@ body {
 }
 
 .test-tv {
-  background-color: red;
-  color: white;
-  font-size: 60px;
-  padding: 40px;
+    background-color: red;
+    color: white;
+    font-size: 60px;
+    padding: 40px;
+}
+
+.test-tv-var {
+    background-color: var(--color-red-500);
+    color: white;
+    font-size: 60px;
+    padding: 40px;
 }

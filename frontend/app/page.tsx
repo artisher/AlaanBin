@@ -30,6 +30,9 @@ export default function Home() {
       <div className="test-tv">
         TEST CSS
       </div>
+      <div className="test-tv-var">
+        TEST VAR
+      </div>
     </div>
   );
 }
