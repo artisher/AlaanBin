@@ -1,23 +1,29 @@
 "use client";
 import { ManageUser } from '@/components/ManageUser';
 import { MangeFilms } from '@/components/MangeFilms';
-import { MangePayment } from '@/components/MangePayment';
+import { ManageRequests } from '@/components/ManageRequests';
 import { useState } from 'react';
 import type { User } from "@/types/user";
-import type { Movie} from "@/types/movies";
+import type { Movie } from "@/types/movies";
+import type { UserRequest } from "@/types/request";
 
-export const AdminMainComponent = ({ moviesList = [], userList = [] }:
-    {
-        moviesList?: Movie[], userList?: User[]
-    }) => {
+export const AdminMainComponent = ({
+    moviesList = [],
+    userList = [],
+    requestsList = []
+}: {
+    moviesList?: Movie[];
+    userList?: User[];
+    requestsList?: UserRequest[];
+}) => {
 
-    const [activeTab, setActiveTab] = useState<'users' | 'movies' | 'payments'>('users');
+    const [activeTab, setActiveTab] = useState<'users' | 'movies' | 'requests'>('users');
     const tabs = [
         { id: 'movies', label: 'فیلم‌ها' },
         { id: 'users', label: 'کاربران' },
-        { id: 'payments', label: 'پرداخت‌ها' },
+        { id: 'requests', label: 'درخواست‌ها' },
     ];
-    
+
 
     return (
         <div>
@@ -67,7 +73,9 @@ export const AdminMainComponent = ({ moviesList = [], userList = [] }:
                     <div className="animate-fade-in">
                         {activeTab === 'movies' && <MangeFilms moviesList={moviesList} />}
                         {activeTab === 'users' && <ManageUser userList={userList} />}
-                        {activeTab === 'payments' && <MangePayment />}
+                        {activeTab === 'requests' && (
+                            <ManageRequests requestsList={requestsList} />
+                        )}
                     </div>
                 </main>
             </div>

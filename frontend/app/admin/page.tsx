@@ -21,7 +21,21 @@ export default async function AdminDashboard() {
     const moviesList = await resMovie.json();
 
 
+    const resRequests = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/requests`,
+        {
+            cache: "no-store",
+            headers: {
+                Cookie: cookieStore.toString(),
+            },
+        }
+    );
 
+    if (!resRequests.ok) {
+        throw new Error(`خطا در دریافت درخواست‌ها: ${resRequests.status}`);
+    }
+
+    const requestsList = await resRequests.json();
 
     const resUser = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`, {
         cache: "no-store",
@@ -35,12 +49,14 @@ export default async function AdminDashboard() {
     }
 
     const userList = await resUser.json();
-    
+
     return (
         <div>
             <AdminMainComponent
                 moviesList={moviesList.movies}
-                userList={userList} />
+                userList={userList}
+                requestsList={requestsList.requests}
+            />
         </div>
     );
 
