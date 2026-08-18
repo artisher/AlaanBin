@@ -10,6 +10,7 @@ import path from "path";
 import checkSubscription from './middleware/auth.middleware';
 import { adminMiddleware } from './middleware/admin';
 import dotenv from "dotenv";
+import { Request } from './models/Request';
 
 dotenv.config();
 const app = express();
@@ -323,7 +324,7 @@ app.get('/api/movies', async (req, res) => {
         const limit = Number(req.query.limit) || 20;
 
         const totalMovies = await Movie.countDocuments(query);
-
+        const totalPages = Math.max(1, Math.ceil(totalMovies / limit));
         const movies = await Movie.find(query)
             .sort(sort)
             .skip((page - 1) * limit)
@@ -332,7 +333,7 @@ app.get('/api/movies', async (req, res) => {
         res.json({
             movies,
             currentPage: page,
-            totalPages: Math.ceil(totalMovies / limit),
+            totalPages,
             totalMovies
         });
 
@@ -623,7 +624,94 @@ app.get("/api/auth/me", async (req, res) => {
         });
     }
 });
+// ثبت درخواست‌های کاربر
+app.post("/api/requests", async (req, res) => {
+    try {
+        const token = req.cookies.token;
 
+        if (!token) {
+            return res.status(401).json({
+                message: "برای ارسال درخواست باید وارد حساب شوید"
+            });
+        }
+
+        const decoded = jwt.verify(
+            token,
+            process.env.JWT_SECRET!
+        ) as {
+            id: string;
+            role: string;
+        };
+
+        const user = await User.findById(decoded.id);
+
+        if (!user) {
+            return res.status(404).json({
+                message: "کاربر پیدا نشد"
+            });
+        }
+
+        const {
+            type,
+            subject,
+            message,
+            movieTitle,
+            page
+        } = req.body;
+
+        // بررسی نوع درخواست
+        if (!["bug", "film", "contact"].includes(type)) {
+            return res.status(400).json({
+                message: "نوع درخواست نامعتبر است"
+            });
+        }
+
+        // پیام برای همه فرم‌ها اجباری است
+        if (!message?.trim()) {
+            return res.status(400).json({
+                message: "متن پیام الزامی است"
+            });
+        }
+
+        // درخواست فیلم باید عنوان فیلم داشته باشد
+        if (type === "film" && !movieTitle?.trim()) {
+            return res.status(400).json({
+                message: "نام فیلم الزامی است"
+            });
+        }
+
+        const newRequest = new Request({
+            type,
+            user: user._id,
+
+            // اطلاعات کاربر از دیتابیس گرفته می‌شود
+            name: user.fullName,
+            email: user.email,
+
+            subject: subject || "",
+            message: message.trim(),
+            movieTitle: movieTitle || "",
+            page: page || "",
+
+            status: "pending"
+        });
+
+        const savedRequest = await newRequest.save();
+
+        res.status(201).json({
+            success: true,
+            message: "درخواست با موفقیت ثبت شد",
+            request: savedRequest
+        });
+
+    } catch (err) {
+        console.error("REQUEST ERROR:", err);
+
+        res.status(500).json({
+            message: "خطا در ثبت درخواست"
+        });
+    }
+});
 // movie 
 app.get("/api/movies/:id",
     checkSubscription,
