@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/app/providers/AuthProvider";
 import {
     Home,
     Film,
@@ -19,16 +20,14 @@ export const HamburgerMenu = ({
 }: {
     isLoggedIn: boolean;
 }) => {
+    const { logout } = useAuth();
+
     const logoutHandler = async () => {
+        await logout();
 
-
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
-            method: "POST",
-            credentials: "include",
-        });
-        router.refresh()
-        router.push("/")
-    }
+        setIsOpen(false);
+        router.push("/");
+    };
     const [isOpen, setIsOpen] = useState(false);
 
     const router = useRouter();

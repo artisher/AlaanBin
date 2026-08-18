@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { useAuth } from "@/app/providers/AuthProvider";
 export const LoginComponent = () => {
 
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-
+    const { refreshUser } = useAuth();
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -32,8 +33,10 @@ export const LoginComponent = () => {
 
             return;
         }
-        toast.success("  successfully Logged in. ");
-        router.refresh();
+        toast.success("Successfully Logged in.");
+
+        await refreshUser();
+
         router.push("/");
 
     };
