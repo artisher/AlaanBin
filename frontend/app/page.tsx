@@ -16,21 +16,7 @@ export default function Home() {
       <WhyAlanbin />
       <Step />
       <Cta />
-      <div style={{
-        backgroundColor: "red",
-        color: "white",
-        fontSize: "60px",
-        padding: "40px"
-      }}>
-        TEST TV
-      </div>
-      <div className="bg-red-500 text-white text-6xl p-10">
-        TEST TAILWIND
-      </div>
-      <div className="test-tv">
-        TEST CSS
-      </div>
-      <div className="test-tv-var">
+      <div className="test-var">
         TEST VAR
       </div>
     </div>

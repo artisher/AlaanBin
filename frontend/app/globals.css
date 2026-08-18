@@ -69,3 +69,8 @@ body {
     font-size: 60px;
     padding: 40px;
 }
+
+.test-var {
+    --test-color: red;
+    background-color: var(--test-color);
+}
