@@ -24,6 +24,9 @@ export default function Home() {
       }}>
         TEST TV
       </div>
+      <div className="bg-red-500 text-white text-6xl p-10">
+        TEST TAILWIND
+      </div>
     </div>
   );
 }
