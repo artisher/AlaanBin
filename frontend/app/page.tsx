@@ -16,6 +16,14 @@ export default function Home() {
       <WhyAlanbin />
       <Step />
       <Cta />
+      <div style={{
+        backgroundColor: "red",
+        color: "white",
+        fontSize: "60px",
+        padding: "40px"
+      }}>
+        TEST TV
+      </div>
     </div>
   );
 }
