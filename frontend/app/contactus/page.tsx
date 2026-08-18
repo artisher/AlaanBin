@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
     Mail,
     MessageSquare,
-    User,
     Send,
     CheckCircle2,
     Phone,
@@ -13,29 +12,55 @@ import {
 
 export default function ContactUs() {
 
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
+    const [subject, setSubject] = useState("");
     const [message, setMessage] = useState("");
-    const [status, setStatus] = useState("");
+
+    const [status, setStatus] = useState<
+        "idle" | "loading" | "success" | "error"
+    >("idle");
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        setStatus("loading");
+        try {
+            setStatus("loading");
 
-        await new Promise(resolve => setTimeout(resolve, 1800));
+            const res = await fetch("/api/requests", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    type: "contact",
+                    subject: subject.trim(),
+                    message: message.trim(),
+                }),
+            });
 
-        setStatus("success");
+            const data = await res.json();
 
-        setName("");
-        setEmail("");
-        setMessage("");
+            if (!res.ok) {
+                throw new Error(
+                    data.message || "خطا در ارسال پیام"
+                );
+            }
+
+            setStatus("success");
+
+            setSubject("");
+            setMessage("");
+
+        } catch (error) {
+            console.error(error);
+            setStatus("error");
+        }
     };
 
     return (
 
         <section className="bg-[#0B0F14] min-h-screen py-24">
-
+            
             <div className="max-w-7xl mx-auto px-6">
 
                 {/* Hero */}
@@ -80,88 +105,35 @@ export default function ContactUs() {
                             className="space-y-6"
                         >
 
-                            <div>
-
-                                <label className="block mb-3  text-white placeholder:text-white">
-                                    نام
-                                </label>
-
-                                <div className="relative">
-
-                                    <User
-                                        size={20}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#14c78b]"
-                                    />
-
-                                    <input
-                                        type="text"
-                                        value={name}
-                                        required
-                                        onChange={(e) => setName(e.target.value)}
-                                        placeholder="نام شما"
-
-                                        className="
-                                        w-full
-                                        h-14
-                                        text-white
-                                        rounded-xl
-                                        bg-[#0B0F14]
-                                        border
-                                        border-white/10
-                                        pr-12
-                                        pl-4
-                                        outline-none
-                                        transition
-                                        focus:border-[#14c78b]
-                                        placeholder:text-white
-                                        "
-                                    />
-
-                                </div>
-
-                            </div>
 
                             <div>
-
-                                <label className="block mb-3  text-white">
-                                    ایمیل
+                                <label className="block mb-3 text-gray-300">
+                                    موضوع
                                 </label>
 
-                                <div className="relative">
-
-                                    <Mail
-                                        size={20}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#14c78b]"
-                                    />
-
-                                    <input
-
-                                        type="email"
-                                        required
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        placeholder="example@email.com"
-
-                                        className="
-                                        w-full
-                                        h-14
-                                        rounded-xl
-                                        bg-[#0B0F14]
-                                        border
-                                          placeholder:text-white
-                                        border-white/10
-                                        pr-12
-                                        pl-4
-                                        outline-none
-                                        transition
-                                        text-white
-                                        focus:border-[#14c78b]
-                                        "
-                                    />
-
-                                </div>
-
+                                <input
+                                    type="text"
+                                    required
+                                    value={subject}
+                                    onChange={(e) => setSubject(e.target.value)}
+                                    placeholder="موضوع پیام"
+                                    className="
+            w-full
+            h-14
+            text-white
+            rounded-xl
+            bg-[#0B0F14]
+            border
+            border-white/10
+            px-4
+            outline-none
+            transition
+            focus:border-[#14c78b]
+            placeholder:text-white
+        "
+                                />
                             </div>
+
 
                             <div>
 
@@ -240,7 +212,11 @@ export default function ContactUs() {
                                 </div>
 
                             )}
-
+                            {status === "error" && (
+                                <div className="text-center text-red-400">
+                                    ارسال درخواست با خطا مواجه شد. لطفاً دوباره تلاش کنید.
+                                </div>
+                            )}
                             {status === "success" && (
 
                                 <div

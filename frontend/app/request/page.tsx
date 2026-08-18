@@ -11,16 +11,53 @@ import {
 } from "lucide-react";
 
 export default function Request() {
-    const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
+    const [requestType, setRequestType] = useState("");
+    const [movieTitle, setMovieTitle] = useState("");
+    const [message, setMessage] = useState("");
+    const [status, setStatus] = useState<
+        "idle" | "loading" | "success" | "error"
+    >("idle");
 
     const submitHandler = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        setStatus("loading");
+        if (!requestType || !movieTitle.trim()) {
+            return;
+        }
 
-        await new Promise((r) => setTimeout(r, 1800));
+        try {
+            setStatus("loading");
 
-        setStatus("success");
+            const res = await fetch("/api/requests", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    type: "film",
+                    movieTitle: movieTitle.trim(),
+                    message: message.trim(),
+                    subject: requestType,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.message || "خطا در ثبت درخواست");
+            }
+
+            setStatus("success");
+
+            setRequestType("");
+            setMovieTitle("");
+            setMessage("");
+
+        } catch (error) {
+            console.error(error);
+            setStatus("error");
+        }
     };
 
     return (
@@ -82,6 +119,9 @@ export default function Request() {
                                 />
 
                                 <select
+                                    value={requestType}
+                                    onChange={(e) => setRequestType(e.target.value)}
+                                    required
                                     className="
                                     w-full
                                     h-14
@@ -125,6 +165,9 @@ export default function Request() {
 
                                 <input
                                     type="text"
+                                    value={movieTitle}
+                                    onChange={(e) => setMovieTitle(e.target.value)}
+                                    required
                                     placeholder="مثلاً: The Last of Us"
                                     className="
                                     w-full
@@ -163,6 +206,8 @@ export default function Request() {
 
                                 <textarea
                                     rows={5}
+                                    value={message}
+                                    onChange={(e) => setMessage(e.target.value)}
                                     placeholder="اگر نسخه خاص، دوبله، زیرنویس یا فصل مشخصی مدنظر دارید بنویسید..."
                                     className="
                                     w-full
