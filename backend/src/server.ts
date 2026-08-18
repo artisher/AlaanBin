@@ -624,6 +624,10 @@ app.get("/api/auth/me", async (req, res) => {
         });
     }
 });
+
+
+
+//tiecket
 // ثبت درخواست‌های کاربر
 app.post("/api/requests", async (req, res) => {
     try {
@@ -712,6 +716,30 @@ app.post("/api/requests", async (req, res) => {
         });
     }
 });
+app.get(
+    "/api/admin/requests",
+    checkSubscription,
+    adminMiddleware,
+    async (req, res) => {
+        try {
+            const requests = await Request.find()
+                .populate("user", "fullName email phoneNumber")
+                .sort({ createdAt: -1 });
+
+            res.status(200).json({
+                success: true,
+                requests,
+            });
+        } catch (err) {
+            console.error("ADMIN REQUESTS ERROR:", err);
+
+            res.status(500).json({
+                success: false,
+                message: "خطا در دریافت درخواست‌ها",
+            });
+        }
+    }
+);
 // movie 
 app.get("/api/movies/:id",
     checkSubscription,
