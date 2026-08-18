@@ -10,9 +10,9 @@ export default function Home() {
   return (
     <div className="overflow-x-hidden">
       <HeroSection />
-      <Suspense fallback={<TopMovieSkeleton />}>
+      {/* <Suspense fallback={<TopMovieSkeleton />}>
         <TopMovies />
-      </Suspense>
+      </Suspense> */}
       <WhyAlanbin />
       <Step />
       <Cta />

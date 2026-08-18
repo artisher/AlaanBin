@@ -5,7 +5,7 @@ export const HeroSection = () => {
     <section className="relative overflow-hidden">
 
       {/* Background */}
-      <div className="absolute inset-0 bg-[url('/Images/BgHero.png')] bg-cover bg-center" />
+      {/* <div className="absolute inset-0 bg-[url('/Images/BgHero.png')] bg-cover bg-center" /> */}
 
       <div className="absolute inset-0 bg-black/70" />
 
