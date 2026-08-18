@@ -740,6 +740,97 @@ app.get(
         }
     }
 );
+app.put(
+    "/api/admin/requests/:id",
+    checkSubscription,
+    adminMiddleware,
+    async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { status } = req.body;
+
+            const allowedStatuses = [
+                "pending",
+                "reviewing",
+                "resolved",
+                "rejected"
+            ];
+
+            if (!allowedStatuses.includes(status)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "وضعیت نامعتبر است"
+                });
+            }
+
+            const updatedRequest = await Request.findByIdAndUpdate(
+                id,
+                { status },
+                {
+                    new: true,
+                    runValidators: true
+                }
+            ).populate(
+                "user",
+                "fullName email phoneNumber"
+            );
+
+            if (!updatedRequest) {
+                return res.status(404).json({
+                    success: false,
+                    message: "درخواست پیدا نشد"
+                });
+            }
+
+            res.status(200).json({
+                success: true,
+                message: "وضعیت درخواست با موفقیت تغییر کرد",
+                request: updatedRequest
+            });
+
+        } catch (err) {
+            console.error("UPDATE REQUEST ERROR:", err);
+
+            res.status(500).json({
+                success: false,
+                message: "خطا در بروزرسانی درخواست"
+            });
+        }
+    }
+);
+// حذف درخواست
+app.delete(
+    "/api/admin/requests/:id",
+    checkSubscription,
+    adminMiddleware,
+    async (req, res) => {
+        try {
+            const { id } = req.params;
+
+            const deletedRequest = await Request.findByIdAndDelete(id);
+
+            if (!deletedRequest) {
+                return res.status(404).json({
+                    success: false,
+                    message: "درخواست پیدا نشد"
+                });
+            }
+
+            res.status(200).json({
+                success: true,
+                message: "درخواست با موفقیت حذف شد"
+            });
+
+        } catch (err) {
+            console.error("DELETE REQUEST ERROR:", err);
+
+            res.status(500).json({
+                success: false,
+                message: "خطا در حذف درخواست"
+            });
+        }
+    }
+);
 // movie 
 app.get("/api/movies/:id",
     checkSubscription,
