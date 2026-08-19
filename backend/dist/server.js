@@ -11,30 +11,65 @@ const cors_1 = __importDefault(require("cors"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const Movie_1 = require("./models/Movie");
 const User_1 = require("./models/User");
-const path_1 = __importDefault(require("path"));
 const auth_middleware_1 = __importDefault(require("./middleware/auth.middleware"));
 const admin_1 = require("./middleware/admin");
 const dotenv_1 = __importDefault(require("dotenv"));
+const Request_1 = require("./models/Request");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
+const isProduction = process.env.APP_ENV === "production";
 // تنظیمات امنیتی و پارس کردن داده‌ها
 app.use((0, cors_1.default)({
-    origin: process.env.CLIENT_URL,
-    // origin: "http://localhost:3000",
+    origin: [
+        "http://localhost:3000",
+        "https://alanbin.com",
+        "https://www.alanbin.com"
+    ],
     credentials: true,
 })); // اجازه دسترسی از فرانت
 app.use(express_1.default.json()); // خواندن داده‌های JSON
 app.use((0, cookie_parser_1.default)());
-app.use("/videos", express_1.default.static(path_1.default.join(process.cwd(), "videos")));
-console.log(path_1.default.join(process.cwd(), "videos"));
+app.get("/videos/:filename", auth_middleware_1.default, async (req, res) => {
+    try {
+        const filename = String(req.params.filename);
+        // جلوگیری از Path Traversal
+        if (!/^[a-zA-Z0-9_-]+\.mp4$/.test(filename)) {
+            return res.status(400).json({
+                message: "نام فایل نامعتبر است"
+            });
+        }
+        {
+            return res.status(400).json({
+                message: "نام فایل نامعتبر است"
+            });
+        }
+        res.setHeader("X-Accel-Redirect", `/protected-videos/${encodeURIComponent(filename)}`);
+        res.setHeader("Content-Type", "video/mp4");
+        res.end();
+    }
+    catch (err) {
+        console.error("VIDEO ERROR:", err);
+        res.status(500).json({
+            message: "خطا در دریافت ویدیو"
+        });
+    }
+});
 const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) {
     throw new Error("MONGODB_URI is missing");
 }
 mongoose_1.default.connect(MONGODB_URI)
-    .then(() => console.log('✅ دیتابیس وصل شد!'))
-    .catch((err) => console.error('❌ خطای اتصال:', err));
+    .then(async () => {
+    console.log("✅ Mongo connected");
+    if (!mongoose_1.default.connection.db) {
+        throw new Error("DB undefined");
+    }
+})
+    .catch((err) => {
+    console.error("❌ Mongo connection failed:");
+    console.error(err);
+});
 // --- API مربوط به یوزرها ---
 //admin API
 // 1. دریافت همه یوزرها
@@ -252,6 +287,7 @@ app.get('/api/movies', async (req, res) => {
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 20;
         const totalMovies = await Movie_1.Movie.countDocuments(query);
+        const totalPages = Math.max(1, Math.ceil(totalMovies / limit));
         const movies = await Movie_1.Movie.find(query)
             .sort(sort)
             .skip((page - 1) * limit)
@@ -259,7 +295,7 @@ app.get('/api/movies', async (req, res) => {
         res.json({
             movies,
             currentPage: page,
-            totalPages: Math.ceil(totalMovies / limit),
+            totalPages,
             totalMovies
         });
     }
@@ -271,13 +307,16 @@ app.get('/api/movies', async (req, res) => {
     }
 });
 app.get("/api/movies/top", async (req, res) => {
-    console.log("🔥 TOP ROUTE HIT");
     try {
         const topMovies = await Movie_1.Movie.find({ topWeek: true });
         res.json(topMovies);
     }
     catch (error) {
-        res.status(500).json({ message: "خطا در دریافت فیلم‌های برتر" });
+        console.error("TOP MOVIES ERROR:", error);
+        res.status(500).json({
+            message: "خطا در دریافت فیلم‌های برتر",
+            error,
+        });
     }
 });
 //فیلم مورد علاقه اضافه کردن یا حذف کردن
@@ -385,10 +424,7 @@ app.post('/api/auth/login', async (req, res) => {
                 message: "کاربر یافت نشد"
             });
         }
-        console.log("LOGIN PASSWORD:", password);
-        console.log("DB HASH:", user.password);
         const isMatch = await bcryptjs_1.default.compare(password, user.password);
-        console.log("MATCH:", isMatch);
         if (!isMatch) {
             return res.status(400).json({
                 message: "رمز عبور اشتباه است"
@@ -403,8 +439,11 @@ app.post('/api/auth/login', async (req, res) => {
         res.cookie("token", token, {
             httpOnly: true,
             maxAge: 1000 * 60 * 60 * 24 * 30,
-            sameSite: "lax", // یا "none" اگر https داری
-            secure: false, // در prod باید true بشه
+            sameSite: "lax",
+            secure: isProduction,
+            ...(isProduction && {
+                domain: ".alanbin.com",
+            }),
         });
         res.json({
             message: "ورود موفق",
@@ -423,10 +462,18 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 //لاگ اوت 
-app.post('/api/auth/logout', (req, res) => {
-    res.clearCookie("token");
+app.post("/api/auth/logout", (req, res) => {
+    res.clearCookie("token", {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: isProduction,
+        ...(isProduction && {
+            domain: ".alanbin.com",
+        }),
+        path: "/",
+    });
     res.json({
-        message: "خروج موفق"
+        message: "خروج موفق",
     });
 });
 //دیتای منو و اکانت 
@@ -467,6 +514,150 @@ app.get("/api/auth/me", async (req, res) => {
         res.status(401).json({
             isAuthenticated: false,
             message: "توکن نامعتبر است"
+        });
+    }
+});
+//tiecket
+// ثبت درخواست‌های کاربر
+app.post("/api/requests", async (req, res) => {
+    try {
+        const token = req.cookies.token;
+        if (!token) {
+            return res.status(401).json({
+                message: "برای ارسال درخواست باید وارد حساب شوید"
+            });
+        }
+        const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
+        const user = await User_1.User.findById(decoded.id);
+        if (!user) {
+            return res.status(404).json({
+                message: "کاربر پیدا نشد"
+            });
+        }
+        const { type, subject, message, movieTitle, page } = req.body;
+        // بررسی نوع درخواست
+        if (!["bug", "film", "contact"].includes(type)) {
+            return res.status(400).json({
+                message: "نوع درخواست نامعتبر است"
+            });
+        }
+        // پیام برای همه فرم‌ها اجباری است
+        if (!message?.trim()) {
+            return res.status(400).json({
+                message: "متن پیام الزامی است"
+            });
+        }
+        // درخواست فیلم باید عنوان فیلم داشته باشد
+        if (type === "film" && !movieTitle?.trim()) {
+            return res.status(400).json({
+                message: "نام فیلم الزامی است"
+            });
+        }
+        const newRequest = new Request_1.Request({
+            type,
+            user: user._id,
+            // اطلاعات کاربر از دیتابیس گرفته می‌شود
+            name: user.fullName,
+            email: user.email,
+            subject: subject || "",
+            message: message.trim(),
+            movieTitle: movieTitle || "",
+            page: page || "",
+            status: "pending"
+        });
+        const savedRequest = await newRequest.save();
+        res.status(201).json({
+            success: true,
+            message: "درخواست با موفقیت ثبت شد",
+            request: savedRequest
+        });
+    }
+    catch (err) {
+        console.error("REQUEST ERROR:", err);
+        res.status(500).json({
+            message: "خطا در ثبت درخواست"
+        });
+    }
+});
+app.get("/api/admin/requests", auth_middleware_1.default, admin_1.adminMiddleware, async (req, res) => {
+    try {
+        const requests = await Request_1.Request.find()
+            .populate("user", "fullName email phoneNumber")
+            .sort({ createdAt: -1 });
+        res.status(200).json({
+            success: true,
+            requests,
+        });
+    }
+    catch (err) {
+        console.error("ADMIN REQUESTS ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "خطا در دریافت درخواست‌ها",
+        });
+    }
+});
+app.put("/api/admin/requests/:id", auth_middleware_1.default, admin_1.adminMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        const allowedStatuses = [
+            "pending",
+            "reviewing",
+            "resolved",
+            "rejected"
+        ];
+        if (!allowedStatuses.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: "وضعیت نامعتبر است"
+            });
+        }
+        const updatedRequest = await Request_1.Request.findByIdAndUpdate(id, { status }, {
+            new: true,
+            runValidators: true
+        }).populate("user", "fullName email phoneNumber");
+        if (!updatedRequest) {
+            return res.status(404).json({
+                success: false,
+                message: "درخواست پیدا نشد"
+            });
+        }
+        res.status(200).json({
+            success: true,
+            message: "وضعیت درخواست با موفقیت تغییر کرد",
+            request: updatedRequest
+        });
+    }
+    catch (err) {
+        console.error("UPDATE REQUEST ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "خطا در بروزرسانی درخواست"
+        });
+    }
+});
+// حذف درخواست
+app.delete("/api/admin/requests/:id", auth_middleware_1.default, admin_1.adminMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedRequest = await Request_1.Request.findByIdAndDelete(id);
+        if (!deletedRequest) {
+            return res.status(404).json({
+                success: false,
+                message: "درخواست پیدا نشد"
+            });
+        }
+        res.status(200).json({
+            success: true,
+            message: "درخواست با موفقیت حذف شد"
+        });
+    }
+    catch (err) {
+        console.error("DELETE REQUEST ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "خطا در حذف درخواست"
         });
     }
 });

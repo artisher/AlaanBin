@@ -6,7 +6,6 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import { Movie } from './models/Movie';
 import { User } from './models/User';
-import path from "path";
 import checkSubscription from './middleware/auth.middleware';
 import { adminMiddleware } from './middleware/admin';
 import dotenv from "dotenv";
@@ -29,18 +28,53 @@ app.use(
 ); // اجازه دسترسی از فرانت
 app.use(express.json()); // خواندن داده‌های JSON
 app.use(cookieParser());
-app.use(
-    "/videos",
-    express.static(path.join(process.cwd(), "videos"))
+
+app.get(
+    "/videos/:filename",
+    checkSubscription,
+    async (req, res) => {
+        try {
+            const filename = String(req.params.filename);
+
+            // جلوگیری از Path Traversal
+            if (!/^[a-zA-Z0-9_-]+\.mp4$/.test(filename)) {
+                return res.status(400).json({
+                    message: "نام فایل نامعتبر است"
+                });
+            } {
+                return res.status(400).json({
+                    message: "نام فایل نامعتبر است"
+                });
+            }
+
+            res.setHeader(
+                "X-Accel-Redirect",
+                `/protected-videos/${encodeURIComponent(filename)}`
+            );
+
+            res.setHeader(
+                "Content-Type",
+                "video/mp4"
+            );
+
+            res.end();
+
+        } catch (err) {
+            console.error("VIDEO ERROR:", err);
+
+            res.status(500).json({
+                message: "خطا در دریافت ویدیو"
+            });
+        }
+    }
 );
-console.log(path.join(process.cwd(), "videos"));
 
 const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) {
     throw new Error("MONGODB_URI is missing");
 }
 
-console.log(process.env.MONGODB_URI);
+
 
 mongoose.connect(MONGODB_URI)
     .then(async () => {
@@ -50,7 +84,7 @@ mongoose.connect(MONGODB_URI)
             throw new Error("DB undefined");
         }
 
-        console.log("DB Name:", mongoose.connection.db.databaseName);
+
     })
     .catch((err) => {
         console.error("❌ Mongo connection failed:");
@@ -347,7 +381,7 @@ app.get('/api/movies', async (req, res) => {
 });
 
 app.get("/api/movies/top", async (req, res) => {
-    console.log("🔥 TOP ROUTE HIT");
+
 
     try {
         const topMovies = await Movie.find({ topWeek: true });
@@ -502,13 +536,12 @@ app.post('/api/auth/login', async (req, res) => {
                 message: "کاربر یافت نشد"
             });
         }
-        console.log("LOGIN PASSWORD:", password);
-        console.log("DB HASH:", user.password);
+
         const isMatch = await bcrypt.compare(
             password,
             user.password
         );
-        console.log("MATCH:", isMatch);
+
         if (!isMatch) {
             return res.status(400).json({
                 message: "رمز عبور اشتباه است"
