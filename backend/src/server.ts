@@ -41,11 +41,7 @@ app.get(
                 return res.status(400).json({
                     message: "نام فایل نامعتبر است"
                 });
-            } {
-                return res.status(400).json({
-                    message: "نام فایل نامعتبر است"
-                });
-            }
+            } 
 
             res.setHeader(
                 "X-Accel-Redirect",

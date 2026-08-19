@@ -39,11 +39,6 @@ app.get("/videos/:filename", auth_middleware_1.default, async (req, res) => {
                 message: "نام فایل نامعتبر است"
             });
         }
-        {
-            return res.status(400).json({
-                message: "نام فایل نامعتبر است"
-            });
-        }
         res.setHeader("X-Accel-Redirect", `/protected-videos/${encodeURIComponent(filename)}`);
         res.setHeader("Content-Type", "video/mp4");
         res.end();
