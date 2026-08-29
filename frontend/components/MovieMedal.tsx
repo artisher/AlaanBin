@@ -161,39 +161,7 @@ export const MovieModal = ({
                     WATCH BUTTON
                 ========================= */}
 
-                    <Link
-                        href={`/movies/${movie._id}`}
-                        className="
-                        my-8
-                        flex
-                        h-12
-                        w-full
-                        items-center
-                        justify-center
-                        gap-3
-                        rounded-xl
-                        bg-[#14c78b]
-                        text-sm
-                        font-bold
-                        text-black
-                        transition-all
-                        duration-300
-                        hover:scale-[1.01]
-                        hover:shadow-[0_0_30px_rgba(20,199,139,.45)]
-                        sm:mt-10
-                        sm:h-14
-                        sm:text-base
-                    "
-                    >
-
-                        <Play
-                            size={20}
-                            fill="currentColor"
-                        />
-
-                        مشاهده فیلم
-
-                    </Link>
+                  
 
                     <div
                         className="
@@ -306,7 +274,39 @@ export const MovieModal = ({
                     {/* =========================
                     MOVIE INFO
                 ========================= */}
+  <Link
+                        href={`/movies/${movie._id}`}
+                        className="
+                        my-8
+                        flex
+                        h-12
+                        w-full
+                        items-center
+                        justify-center
+                        gap-3
+                        rounded-xl
+                        bg-[#14c78b]
+                        text-sm
+                        font-bold
+                        text-black
+                        transition-all
+                        duration-300
+                        hover:scale-[1.01]
+                        hover:shadow-[0_0_30px_rgba(20,199,139,.45)]
+                        sm:mt-10
+                        sm:h-14
+                        sm:text-base
+                    "
+                    >
 
+                        <Play
+                            size={20}
+                            fill="currentColor"
+                        />
+
+                        مشاهده فیلم
+
+                    </Link>
                     <div
                         className="
                         mt-6
