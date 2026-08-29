@@ -1,14 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import {
     Mail,
+    MapPin,
     MessageSquare,
-    Send,
-    CheckCircle2,
     Phone,
-    MapPin
+    Send
 } from "lucide-react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 
 export default function ContactUs() {
@@ -218,35 +217,8 @@ return (
                             </div>
 
                         )}
-                        {status === "error" && (
-                            <div className="text-center text-red-400">
-                                ارسال درخواست با خطا مواجه شد. لطفاً دوباره تلاش کنید.
-                            </div>
-                        )}
-                        {status === "success" && (
-
-                            <div
-                                className="
-                                    flex
-                                    items-center
-                                    justify-center
-                                    gap-2
-                                    rounded-xl
-                                    bg-[#14c78b]/10
-                                    border
-                                    border-[#14c78b]/30
-                                    py-4
-                                    text-[#14c78b]
-                                    "
-                            >
-
-                                <CheckCircle2 size={20} />
-
-                                پیام شما با موفقیت ارسال شد.
-
-                            </div>
-
-                        )}
+                       
+                        
 
                     </form>
 
