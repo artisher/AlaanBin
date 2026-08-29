@@ -1,7 +1,7 @@
 'use client';
 import { useState } from "react";
 import { EditMovieModal } from "./EditMovieModal";
-import { CreateMovieModal } from "./CreateMovieModal";
+import CreateMovieModal from "./CreateMovieModal";
 import type { Movie } from "@/types/movies";
 import toast from "react-hot-toast";
 
