@@ -25,37 +25,35 @@ export const MovieModal = ({
             onClick={onClose}
             className="
             fixed
-            inset-0
-            z-50
-            flex
-            items-center
-            justify-center
-            bg-black/80
-            backdrop-blur-md
-            p-3
-            sm:p-5
+        inset-0
+        z-50
+        overflow-y-auto
+        bg-black/80
+        backdrop-blur-md
+        p-3
+        sm:p-5
         "
         >
             <div
                 onClick={(e) => e.stopPropagation()}
                 className="
-                relative
-                flex
-                w-full
-                max-w-6xl
-                max-h-[94vh]
-                flex-col
-                overflow-hidden
-                rounded-2xl
-                sm:rounded-3xl
-                border
-                border-[#14c78b]/20
-                bg-[#0f141b]
-                shadow-[0_0_60px_rgba(20,199,139,.15)]
-                md:grid
-                md:grid-cols-[320px_1fr]
-                lg:grid-cols-[380px_1fr]
-            "
+        relative
+        mx-auto
+        my-3
+        w-full
+        max-w-6xl
+        overflow-hidden
+        rounded-2xl
+        sm:my-5
+        sm:rounded-3xl
+        border
+        border-[#14c78b]/20
+        bg-[#0f141b]
+        shadow-[0_0_60px_rgba(20,199,139,.15)]
+        md:grid
+        md:grid-cols-[320px_1fr]
+        lg:grid-cols-[380px_1fr]
+    "
             >
 
                 {/* =========================
@@ -146,12 +144,10 @@ export const MovieModal = ({
 
                 <div
                     className="
-                    min-h-0
-                    overflow-y-auto
-                    p-5
-                    sm:p-7
-                    lg:p-8
-                "
+        p-5
+        sm:p-7
+        lg:p-8
+    "
                 >
 
                     {/* Header */}
