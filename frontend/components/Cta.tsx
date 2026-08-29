@@ -2,6 +2,7 @@ import { Sparkles } from "lucide-react";
 import { CtaBtns } from "./CtaBtns";
 
 export const Cta = () => {
+    
     return (
         <section className="relative overflow-hidden border-y border-white/10">
 

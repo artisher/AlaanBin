@@ -6,6 +6,7 @@ import {
     useEffect,
     useState,
 } from "react";
+import toast from "react-hot-toast";
 
 type User = {
     id: string;
@@ -69,18 +70,31 @@ export function AuthProvider({
 
     async function logout() {
         try {
-            await fetch(
+            const res = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`,
                 {
                     method: "POST",
                     credentials: "include",
                 }
             );
-        } finally {
+
+            if (!res.ok) {
+                throw new Error("خطا در خروج از حساب");
+            }
+
             setUser(null);
+
+            toast.success("با موفقیت از حساب خارج شدید.");
+        } catch (error) {
+            console.error("LOGOUT ERROR:", error);
+
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "خروج از حساب با خطا مواجه شد."
+            );
         }
     }
-
     return (
         <AuthContext.Provider
             value={{

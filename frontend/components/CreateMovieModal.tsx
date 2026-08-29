@@ -1,215 +1,316 @@
-'use client';
-import type { Movie } from "@/types/movies";
-import { zodResolver } from '@hookform/resolvers/zod';
-import React from 'react';
-import { useForm } from 'react-hook-form';
+
+"use client";
+
+import { useState } from "react";
+import {
+    Film,
+    Clapperboard,
+    Send,
+    MessageSquare,
+} from "lucide-react";
 import toast from "react-hot-toast";
-import * as z from 'zod';
-export const addedMovie = z.object({
-    title: z.string(),
-    description: z.string(),
-    genre: z.string(),
-    year: z.coerce.number(),
-    rating: z.coerce.number().optional(),
-    topWeek: z.boolean(),
-    poster: z.string(),
-    product: z.string(),
-});
-interface EditMovieModalProps {
-    isOpen: boolean;
-    movie: Movie | null;
-    onClose: () => void;
-    onSave: (updatedMovie: Movie) => void;
-}
-export type AddedMovie = z.infer<typeof addedMovie>;
 
-export const CreateMovieModal: React.FC<EditMovieModalProps> = ({ isOpen, movie, onClose }) => {
-    const {
-        register,
-        handleSubmit,
-        formState: { errors, isSubmitting },
-    } = useForm<
-        z.input<typeof addedMovie>,
-        any,
-        z.output<typeof addedMovie>
-    >({
-        resolver: zodResolver(addedMovie),
-    });
 
-    const onSubmit = async (data: z.output<typeof addedMovie>) => {
+export default function Request() {
+    const [requestType, setRequestType] = useState("");
+    const [movieTitle, setMovieTitle] = useState("");
+    const [message, setMessage] = useState("");
+    const [loading, setLoading] = useState(false);
 
+    const submitHandler = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!requestType || !movieTitle.trim()) {
+            toast.error("لطفاً نوع درخواست و نام فیلم یا سریال را وارد کنید.");
+            return;
+        }
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/admin/movies`, {
+            setLoading(true);
+
+            const res = await fetch("/api/requests", {
+                method: "POST",
                 credentials: "include",
-                method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                 },
-                body: JSON.stringify(data),
+                body: JSON.stringify({
+                    type: "film",
+                    movieTitle: movieTitle.trim(),
+                    message: message.trim(),
+                    subject: requestType,
+                }),
             });
 
-            const result = await response.json();
+            let data: { message?: string } = {};
 
-            if (response.ok) {
-                toast.success("Successfully created.");
-                onClose();
-            } else {
-                toast.error("Something went wrong. Check the console for more information.");
-                console.log(result.message || 'خطا در افزودن فیلم');
-
+            try {
+                data = await res.json();
+            } catch {
+                // اگر پاسخ API JSON نبود، خطای پایین نمایش داده می‌شود.
             }
+
+            if (!res.ok) {
+                throw new Error(
+                    data.message || "خطا در ثبت درخواست. لطفاً دوباره تلاش کنید."
+                );
+            }
+
+            toast.success("درخواست شما با موفقیت ثبت شد.");
+
+            setRequestType("");
+            setMovieTitle("");
+            setMessage("");
         } catch (error) {
-            console.error('خطا در ارسال:', error);
-            toast.error("Something went wrong. Check the console for more information.");
+            console.error("REQUEST ERROR:", error);
+
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "ثبت درخواست با خطا مواجه شد. لطفاً دوباره تلاش کنید."
+            );
+        } finally {
+            setLoading(false);
         }
     };
 
-    if (!isOpen) return null;
-
     return (
-        <div
-            className="fixed inset-0 bg-black/60 flex justify-center items-center z-50"
-            onClick={onClose}
-        >
-            <div
-                className="bg-gray-800 p-8 rounded-lg w-[90%] max-w-3xl relative shadow-2xl max-h-[90vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl"
+        <section className="min-h-screen bg-[#0B0F14] py-20 px-6">
+            <div className="max-w-3xl mx-auto">
+
+                {/* Header */}
+
+                <div className="text-center mb-14">
+
+                    <span className="tracking-[5px] text-[#14c78b] font-semibold">
+                        REQUEST CONTENT
+                    </span>
+
+                    <h1 className="mt-4 text-5xl font-extrabold text-white">
+                        درخواست فیلم یا سریال
+                    </h1>
+
+                    <p className="mt-5 text-gray-400 leading-8 max-w-2xl mx-auto">
+                        اگر محتوای مورد نظر شما در آرشیو الان بین وجود ندارد،
+                        درخواست خود را ثبت کنید. تیم ما پس از بررسی، در صورت
+                        امکان آن را به آرشیو اضافه خواهد کرد.
+                    </p>
+
+                </div>
+
+                {/* Card */}
+
+                <div
+                    className="
+                    rounded-3xl
+                    border
+                    border-white/10
+                    bg-[#111827]
+                    p-8
+                    shadow-[0_0_40px_rgba(20,199,139,.08)]
+                    "
                 >
-                    ×
-                </button>
 
-                <h2 className="text-xl font-bold mb-6 text-white">
-                    اضافه کردن فیلم:
-                </h2>
+                    <form
+                        onSubmit={submitHandler}
+                        className="space-y-7"
+                    >
 
-                {/* فرم را اینجا قرار دادیم */}
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 flex flex-wrap gap-6 justify-center">
+                        {/* Type */}
 
-                    {/* نام کامل */}
-                    <div className='w-full sm:w-75'>
-                        <label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-1">نام </label>
-                        <input
-                            type="text"
-                            id="title"
-                            {...register('title')}
-                            className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
-                        />
-                        {errors.title && <span className="text-red-400 text-xs mt-1">{errors.title.message}</span>}
-                    </div>
+                        <div>
 
-                    {/* ایمیل */}
-                    <div className='w-full sm:w-75'>
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-300 mb-1">توضیحات</label>
-                        <input
-                            type="text"
-                            id="description"
-                            {...register('description')}
-                            className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
-                        />
-                        {errors.description && <span className="text-red-400 text-xs mt-1">{errors.description.message}</span>}
-                    </div>
+                            <label className="block mb-3 text-white font-medium">
+                                نوع درخواست
+                            </label>
 
-                    {/* شماره تلفن */}
-                    <div className='w-full sm:w-75'>
-                        <label htmlFor="poster" className="block text-sm font-medium text-gray-300 mb-1">عکس </label>
-                        <input
-                            type="text"
-                            id="poster"
-                            {...register('poster')}
-                            className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
-                        />
-                        {errors.poster && <span className="text-red-400 text-xs mt-1">{errors.poster.message}</span>}
-                    </div>
+                            <div className="relative">
 
-                    {/* کشور */}
-                    <div className='w-full sm:w-75'>
-                        <label htmlFor="rating" className="block text-sm font-medium text-gray-300 mb-1">امتیاز</label>
-                        <input
+                                <Clapperboard
+                                    size={20}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#14c78b]"
+                                />
 
-                            id="country"
-                            {...register('rating')}
-                            className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
-                        />
-                        {errors.rating && <span className="text-red-400 text-xs mt-1">{errors.rating.message}</span>}
-                    </div>
+                                <select
+                                    value={requestType}
+                                    onChange={(e) =>
+                                        setRequestType(e.target.value)
+                                    }
+                                    required
+                                    disabled={loading}
+                                    className="
+                                    w-full
+                                    h-14
+                                    rounded-xl
+                                    bg-[#0B0F14]
+                                    border
+                                    border-white/10
+                                    pr-12
+                                    pl-4
+                                    text-white
+                                    outline-none
+                                    focus:border-[#14c78b]
+                                    cursor-pointer
+                                    disabled:opacity-50
+                                    disabled:cursor-not-allowed
+                                    "
+                                >
+                                    <option value="">
+                                        انتخاب کنید
+                                    </option>
 
+                                    <option value="فیلم">
+                                        فیلم
+                                    </option>
 
-                    {/* نقش */}
-                    <div className='w-full sm:w-75'>
-                        <label htmlFor="genre" className="block text-sm font-medium text-gray-300 mb-1">ژانر </label>
-                        <input
-                            type="text"
-                            id="genre"
-                            {...register('genre')}
-                            className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
-                        />
+                                    <option value="سریال">
+                                        سریال
+                                    </option>
 
-                        {errors.genre && <span className="text-red-400 text-xs mt-1">{errors.genre.message}</span>}
-                    </div>
+                                    <option value="فصل جدید سریال">
+                                        فصل جدید سریال
+                                    </option>
 
+                                    <option value="انیمیشن">
+                                        انیمیشن
+                                    </option>
+                                </select>
 
-                    <div className='w-full sm:w-75'>
-                        <label htmlFor="topWeek" className="block text-sm font-medium text-gray-300 mb-1"> برتر هفته</label>
-                        <select
-                            id="topWeek"
-                            {...register('topWeek', {
-                                setValueAs: (value) => value === 'true' // تبدیل رشته به بولی
-                            })}
-                            className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
-                        >
-                            <option value="true">دارد</option>
-                            <option value="false">ندارد</option>
-                        </select>
-                        {errors.topWeek && <span className="text-red-400 text-xs mt-1">{errors.topWeek.message}</span>}
-                    </div>
+                            </div>
 
+                        </div>
 
-                    <div className='w-full sm:w-75'>
-                        <label htmlFor="year" className="block text-sm font-medium text-gray-300 mb-1">تاریخ  ساخت </label>
-                        <input
-                            type="text"
-                            id="year"
-                            placeholder="مثال: 1403/12/30"
-                            {...register('year')}
-                            className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
-                        />
-                        {errors.year && <span className="text-red-400 text-xs mt-1">{errors.year.message}</span>}
-                    </div>
+                        {/* Title */}
 
-                    <div className='w-full sm:w-75'>
-                        <label htmlFor="product" className="block text-sm font-medium text-gray-300 mb-1">  ساخت کشور</label>
-                        <input
-                            type="text"
-                            id="product"
-                            placeholder="مثال: 1403/12/30"
-                            {...register('product')}
-                            className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
-                        />
-                        {errors.product && <span className="text-red-400 text-xs mt-1">{errors.product.message}</span>}
-                    </div>
-                    <div className="mt-8 flex justify-end gap-3 w-full">
+                        <div>
+
+                            <label className="block mb-3 text-white font-medium">
+                                نام فیلم یا سریال
+                            </label>
+
+                            <div className="relative">
+
+                                <Film
+                                    size={20}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#14c78b]"
+                                />
+
+                                <input
+                                    type="text"
+                                    value={movieTitle}
+                                    onChange={(e) =>
+                                        setMovieTitle(e.target.value)
+                                    }
+                                    required
+                                    disabled={loading}
+                                    placeholder="مثلاً: The Last of Us"
+                                    className="
+                                    w-full
+                                    h-14
+                                    rounded-xl
+                                    bg-[#0B0F14]
+                                    border
+                                    border-white/10
+                                    pr-12
+                                    pl-4
+                                    text-white
+                                    placeholder:text-gray-500
+                                    outline-none
+                                    focus:border-[#14c78b]
+                                    disabled:opacity-50
+                                    "
+                                />
+
+                            </div>
+
+                        </div>
+
+                        {/* Details */}
+
+                        <div>
+
+                            <label className="block mb-3 text-white font-medium">
+                                توضیحات (اختیاری)
+                            </label>
+
+                            <div className="relative">
+
+                                <MessageSquare
+                                    size={20}
+                                    className="absolute right-4 top-5 text-[#14c78b]"
+                                />
+
+                                <textarea
+                                    rows={5}
+                                    value={message}
+                                    onChange={(e) =>
+                                        setMessage(e.target.value)
+                                    }
+                                    disabled={loading}
+                                    placeholder="اگر نسخه خاص، دوبله، زیرنویس یا فصل مشخصی مدنظر دارید بنویسید..."
+                                    className="
+                                    w-full
+                                    rounded-xl
+                                    bg-[#0B0F14]
+                                    border
+                                    border-white/10
+                                    pr-12
+                                    pl-4
+                                    pt-4
+                                    resize-none
+                                    text-white
+                                    placeholder:text-gray-500
+                                    outline-none
+                                    focus:border-[#14c78b]
+                                    disabled:opacity-50
+                                    "
+                                />
+
+                            </div>
+
+                        </div>
+
+                        {/* Button */}
+
                         <button
-                            type="button"
-                            onClick={onClose}
-                            className="px-4 py-2 border border-gray-600 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                            type="submit"
+                            disabled={loading}
+                            className="
+                            w-full
+                            h-14
+                            rounded-xl
+                            bg-[#14c78b]
+                            text-black
+                            font-bold
+                            flex
+                            items-center
+                            justify-center
+                            gap-3
+                            cursor-pointer
+                            transition
+                            hover:scale-[1.02]
+                            hover:shadow-[0_0_30px_rgba(20,199,139,.35)]
+                            disabled:opacity-50
+                            disabled:cursor-not-allowed
+                            disabled:hover:scale-100
+                            "
                         >
-                            لغو
+
+                            <Send size={20} />
+
+                            {loading
+                                ? "در حال ثبت درخواست..."
+                                : "ثبت درخواست"
+                            }
+
                         </button>
-                        <button
-                            disabled={isSubmitting}
-                            type='submit'
-                            className="px-4 py-2 bg-[#14c78b] rounded-md text-sm font-medium text-white hover:bg-[#12b07a] focus:outline-none focus:ring-2 focus:ring-[#14c78b] focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isSubmitting ? 'در حال ارسال...' : 'افزودن فیلم'}
-                        </button>
-                    </div>
-                </form>
+
+                    </form>
+
+                </div>
+
             </div>
-        </div>
-    )
+        </section>
+    );
 }
+

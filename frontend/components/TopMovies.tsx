@@ -9,7 +9,8 @@ export const TopMovies = async () => {
             }
         );
 
-        if (!res.ok) {
+        // فیلمی پیدا نشده
+        if (res.status === 404) {
             return (
                 <div className="py-16 text-center text-gray-400">
                     فیلمی برای نمایش وجود ندارد.
@@ -17,8 +18,14 @@ export const TopMovies = async () => {
             );
         }
 
+        // خطای سرور یا API
+        if (!res.ok) {
+            throw new Error(`Top movies API error: ${res.status}`);
+        }
+
         const data = await res.json();
 
+        // پاسخ API چیزی نیست که انتظار داریم
         if (!Array.isArray(data) || data.length === 0) {
             return (
                 <div className="py-16 text-center text-gray-400">
@@ -26,7 +33,13 @@ export const TopMovies = async () => {
                 </div>
             );
         }
-
+        if (data.length === 0) {
+            return (
+                <div className="py-16 text-center text-gray-400">
+                    فیلمی برای نمایش وجود ندارد.
+                </div>
+            );
+        }
         return (
             <div className="border-y border-white/10 py-16">
                 <div className="text-center mb-10">
@@ -43,10 +56,7 @@ export const TopMovies = async () => {
     } catch (error) {
         console.error("TopMovies Error:", error);
 
-        return (
-            <div className="py-16 text-center text-gray-400">
-                فیلمی برای نمایش وجود ندارد.
-            </div>
-        );
+        throw error;
     }
 };
+
