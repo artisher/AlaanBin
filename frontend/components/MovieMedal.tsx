@@ -25,47 +25,48 @@ export const MovieModal = ({
             onClick={onClose}
             className="
             fixed
-        inset-0
-        z-50
-        overflow-y-auto
-        bg-black/80
-        backdrop-blur-md
-        p-3
-        sm:p-5
+            inset-0
+            z-50
+            overflow-y-auto
+            bg-black/80
+            backdrop-blur-md
+            p-2
+            sm:p-4
+            md:flex
+            md:items-center
+            md:justify-center
         "
         >
             <div
                 onClick={(e) => e.stopPropagation()}
                 className="
-        relative
-        mx-auto
-        my-3
-        w-full
-        max-w-6xl
-        overflow-hidden
-        rounded-2xl
-        sm:my-5
-        sm:rounded-3xl
-        border
-        border-[#14c78b]/20
-        bg-[#0f141b]
-        shadow-[0_0_60px_rgba(20,199,139,.15)]
-        md:grid
-        md:grid-cols-[320px_1fr]
-        lg:grid-cols-[380px_1fr]
-    "
+                relative
+                mx-auto
+                w-full
+                max-w-6xl
+                overflow-hidden
+                rounded-2xl
+                border
+                border-[#14c78b]/20
+                bg-[#0f141b]
+                shadow-[0_0_60px_rgba(20,199,139,.15)]
+                md:grid
+                md:grid-cols-[320px_1fr]
+                lg:grid-cols-[380px_1fr]
+            "
             >
 
                 {/* =========================
-                Poster
+                POSTER
             ========================= */}
 
                 <div
                     className="
                     relative
-                    h-[220px]
+                    h-[210px]
+                    w-full
                     shrink-0
-                    sm:h-[280px]
+                    sm:h-[260px]
                     md:h-[650px]
                     lg:h-[680px]
                 "
@@ -75,22 +76,23 @@ export const MovieModal = ({
                         src={movie.poster}
                         alt={movie.title}
                         fill
-                        className="object-cover"
+                        priority
                         sizes="
-                        (max-width: 640px) 100vw,
-                        (max-width: 768px) 100vw,
+                        (max-width: 639px) 100vw,
+                        (max-width: 767px) 100vw,
                         380px
                     "
+                        className="object-cover"
                     />
 
-                    {/* Poster overlay */}
+                    {/* Dark overlay */}
 
                     <div
                         className="
                         absolute
                         inset-0
                         bg-gradient-to-t
-                        from-black
+                        from-black/80
                         via-black/10
                         to-transparent
                     "
@@ -100,13 +102,14 @@ export const MovieModal = ({
 
                     <Link
                         href={`/movies/${movie._id}`}
+                        aria-label={`مشاهده ${movie.title}`}
                         className="
                         absolute
                         inset-0
+                        z-10
                         flex
                         items-center
                         justify-center
-                        group
                     "
                     >
                         <div
@@ -119,16 +122,16 @@ export const MovieModal = ({
                             rounded-full
                             bg-[#14c78b]
                             text-black
-                            shadow-[0_0_30px_rgba(20,199,139,.45)]
-                            transition
+                            shadow-[0_0_35px_rgba(20,199,139,.55)]
+                            transition-all
                             duration-300
-                            group-hover:scale-110
+                            hover:scale-110
                             sm:h-20
                             sm:w-20
                         "
                         >
                             <Play
-                                size={28}
+                                size={30}
                                 fill="currentColor"
                                 className="sm:h-[34px] sm:w-[34px]"
                             />
@@ -139,18 +142,21 @@ export const MovieModal = ({
 
 
                 {/* =========================
-                Information
+                CONTENT
             ========================= */}
 
                 <div
                     className="
-        p-5
-        sm:p-7
-        lg:p-8
-    "
+                    min-w-0
+                    p-4
+                    sm:p-6
+                    lg:p-8
+                "
                 >
 
-                    {/* Header */}
+                    {/* =========================
+                    HEADER
+                ========================= */}
 
                     <div
                         className="
@@ -165,11 +171,11 @@ export const MovieModal = ({
 
                             <h1
                                 className="
+                                break-words
                                 text-2xl
                                 font-bold
                                 leading-tight
                                 text-white
-                                break-words
                                 sm:text-3xl
                                 lg:text-4xl
                             "
@@ -191,7 +197,7 @@ export const MovieModal = ({
                         </div>
 
 
-                        {/* Buttons */}
+                        {/* Actions */}
 
                         <div
                             className="
@@ -222,7 +228,11 @@ export const MovieModal = ({
                             "
                             >
                                 <Heart
-                                    fill={isFavorite ? "currentColor" : "none"}
+                                    fill={
+                                        isFavorite
+                                            ? "currentColor"
+                                            : "none"
+                                    }
                                     className="h-5 w-5"
                                 />
                             </button>
@@ -239,7 +249,7 @@ export const MovieModal = ({
                                 justify-center
                                 rounded-xl
                                 bg-white/5
-                                text-lg
+                                text-xl
                                 text-white
                                 transition
                                 hover:bg-red-500
@@ -257,7 +267,7 @@ export const MovieModal = ({
 
 
                     {/* =========================
-                    Short Information
+                    MOVIE INFO
                 ========================= */}
 
                     <div
@@ -267,7 +277,6 @@ export const MovieModal = ({
                         grid-cols-2
                         gap-3
                         sm:gap-4
-                        md:grid-cols-2
                         lg:grid-cols-4
                     "
                     >
@@ -276,6 +285,7 @@ export const MovieModal = ({
 
                         <div
                             className="
+                            min-w-0
                             rounded-xl
                             border
                             border-white/10
@@ -286,7 +296,12 @@ export const MovieModal = ({
                         >
 
                             <Star
-                                className="mb-2 h-5 w-5 text-yellow-400"
+                                className="
+                                mb-2
+                                h-5
+                                w-5
+                                text-yellow-400
+                            "
                                 fill="currentColor"
                             />
 
@@ -305,6 +320,7 @@ export const MovieModal = ({
 
                         <div
                             className="
+                            min-w-0
                             rounded-xl
                             border
                             border-white/10
@@ -315,7 +331,12 @@ export const MovieModal = ({
                         >
 
                             <Calendar
-                                className="mb-2 h-5 w-5 text-[#14c78b]"
+                                className="
+                                mb-2
+                                h-5
+                                w-5
+                                text-[#14c78b]
+                            "
                             />
 
                             <p className="text-xs text-gray-400 sm:text-sm">
@@ -333,6 +354,7 @@ export const MovieModal = ({
 
                         <div
                             className="
+                            min-w-0
                             rounded-xl
                             border
                             border-white/10
@@ -343,7 +365,12 @@ export const MovieModal = ({
                         >
 
                             <Clock3
-                                className="mb-2 h-5 w-5 text-[#14c78b]"
+                                className="
+                                mb-2
+                                h-5
+                                w-5
+                                text-[#14c78b]
+                            "
                             />
 
                             <p className="text-xs text-gray-400 sm:text-sm">
@@ -353,6 +380,7 @@ export const MovieModal = ({
                             <h3
                                 className="
                                 mt-1
+                                break-words
                                 text-base
                                 font-bold
                                 sm:text-xl
@@ -368,6 +396,7 @@ export const MovieModal = ({
 
                         <div
                             className="
+                            min-w-0
                             rounded-xl
                             border
                             border-white/10
@@ -378,7 +407,12 @@ export const MovieModal = ({
                         >
 
                             <Film
-                                className="mb-2 h-5 w-5 text-[#14c78b]"
+                                className="
+                                mb-2
+                                h-5
+                                w-5
+                                text-[#14c78b]
+                            "
                             />
 
                             <p className="text-xs text-gray-400 sm:text-sm">
@@ -403,7 +437,7 @@ export const MovieModal = ({
 
 
                     {/* =========================
-                    Description
+                    DESCRIPTION
                 ========================= */}
 
                     <div className="mt-7 sm:mt-8">
@@ -411,7 +445,7 @@ export const MovieModal = ({
                         <h3
                             className="
                             text-lg
-                            font-semibold
+                            font-bold
                             text-white
                             sm:text-xl
                         "
@@ -423,7 +457,7 @@ export const MovieModal = ({
                             className="
                             mt-3
                             h-1
-                            w-14
+                            w-16
                             rounded-full
                             bg-[#14c78b]
                         "
@@ -432,6 +466,7 @@ export const MovieModal = ({
                         <p
                             className="
                             mt-4
+                            break-words
                             text-sm
                             leading-8
                             text-gray-300
@@ -446,12 +481,19 @@ export const MovieModal = ({
 
 
                     {/* =========================
-                    Genres
+                    GENRES
                 ========================= */}
 
                     <div className="mt-7 sm:mt-8">
 
-                        <h3 className="font-semibold text-white">
+                        <h3
+                            className="
+                            text-lg
+                            font-bold
+                            text-white
+                            sm:text-xl
+                        "
+                        >
                             ژانرها
                         </h3>
 
@@ -459,7 +501,7 @@ export const MovieModal = ({
                             className="
                             mt-3
                             h-1
-                            w-14
+                            w-16
                             rounded-full
                             bg-[#14c78b]
                         "
@@ -471,7 +513,6 @@ export const MovieModal = ({
                             flex
                             flex-wrap
                             gap-2
-                            sm:gap-3
                         "
                         >
 
@@ -504,7 +545,7 @@ export const MovieModal = ({
 
 
                     {/* =========================
-                    Watch Button
+                    WATCH BUTTON
                 ========================= */}
 
                     <Link
@@ -522,7 +563,8 @@ export const MovieModal = ({
                         text-sm
                         font-bold
                         text-black
-                        transition
+                        transition-all
+                        duration-300
                         hover:scale-[1.01]
                         hover:shadow-[0_0_30px_rgba(20,199,139,.45)]
                         sm:mt-10
@@ -530,6 +572,7 @@ export const MovieModal = ({
                         sm:text-base
                     "
                     >
+
                         <Play
                             size={20}
                             fill="currentColor"
