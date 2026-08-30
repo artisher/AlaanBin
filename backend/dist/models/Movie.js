@@ -9,6 +9,10 @@ const movieSchema = new mongoose_1.default.Schema({
     title: { type: String, required: true },
     description: String,
     poster: String,
+    videoUrl: {
+        type: String,
+        required: true
+    },
     rating: { type: Number, min: 0, max: 10 },
     topWeek: { type: Boolean, default: false },
     genre: [String],

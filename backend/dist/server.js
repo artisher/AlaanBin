@@ -15,6 +15,7 @@ const auth_middleware_1 = __importDefault(require("./middleware/auth.middleware"
 const admin_1 = require("./middleware/admin");
 const dotenv_1 = __importDefault(require("dotenv"));
 const Request_1 = require("./models/Request");
+const fs_1 = __importDefault(require("fs"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
@@ -203,6 +204,43 @@ app.get("/api/admin/movies", auth_middleware_1.default, admin_1.adminMiddleware,
         res.status(500).json({
             success: false,
             message: "خطا در دریافت فیلم‌ها",
+        });
+    }
+});
+app.get("/api/admin/storage/movies", auth_middleware_1.default, admin_1.adminMiddleware, async (req, res) => {
+    try {
+        const moviesPath = "/mnt/alanbin/movies";
+        const files = await fs_1.default.promises.readdir(moviesPath, {
+            withFileTypes: true
+        });
+        const storageMovies = files
+            .filter(file => file.isFile() &&
+            file.name.toLowerCase().endsWith(".mp4"))
+            .map(file => file.name);
+        const movies = await Movie_1.Movie.find()
+            .select("videoUrl title");
+        const importedFiles = new Set(movies
+            .map(movie => movie.videoUrl)
+            .filter(Boolean)
+            .map(videoUrl => videoUrl
+            .replace(/^\/videos\//i, "")
+            .toLowerCase()));
+        const result = storageMovies.map(filename => ({
+            filename,
+            imported: importedFiles.has(filename.toLowerCase())
+        }));
+        res.json({
+            success: true,
+            totalFiles: result.length,
+            newFiles: result.filter(movie => !movie.imported).length,
+            movies: result
+        });
+    }
+    catch (err) {
+        console.error("STORAGE SCAN ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "خطا در بررسی Storage"
         });
     }
 });
