@@ -19,6 +19,8 @@ export const MangeFilms = ({ moviesList }: ManageMovieProps) => {
     >([]);
 
     const [isScanningStorage, setIsScanningStorage] = useState(false);
+    const [storageFilename, setStorageFilename] = useState<string | null>(null);
+
 
     const handleScanStorage = async () => {
         try {
@@ -65,6 +67,7 @@ export const MangeFilms = ({ moviesList }: ManageMovieProps) => {
     };
     const handleCloseUserModal = () => {
         setAddMovie(null);
+        setStorageFilename(null);
     };
     const handleSaveEdit = (updatedMovie: Movie) => {
         setMovies(movies.map(movie => (movie._id === updatedMovie._id ? updatedMovie : movie)));
@@ -160,6 +163,10 @@ export const MangeFilms = ({ moviesList }: ManageMovieProps) => {
                                 </div>
 
                                 <button
+                                    onClick={() => {
+                                        setStorageFilename(movie.filename);
+                                        setAddMovie(true);
+                                    }}
                                     className="bg-primary text-dark px-4 py-2 rounded font-bold hover:bg-green-400 transition"
                                 >
                                     وارد کردن
@@ -200,7 +207,9 @@ export const MangeFilms = ({ moviesList }: ManageMovieProps) => {
                 isOpen={!!addMovie}
                 onClose={handleCloseUserModal}
                 movie={null}
-                onSave={handleSaveEdit} />
+                onSave={handleSaveEdit}
+                storageFilename={storageFilename}
+            />
         </div>
     )
 }

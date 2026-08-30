@@ -14,16 +14,23 @@ export const addedMovie = z.object({
     topWeek: z.boolean(),
     poster: z.string(),
     product: z.string(),
+    videoUrl: z.string().optional(),
 });
-interface EditMovieModalProps {
+interface CreateMovieModalProps {
     isOpen: boolean;
     movie: Movie | null;
     onClose: () => void;
     onSave: (updatedMovie: Movie) => void;
+    storageFilename?: string | null;
 }
 export type AddedMovie = z.infer<typeof addedMovie>;
 
-export const CreateMovieModal: React.FC<EditMovieModalProps> = ({ isOpen, movie, onClose }) => {
+export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
+    isOpen,
+    movie,
+    onClose,
+    storageFilename,
+}) => {
     const {
         register,
         handleSubmit,
@@ -40,13 +47,18 @@ export const CreateMovieModal: React.FC<EditMovieModalProps> = ({ isOpen, movie,
 
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/admin/movies`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/movies`, {
                 credentials: "include",
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(data),
+                body: JSON.stringify({
+                    ...data,
+                    ...(storageFilename && {
+                        videoUrl: `/videos/${storageFilename}`,
+                    }),
+                }),
             });
 
             const result = await response.json();

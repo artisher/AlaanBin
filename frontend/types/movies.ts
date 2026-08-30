@@ -9,5 +9,6 @@ export interface Movie {
     topWeek: boolean;
     genre: string[];
     year: number;
+ 
     product: string;
 }
