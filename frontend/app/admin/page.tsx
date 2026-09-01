@@ -53,6 +53,29 @@ export default async function AdminDashboard() {
         );
     }
 
+    const resStorage = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/storage/movies`,
+        {
+            cache: "no-store",
+            headers: {
+                Cookie: cookieStore.toString(),
+            },
+        }
+    );
+
+    if (resStorage.status === 401) {
+        redirect("/login");
+    }
+
+    if (!resStorage.ok) {
+        throw new Error(
+            `خطا در دریافت فایل‌های Storage: ${resStorage.status}`
+        );
+    }
+
+    const storageList = await resStorage.json();
+
+
     const requestsList = await resRequests.json();
 
     if (!requestsList || !Array.isArray(requestsList.requests)) {
@@ -91,6 +114,7 @@ export default async function AdminDashboard() {
                 moviesList={moviesList.movies}
                 userList={userList}
                 requestsList={requestsList.requests}
+                storageMovies={storageList.movies}
             />
         </div>
     );

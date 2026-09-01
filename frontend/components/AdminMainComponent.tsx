@@ -7,14 +7,21 @@ import type { User } from "@/types/user";
 import type { Movie } from "@/types/movies";
 import type { UserRequest } from "@/types/request";
 
+type StorageMovie = {
+    filename: string;
+    imported: boolean;
+};
+
 export const AdminMainComponent = ({
     moviesList = [],
     userList = [],
-    requestsList = []
+    requestsList = [],
+    storageMovies = []
 }: {
     moviesList?: Movie[];
     userList?: User[];
     requestsList?: UserRequest[];
+    storageMovies?: StorageMovie[];
 }) => {
 
     const [activeTab, setActiveTab] = useState<'users' | 'movies' | 'requests'>('users');
@@ -71,7 +78,12 @@ export const AdminMainComponent = ({
 
                     {/* نمایش محتوای تب فعال */}
                     <div className="animate-fade-in">
-                        {activeTab === 'movies' && <MangeFilms moviesList={moviesList} />}
+                        {activeTab === 'movies' && (
+                            <MangeFilms
+                                moviesList={moviesList}
+                                storageMovies={storageMovies}
+                            />
+                        )}
                         {activeTab === 'users' && <ManageUser userList={userList} />}
                         {activeTab === 'requests' && (
                             <ManageRequests requestsList={requestsList} />

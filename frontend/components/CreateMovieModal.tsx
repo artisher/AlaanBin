@@ -151,11 +151,11 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
                     </div>
                     {/* url */}
                     <div className='w-full sm:w-75'>
-                        <label htmlFor="videoUrl" className="block text-sm font-medium text-gray-300 mb-1">ادرس دیتابیس</label>
+                        <label htmlFor="videoUrl" className="block text-sm font-medium text-gray-300 mb-1">  آدرس  ویدیو</label>
                         <input
 
                             id="videoUrl"
-                            value={storageFilename ? `/video/${storageFilename}` : ""}
+                            value={storageFilename ? `/videos/${storageFilename}` : ""}
                             readOnly
                             placeholder="فیلمی از Storage انتخاب نشده"
                             className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"

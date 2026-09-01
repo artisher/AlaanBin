@@ -1,26 +1,35 @@
 'use client';
-import { useState } from "react";
-import { EditMovieModal } from "./EditMovieModal";
-import { CreateMovieModal } from "./CreateMovieModal";
 import type { Movie } from "@/types/movies";
+import { useState } from "react";
 import toast from "react-hot-toast";
-
+import { CreateMovieModal } from "./CreateMovieModal";
+import { EditMovieModal } from "./EditMovieModal";
+interface StorageMovie {
+    filename: string;
+    imported: boolean;
+}
 interface ManageMovieProps {
     moviesList: Movie[];
+    storageMovies: StorageMovie[];
 }
-export const MangeFilms = ({ moviesList }: ManageMovieProps) => {
+export const MangeFilms = ({
+    moviesList,
+    storageMovies
+}: ManageMovieProps) => {
 
     const [movies, setMovies] = useState<Movie[]>(moviesList ?? []);
 
     const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
     const [addMovie, setAddMovie] = useState<boolean | null>(false);
-    const [storageMovies, setStorageMovies] = useState<
-        { filename: string; imported: boolean }[]
-    >([]);
+
+    const [storageFiles, setStorageFiles] = useState<StorageMovie[]>(
+        storageMovies ?? []
+    );
 
     const [isScanningStorage, setIsScanningStorage] = useState(false);
-    const [storageFilename, setStorageFilename] = useState<string | null>(null);
 
+    const [selectedStorageFile, setSelectedStorageFile] =
+        useState<string | null>(null);
 
     const handleScanStorage = async () => {
         try {
@@ -44,7 +53,7 @@ export const MangeFilms = ({ moviesList }: ManageMovieProps) => {
                 throw new Error(data.message || "خطا در بررسی Storage");
             }
 
-            setStorageMovies(
+            setStorageFiles(
                 data.movies.filter(
                     (movie: { filename: string; imported: boolean }) =>
                         !movie.imported
@@ -67,7 +76,7 @@ export const MangeFilms = ({ moviesList }: ManageMovieProps) => {
     };
     const handleCloseUserModal = () => {
         setAddMovie(null);
-        setStorageFilename(null);
+        setSelectedStorageFile(null);
     };
     const handleSaveEdit = (updatedMovie: Movie) => {
         setMovies(movies.map(movie => (movie._id === updatedMovie._id ? updatedMovie : movie)));
@@ -134,7 +143,7 @@ export const MangeFilms = ({ moviesList }: ManageMovieProps) => {
                     </button>
                 </div>
             </div>
-            {storageMovies.length > 0 && (
+            {storageFiles.length > 0 && (
                 <div className="bg-card border border-yellow-600/30 rounded-lg p-5 mb-6">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-bold text-white">
@@ -142,12 +151,12 @@ export const MangeFilms = ({ moviesList }: ManageMovieProps) => {
                         </h3>
 
                         <span className="text-sm text-yellow-400">
-                            {storageMovies.length} فیلم جدید
+                            {storageFiles.length} فیلم جدید
                         </span>
                     </div>
 
                     <div className="space-y-3">
-                        {storageMovies.map((movie) => (
+                        {storageFiles.map((movie) => (
                             <div
                                 key={movie.filename}
                                 className="flex items-center justify-between bg-gray-900/50 border border-gray-700 rounded-lg p-3"
@@ -164,7 +173,7 @@ export const MangeFilms = ({ moviesList }: ManageMovieProps) => {
 
                                 <button
                                     onClick={() => {
-                                        setStorageFilename(movie.filename);
+                                        setSelectedStorageFile(movie.filename);
                                         setAddMovie(true);
                                     }}
                                     className="bg-primary text-dark px-4 py-2 rounded font-bold hover:bg-green-400 transition"
@@ -208,7 +217,7 @@ export const MangeFilms = ({ moviesList }: ManageMovieProps) => {
                 onClose={handleCloseUserModal}
                 movie={null}
                 onSave={handleSaveEdit}
-                storageFilename={storageFilename}
+                storageFilename={selectedStorageFile}
             />
         </div>
     )
