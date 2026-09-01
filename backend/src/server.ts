@@ -103,8 +103,12 @@ app.get(
         try {
             const filename = String(req.params.filename);
 
-            // جلوگیری از Path Traversal
-            if (!/^[a-zA-Z0-9_-]+\.mp4$/.test(filename)) {
+            if (
+                filename.includes("/") ||
+                filename.includes("\\") ||
+                filename.includes("..") ||
+                !filename.toLowerCase().endsWith(".mp4")
+            ) {
                 return res.status(400).json({
                     message: "نام فایل نامعتبر است"
                 });
