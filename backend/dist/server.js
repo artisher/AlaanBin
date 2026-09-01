@@ -16,6 +16,8 @@ const admin_1 = require("./middleware/admin");
 const dotenv_1 = __importDefault(require("dotenv"));
 const Request_1 = require("./models/Request");
 const fs_1 = __importDefault(require("fs"));
+const multer_1 = __importDefault(require("multer"));
+const path_1 = __importDefault(require("path"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
@@ -31,6 +33,54 @@ app.use((0, cors_1.default)({
 })); // اجازه دسترسی از فرانت
 app.use(express_1.default.json()); // خواندن داده‌های JSON
 app.use((0, cookie_parser_1.default)());
+const storage = multer_1.default.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "/mnt/alanbin/movies");
+    },
+    filename: (req, file, cb) => {
+        const filename = Buffer
+            .from(file.originalname, "latin1")
+            .toString("utf8");
+        cb(null, filename);
+    }
+});
+const upload = (0, multer_1.default)({
+    storage,
+    limits: {
+        fileSize: 5 * 1024 * 1024 * 1024,
+    },
+    fileFilter: (req, file, cb) => {
+        const ext = path_1.default.extname(file.originalname).toLowerCase();
+        if (ext !== ".mp4") {
+            return cb(new Error("فقط فایل MP4 مجاز است"));
+        }
+        cb(null, true);
+    }
+});
+app.post("/api/admin/storage/upload", auth_middleware_1.default, admin_1.adminMiddleware, upload.single("video"), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: "فایلی ارسال نشده است"
+            });
+        }
+        res.status(201).json({
+            success: true,
+            message: "فیلم با موفقیت در Storage آپلود شد",
+            filename: req.file.filename,
+            size: req.file.size,
+            videoUrl: `/videos/${req.file.filename}`
+        });
+    }
+    catch (err) {
+        console.error("UPLOAD ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: err.message || "خطا در آپلود فیلم"
+        });
+    }
+});
 app.get("/videos/:filename", auth_middleware_1.default, async (req, res) => {
     try {
         const filename = String(req.params.filename);

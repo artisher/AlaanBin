@@ -11,6 +11,9 @@ import { adminMiddleware } from './middleware/admin';
 import dotenv from "dotenv";
 import { Request } from './models/Request';
 import fs from "fs";
+import multer from "multer";
+import path from "path";
+
 
 dotenv.config();
 const app = express();
@@ -30,6 +33,69 @@ app.use(
 app.use(express.json()); // خواندن داده‌های JSON
 app.use(cookieParser());
 
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "/mnt/alanbin/movies");
+    },
+
+    filename: (req, file, cb) => {
+        const filename = Buffer
+            .from(file.originalname, "latin1")
+            .toString("utf8");
+
+        cb(null, filename);
+    }
+});
+
+const upload = multer({
+    storage,
+
+    limits: {
+        fileSize: 5 * 1024 * 1024 * 1024,
+    },
+
+    fileFilter: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+
+        if (ext !== ".mp4") {
+            return cb(new Error("فقط فایل MP4 مجاز است"));
+        }
+
+        cb(null, true);
+    }
+});
+app.post(
+    "/api/admin/storage/upload",
+    checkSubscription,
+    adminMiddleware,
+    upload.single("video"),
+    async (req, res) => {
+        try {
+            if (!req.file) {
+                return res.status(400).json({
+                    success: false,
+                    message: "فایلی ارسال نشده است"
+                });
+            }
+
+            res.status(201).json({
+                success: true,
+                message: "فیلم با موفقیت در Storage آپلود شد",
+                filename: req.file.filename,
+                size: req.file.size,
+                videoUrl: `/videos/${req.file.filename}`
+            });
+
+        } catch (err: any) {
+            console.error("UPLOAD ERROR:", err);
+
+            res.status(500).json({
+                success: false,
+                message: err.message || "خطا در آپلود فیلم"
+            });
+        }
+    }
+);
 app.get(
     "/videos/:filename",
     checkSubscription,
@@ -42,7 +108,7 @@ app.get(
                 return res.status(400).json({
                     message: "نام فایل نامعتبر است"
                 });
-            } 
+            }
 
             res.setHeader(
                 "X-Accel-Redirect",
