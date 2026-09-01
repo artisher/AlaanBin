@@ -1,7 +1,7 @@
 'use client';
 import type { Movie } from "@/types/movies";
 import { zodResolver } from '@hookform/resolvers/zod';
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from "react-hot-toast";
 import * as z from 'zod';
@@ -42,7 +42,64 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
     >({
         resolver: zodResolver(addedMovie),
     });
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadedVideo, setUploadedVideo] = useState<{
+        filename: string;
+        videoUrl: string;
+    } | null>(null);
 
+    const uploadVideo = async () => {
+        if (!selectedFile) {
+            toast.error("لطفاً یک فایل MP4 انتخاب کنید.");
+            return null;
+        }
+
+        const formData = new FormData();
+        formData.append("video", selectedFile);
+
+        setIsUploading(true);
+
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/admin/storage/upload`,
+                {
+                    method: "POST",
+                    credentials: "include",
+                    body: formData,
+                }
+            );
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || "خطا در آپلود فیلم");
+            }
+
+            setUploadedVideo({
+                filename: result.filename,
+                videoUrl: result.videoUrl,
+            });
+
+            toast.success("فیلم با موفقیت آپلود شد.");
+
+            return result;
+
+        } catch (error) {
+            console.error("Upload error:", error);
+
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "خطا در آپلود فیلم"
+            );
+
+            return null;
+
+        } finally {
+            setIsUploading(false);
+        }
+    };
     const onSubmit = async (data: z.output<typeof addedMovie>) => {
 
 
@@ -150,18 +207,45 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
                         {errors.rating && <span className="text-red-400 text-xs mt-1">{errors.rating.message}</span>}
                     </div>
                     {/* url */}
-                    <div className='w-full sm:w-75'>
-                        <label htmlFor="videoUrl" className="block text-sm font-medium text-gray-300 mb-1">  آدرس  ویدیو</label>
+                    <div className="w-full sm:w-75">
+                        <label
+                            htmlFor="video"
+                            className="block text-sm font-medium text-gray-300 mb-1"
+                        >
+                            فایل فیلم
+                        </label>
+
                         <input
+                            type="file"
+                            id="video"
+                            accept="video/mp4"
+                            onChange={(e) => {
+                                const file = e.target.files?.[0] ?? null;
 
-                            id="videoUrl"
-                            value={storageFilename ? `/videos/${storageFilename}` : ""}
-                            readOnly
-                            placeholder="فیلمی از Storage انتخاب نشده"
-                            className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
+                                setSelectedFile(file);
+                                setUploadedVideo(null);
+                            }}
+                            className="w-full rounded-md border border-gray-600 bg-gray-700 text-white p-2"
                         />
-                    </div>
 
+                        {selectedFile && (
+                            <p className="text-gray-400 text-sm mt-2">
+                                فایل انتخاب شده: {selectedFile.name}
+                            </p>
+                        )}
+
+                        {uploadedVideo && (
+                            <p className="text-green-400 text-sm mt-2">
+                                ✓ آپلود شد: {uploadedVideo.filename}
+                            </p>
+                        )}
+
+                        {storageFilename && !uploadedVideo && (
+                            <p className="text-blue-400 text-sm mt-2">
+                                فایل Storage انتخاب شده: {storageFilename}
+                            </p>
+                        )}
+                    </div>
                     {/* نقش */}
                     <div className='w-full sm:w-75'>
                         <label htmlFor="genre" className="block text-sm font-medium text-gray-300 mb-1">ژانر </label>
