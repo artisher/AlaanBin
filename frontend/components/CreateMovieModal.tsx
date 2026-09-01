@@ -101,36 +101,62 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
         }
     };
     const onSubmit = async (data: z.output<typeof addedMovie>) => {
-
-
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/movies`, {
-                credentials: "include",
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    ...data,
-                    ...(storageFilename && {
-                        videoUrl: `/videos/${storageFilename}`,
+            let videoUrl: string | undefined;
+
+            // اگر فیلم از قبل روی Storage انتخاب شده
+            if (storageFilename) {
+                videoUrl = `/videos/${storageFilename}`;
+            }
+
+            // اگر فیلم از کامپیوتر انتخاب شده، اول آپلودش کن
+            else if (selectedFile) {
+                const uploadResult = await uploadVideo();
+
+                if (!uploadResult) {
+                    return;
+                }
+
+                videoUrl = uploadResult.videoUrl;
+            }
+
+            // هیچ فیلمی انتخاب نشده
+            else {
+                toast.error("لطفاً یک فیلم انتخاب کنید.");
+                return;
+            }
+
+            // ثبت اطلاعات فیلم در MongoDB
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/admin/movies`,
+                {
+                    credentials: "include",
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        ...data,
+                        videoUrl,
                     }),
-                }),
-            });
+                }
+            );
 
             const result = await response.json();
 
-            if (response.ok) {
-                toast.success("Successfully created.");
-                onClose();
-            } else {
-                toast.error("Something went wrong. Check the console for more information.");
-                console.log(result.message || 'خطا در افزودن فیلم');
-
+            if (!response.ok) {
+                toast.error(
+                    result.message || "خطا در ثبت اطلاعات فیلم"
+                );
+                return;
             }
+
+            toast.success("فیلم با موفقیت اضافه شد.");
+            onClose();
+
         } catch (error) {
-            console.error('خطا در ارسال:', error);
-            toast.error("Something went wrong. Check the console for more information.");
+            console.error("Create movie error:", error);
+            toast.error("خطایی در ثبت فیلم رخ داد.");
         }
     };
 
@@ -246,6 +272,7 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
                             </p>
                         )}
                     </div>
+
                     {/* نقش */}
                     <div className='w-full sm:w-75'>
                         <label htmlFor="genre" className="block text-sm font-medium text-gray-300 mb-1">ژانر </label>
@@ -308,11 +335,15 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
                             لغو
                         </button>
                         <button
-                            disabled={isSubmitting}
-                            type='submit'
+                            disabled={isSubmitting || isUploading}
+                            type="submit"
                             className="px-4 py-2 bg-[#14c78b] rounded-md text-sm font-medium text-white hover:bg-[#12b07a] focus:outline-none focus:ring-2 focus:ring-[#14c78b] focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {isSubmitting ? 'در حال ارسال...' : 'افزودن فیلم'}
+                            {isUploading
+                                ? "در حال آپلود فیلم..."
+                                : isSubmitting
+                                    ? "در حال ثبت..."
+                                    : "افزودن فیلم"}
                         </button>
                     </div>
                 </form>
