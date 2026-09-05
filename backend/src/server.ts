@@ -13,12 +13,14 @@ import { Request } from './models/Request';
 import fs from "fs";
 import multer from "multer";
 import path from "path";
-
+import { execFile } from "child_process";
+import { promisify } from "util";
 
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 const isProduction = process.env.APP_ENV === "production";
+const execFileAsync = promisify(execFile);
 // تنظیمات امنیتی و پارس کردن داده‌ها
 app.use(
     cors({
@@ -391,6 +393,112 @@ app.get(
             res.status(500).json({
                 success: false,
                 message: "خطا در بررسی Storage"
+            });
+        }
+    }
+);
+app.post(
+    "/api/admin/storage/convert",
+    checkSubscription,
+    adminMiddleware,
+    async (req, res) => {
+        try {
+            const { filename } = req.body;
+
+            if (!filename || typeof filename !== "string") {
+                return res.status(400).json({
+                    success: false,
+                    message: "نام فایل ارسال نشده است"
+                });
+            }
+
+            if (
+                filename.includes("/") ||
+                filename.includes("\\") ||
+                filename.includes("..") ||
+                !filename.toLowerCase().endsWith(".mkv")
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "فایل MKV نامعتبر است"
+                });
+            }
+
+            const inputPath = path.join(
+                "/mnt/alanbin/movies",
+                filename
+            );
+
+            const outputFilename =
+                path.basename(filename, path.extname(filename)) + ".mp4";
+
+            const outputPath = path.join(
+                "/mnt/alanbin/movies",
+                outputFilename
+            );
+
+            // بررسی وجود فایل اصلی
+            await fs.promises.access(inputPath);
+
+            // اگر قبلاً تبدیل شده، دوباره تبدیل نکن
+            try {
+                await fs.promises.access(outputPath);
+
+                return res.json({
+                    success: true,
+                    message: "نسخه MP4 قبلاً وجود دارد",
+                    filename: outputFilename,
+                    videoUrl: `/videos/${outputFilename}`
+                });
+
+            } catch {
+                // فایل MP4 وجود ندارد؛ ادامه می‌دهیم
+            }
+
+            console.log("🎬 Starting MKV conversion:", filename);
+
+            await execFileAsync("ffmpeg", [
+                "-i",
+                inputPath,
+
+                "-map",
+                "0:v:0",
+                "-map",
+                "0:a:0",
+
+                // ویدئو H.264 را دوباره encode نمی‌کنیم
+                "-c:v",
+                "copy",
+
+                // تبدیل صدا به AAC
+                "-c:a",
+                "aac",
+                "-b:a",
+                "192k",
+
+                // MP4
+                "-movflags",
+                "+faststart",
+
+                "-y",
+                outputPath
+            ]);
+
+            console.log("✅ MKV conversion finished:", outputFilename);
+
+            res.json({
+                success: true,
+                message: "فیلم با موفقیت به فرمت Web تبدیل شد",
+                filename: outputFilename,
+                videoUrl: `/videos/${outputFilename}`
+            });
+
+        } catch (err: any) {
+            console.error("❌ MKV CONVERSION ERROR:", err);
+
+            res.status(500).json({
+                success: false,
+                message: err.message || "خطا در تبدیل فیلم"
             });
         }
     }
