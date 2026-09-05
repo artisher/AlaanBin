@@ -267,17 +267,227 @@ app.put(
     }
 );
 // 2. اضافه کردن فیلم جدید
-app.post('/api/admin/movies',
+app.post(
+    "/api/admin/movies",
     checkSubscription,
-    adminMiddleware, async (req, res) => {
+    adminMiddleware,
+    async (req, res) => {
         try {
-            const newMovie = new Movie(req.body);
+            const {
+                storageFilename,
+                videoUrl,
+                ...movieData
+            } = req.body;
+
+            let finalVideoUrl = videoUrl;
+
+            /*
+             * فیلمی که از Storage انتخاب شده
+             */
+            if (storageFilename) {
+                if (typeof storageFilename !== "string") {
+                    return res.status(400).json({
+                        message: "نام فایل Storage نامعتبر است"
+                    });
+                }
+
+                if (
+                    storageFilename.includes("/") ||
+                    storageFilename.includes("\\") ||
+                    storageFilename.includes("..")
+                ) {
+                    return res.status(400).json({
+                        message: "نام فایل Storage نامعتبر است"
+                    });
+                }
+
+                const extension = path
+                    .extname(storageFilename)
+                    .toLowerCase();
+
+                if (extension !== ".mkv" && extension !== ".mp4") {
+                    return res.status(400).json({
+                        message: "فرمت فایل پشتیبانی نمی‌شود"
+                    });
+                }
+
+                const moviesPath = "/mnt/alanbin/movies";
+
+                const files = await fs.promises.readdir(
+                    moviesPath,
+                    { withFileTypes: true }
+                );
+
+                /*
+                 * فایل واقعی را پیدا می‌کنیم
+                 * بدون حساسیت به بزرگ/کوچک بودن حروف
+                 */
+                const actualFilename = files
+                    .filter(file => file.isFile())
+                    .map(file => file.name)
+                    .find(
+                        name =>
+                            name.toLowerCase() ===
+                            storageFilename.toLowerCase()
+                    );
+
+                if (!actualFilename) {
+                    return res.status(404).json({
+                        message: "فایل در Storage پیدا نشد"
+                    });
+                }
+
+                const actualExtension = path
+                    .extname(actualFilename)
+                    .toLowerCase();
+
+                /*
+                 * اگر MP4 است، مستقیماً استفاده می‌کنیم
+                 */
+                if (actualExtension === ".mp4") {
+                    finalVideoUrl = `/videos/${actualFilename}`;
+                }
+
+                /*
+                 * اگر MKV است:
+                 * اول بررسی می‌کنیم MP4 هم‌نام وجود دارد یا نه
+                 */
+                else if (actualExtension === ".mkv") {
+                    const baseName = path.basename(
+                        actualFilename,
+                        path.extname(actualFilename)
+                    );
+
+                    const mp4Filename = files
+                        .filter(file => file.isFile())
+                        .map(file => file.name)
+                        .find(
+                            name =>
+                                path.extname(name).toLowerCase() === ".mp4" &&
+                                path.basename(
+                                    name,
+                                    path.extname(name)
+                                ).toLowerCase() ===
+                                baseName.toLowerCase()
+                        );
+
+                    /*
+                     * MP4 از قبل وجود دارد
+                     */
+                    if (mp4Filename) {
+                        console.log(
+                            "✅ Existing MP4 found:",
+                            mp4Filename
+                        );
+
+                        finalVideoUrl =
+                            `/videos/${mp4Filename}`;
+                    }
+
+                    /*
+                     * MP4 وجود ندارد → تبدیل MKV
+                     */
+                    else {
+                        const outputFilename =
+                            `${baseName}.mp4`;
+
+                        const inputPath = path.join(
+                            moviesPath,
+                            actualFilename
+                        );
+
+                        const outputPath = path.join(
+                            moviesPath,
+                            outputFilename
+                        );
+
+                        console.log(
+                            "🎬 Converting MKV:",
+                            actualFilename
+                        );
+
+                        await execFileAsync("ffmpeg", [
+                            "-i",
+                            inputPath,
+
+                            "-map",
+                            "0:v:0",
+
+                            "-map",
+                            "0:a:0?",
+
+                            "-c:v",
+                            "copy",
+
+                            "-c:a",
+                            "aac",
+
+                            "-b:a",
+                            "192k",
+
+                            "-movflags",
+                            "+faststart",
+
+                            "-y",
+                            outputPath
+                        ]);
+
+                        console.log(
+                            "✅ Conversion finished:",
+                            outputFilename
+                        );
+
+                        finalVideoUrl =
+                            `/videos/${outputFilename}`;
+                    }
+                }
+            }
+
+            /*
+             * اگر از Storage نیامده، باید videoUrl داشته باشیم
+             */
+            if (!finalVideoUrl) {
+                return res.status(400).json({
+                    message: "آدرس ویدیو مشخص نشده است"
+                });
+            }
+
+            /*
+             * جلوگیری از ثبت دوباره همان فیلم
+             */
+            const existingMovie = await Movie.findOne({
+                videoUrl: finalVideoUrl
+            });
+
+            if (existingMovie) {
+                return res.status(409).json({
+                    message: "این فیلم قبلاً به سایت اضافه شده است"
+                });
+            }
+
+            /*
+             * ثبت نهایی فیلم
+             */
+            const newMovie = new Movie({
+                ...movieData,
+                videoUrl: finalVideoUrl
+            });
+
             const savedMovie = await newMovie.save();
+
             res.status(201).json(savedMovie);
+
         } catch (err: any) {
-            res.status(400).json({ message: err.message });
+            console.error("ADMIN CREATE MOVIE ERROR:", err);
+
+            res.status(500).json({
+                message:
+                    err.message ||
+                    "خطا در ثبت فیلم"
+            });
         }
-    });
+    }
+);
 // 3. حذف فیلم
 app.delete('/api/admin/movies/:id',
     checkSubscription,
@@ -346,49 +556,127 @@ app.get(
         try {
             const moviesPath = "/mnt/alanbin/movies";
 
-            const files = await fs.promises.readdir(moviesPath, {
-                withFileTypes: true
-            });
+            const files = await fs.promises.readdir(
+                moviesPath,
+                { withFileTypes: true }
+            );
 
-            const storageMovies = files
+            const videoFiles = files
                 .filter(
                     file =>
                         file.isFile() &&
                         (
-                            file.name.toLowerCase().endsWith(".mp4") ||
-                            file.name.toLowerCase().endsWith(".mkv")
+                            file.name
+                                .toLowerCase()
+                                .endsWith(".mp4") ||
+                            file.name
+                                .toLowerCase()
+                                .endsWith(".mkv")
                         )
                 )
                 .map(file => file.name);
 
+            /*
+             * فیلم‌هایی که قبلاً در سایت ثبت شده‌اند
+             *
+             * فقط basename را نگه می‌داریم:
+             *
+             * /videos/atashbas.mp4
+             *             ↓
+             * atashbas
+             */
             const movies = await Movie.find()
                 .select("videoUrl title");
 
-            const importedFiles = new Set(
+            const importedMovies = new Set(
                 movies
                     .map(movie => movie.videoUrl)
                     .filter(Boolean)
-                    .map(videoUrl =>
-                        videoUrl
-                            .replace(/^\/videos\//i, "")
-                            .toLowerCase()
-                    )
+                    .map(videoUrl => {
+                        const filename = videoUrl
+                            .replace(/^\/videos\//i, "");
+
+                        return path
+                            .basename(
+                                filename,
+                                path.extname(filename)
+                            )
+                            .toLowerCase();
+                    })
             );
 
-            const result = storageMovies.map(filename => ({
-                filename,
-                imported: importedFiles.has(filename.toLowerCase())
+            /*
+             * گروه‌بندی MP4 و MKV بر اساس basename
+             */
+            const groupedMovies = new Map<
+                string,
+                {
+                    filename: string;
+                    hasMkv: boolean;
+                    hasMp4: boolean;
+                }
+            >();
+
+            for (const filename of videoFiles) {
+                const ext = path
+                    .extname(filename)
+                    .toLowerCase();
+
+                const baseName = path
+                    .basename(
+                        filename,
+                        path.extname(filename)
+                    );
+
+                const key = baseName.toLowerCase();
+
+                const existing = groupedMovies.get(key);
+
+                if (!existing) {
+                    groupedMovies.set(key, {
+                        /*
+                         * اگر MKV باشد آن را برای نمایش انتخاب می‌کنیم
+                         */
+                        filename,
+                        hasMkv: ext === ".mkv",
+                        hasMp4: ext === ".mp4"
+                    });
+                } else {
+                    if (ext === ".mkv") {
+                        existing.hasMkv = true;
+                        existing.filename = filename;
+                    }
+
+                    if (ext === ".mp4") {
+                        existing.hasMp4 = true;
+                    }
+                }
+            }
+
+            /*
+             * تبدیل Map به خروجی نهایی
+             */
+            const result = Array.from(
+                groupedMovies.entries()
+            ).map(([key, movie]) => ({
+                filename: movie.filename,
+                imported: importedMovies.has(key)
             }));
 
             res.json({
                 success: true,
                 totalFiles: result.length,
-                newFiles: result.filter(movie => !movie.imported).length,
+                newFiles: result.filter(
+                    movie => !movie.imported
+                ).length,
                 movies: result
             });
 
         } catch (err) {
-            console.error("STORAGE SCAN ERROR:", err);
+            console.error(
+                "STORAGE SCAN ERROR:",
+                err
+            );
 
             res.status(500).json({
                 success: false,
