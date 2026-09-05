@@ -352,7 +352,10 @@ app.get(
                 .filter(
                     file =>
                         file.isFile() &&
-                        file.name.toLowerCase().endsWith(".mp4")
+                        (
+                            file.name.toLowerCase().endsWith(".mp4") ||
+                            file.name.toLowerCase().endsWith(".mkv")
+                        )
                 )
                 .map(file => file.name);
 
