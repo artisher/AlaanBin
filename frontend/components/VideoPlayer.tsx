@@ -15,7 +15,7 @@ export const VideoPlayer = ({ video }: any) => {
                         controlsList="nodownload"
                         controls
                         className="w-full"
-                        src={`${process.env.NEXT_PUBLIC_API_URL}${movie.videoUrl.toLowerCase()}`}
+                        src={`${process.env.NEXT_PUBLIC_API_URL}${movie.videoUrl}`}
                     />
                 </div>
 
