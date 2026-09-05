@@ -60,7 +60,7 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
         handleSubmit,
         watch,
         setValue,
-        formState: { errors },
+       formState: { errors, isSubmitting },
     } = useForm<z.infer<typeof addedMovie>>({
         resolver: zodResolver(addedMovie),
 
@@ -449,12 +449,11 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
                     <div className='w-full sm:w-75'>
                         <label htmlFor="year" className="block text-sm font-medium text-gray-300 mb-1">تاریخ  ساخت </label>
                         <input
-                            type="text"
+                            type="number"
                             id="year"
-
+                            {...register("year", { valueAsNumber: true })}
                             placeholder="مثال: 1403/12/30"
-                            {...register('year'), { valueAsNumber: true, }}
-                            className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
+                            className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow..."
                         />
                         {errors.year && <span className="text-red-400 text-xs mt-1">{errors.year.message}</span>}
                     </div>
