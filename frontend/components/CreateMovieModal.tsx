@@ -106,9 +106,70 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
 
             // اگر فیلم از قبل روی Storage انتخاب شده
             if (storageFilename) {
-                videoUrl = `/videos/${storageFilename}`;
-            }
+                const isMkv = storageFilename
+                    .toLowerCase()
+                    .endsWith(".mkv");
 
+                if (isMkv) {
+                    setIsUploading(true);
+
+                    try {
+                        toast.loading("در حال آماده‌سازی فیلم برای پخش وب...", {
+                            id: "mkv-convert",
+                        });
+
+                        const convertResponse = await fetch(
+                            `${process.env.NEXT_PUBLIC_API_URL}/api/admin/storage/convert`,
+                            {
+                                method: "POST",
+                                credentials: "include",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify({
+                                    filename: storageFilename,
+                                }),
+                            }
+                        );
+
+                        const convertResult = await convertResponse.json();
+
+                        if (!convertResponse.ok) {
+                            throw new Error(
+                                convertResult.message ||
+                                "خطا در تبدیل فیلم"
+                            );
+                        }
+
+                        videoUrl = convertResult.videoUrl;
+
+                        toast.success(
+                            "فیلم با موفقیت برای پخش وب آماده شد.",
+                            {
+                                id: "mkv-convert",
+                            }
+                        );
+
+                    } catch (error) {
+                        toast.error(
+                            error instanceof Error
+                                ? error.message
+                                : "خطا در تبدیل فیلم",
+                            {
+                                id: "mkv-convert",
+                            }
+                        );
+
+                        return;
+                    } finally {
+                        setIsUploading(false);
+                    }
+
+                } else {
+                    // MP4 از Storage → مستقیم استفاده شود
+                    videoUrl = `/videos/${storageFilename}`;
+                }
+            }
             // اگر فیلم از کامپیوتر انتخاب شده، اول آپلودش کن
             else if (selectedFile) {
                 const uploadResult = await uploadVideo();
@@ -244,7 +305,7 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
                         <input
                             type="file"
                             id="video"
-                            accept="video/mp4"
+                            accept="video/mp4,video/x-matroska,.mp4,.mkv"
                             onChange={(e) => {
                                 const file = e.target.files?.[0] ?? null;
 
@@ -269,6 +330,11 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
                         {storageFilename && !uploadedVideo && (
                             <p className="text-blue-400 text-sm mt-2">
                                 فایل Storage انتخاب شده: {storageFilename}
+                                {storageFilename.toLowerCase().endsWith(".mkv") && (
+                                    <span className="block text-yellow-400 mt-1">
+                                        فایل MKV هنگام ثبت فیلم به MP4 تبدیل می‌شود.
+                                    </span>
+                                )}
                             </p>
                         )}
                     </div>
