@@ -5,15 +5,39 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from "react-hot-toast";
 import * as z from 'zod';
+const GENRE_OPTIONS = [
+    "اکشن",
+    "کمدی",
+    "درام",
+    "عاشقانه",
+    "ترسناک",
+    "جنایی",
+    "هیجان‌انگیز",
+    "علمی تخیلی",
+    "ماجراجویی",
+    "فانتزی",
+    "تاریخی",
+    "خانوادگی",
+    "مستند",
+    "موزیکال",
+    "ورزشی",
+];
 export const addedMovie = z.object({
-    title: z.string(),
-    description: z.string(),
-    genre: z.string(),
-    year: z.coerce.number(),
-    rating: z.coerce.number().optional(),
+    title: z.string().min(1, "نام فیلم الزامی است"),
+    description: z.string().min(1, "توضیحات الزامی است"),
+
+    genre: z.array(z.string()).min(1, "حداقل یک ژانر انتخاب کنید"),
+
+    year: z.number(),
+    rating: z.number().optional(),
+
+    duration: z.number().min(1, "مدت فیلم الزامی است"),
+
     topWeek: z.boolean(),
+
     poster: z.string(),
     product: z.string(),
+
     videoUrl: z.string().optional(),
 });
 interface CreateMovieModalProps {
@@ -34,13 +58,24 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
     const {
         register,
         handleSubmit,
-        formState: { errors, isSubmitting },
-    } = useForm<
-        z.input<typeof addedMovie>,
-        any,
-        z.output<typeof addedMovie>
-    >({
+        watch,
+        setValue,
+        formState: { errors },
+    } = useForm<z.infer<typeof addedMovie>>({
         resolver: zodResolver(addedMovie),
+
+        defaultValues: {
+            title: "",
+            description: "",
+            genre: [],
+            year: new Date().getFullYear(),
+            rating: undefined,
+            duration: 0,
+            topWeek: false,
+            poster: "",
+            product: "ایرانی",
+            videoUrl: "",
+        },
     });
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
@@ -100,94 +135,36 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
             setIsUploading(false);
         }
     };
-    const onSubmit = async (data: z.output<typeof addedMovie>) => {
+    const onSubmit = async (data: z.infer<typeof addedMovie>) => {
         try {
-            let videoUrl: string | undefined;
+            let body: Record<string, unknown>;
 
-            // اگر فیلم از قبل روی Storage انتخاب شده
             if (storageFilename) {
-                const isMkv = storageFilename
-                    .toLowerCase()
-                    .endsWith(".mkv");
-
-                if (isMkv) {
-                    setIsUploading(true);
-
-                    try {
-                        toast.loading("در حال آماده‌سازی فیلم برای پخش وب...", {
-                            id: "mkv-convert",
-                        });
-
-                        const convertResponse = await fetch(
-                            `${process.env.NEXT_PUBLIC_API_URL}/api/admin/storage/convert`,
-                            {
-                                method: "POST",
-                                credentials: "include",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify({
-                                    filename: storageFilename,
-                                }),
-                            }
-                        );
-
-                        const convertResult = await convertResponse.json();
-
-                        if (!convertResponse.ok) {
-                            throw new Error(
-                                convertResult.message ||
-                                "خطا در تبدیل فیلم"
-                            );
-                        }
-
-                        videoUrl = convertResult.videoUrl;
-
-                        toast.success(
-                            "فیلم با موفقیت برای پخش وب آماده شد.",
-                            {
-                                id: "mkv-convert",
-                            }
-                        );
-
-                    } catch (error) {
-                        toast.error(
-                            error instanceof Error
-                                ? error.message
-                                : "خطا در تبدیل فیلم",
-                            {
-                                id: "mkv-convert",
-                            }
-                        );
-
-                        return;
-                    } finally {
-                        setIsUploading(false);
-                    }
-
-                } else {
-                    // MP4 از Storage → مستقیم استفاده شود
-                    videoUrl = `/videos/${storageFilename}`;
-                }
-            }
-            // اگر فیلم از کامپیوتر انتخاب شده، اول آپلودش کن
-            else if (selectedFile) {
+                // فایل از Storage آمده؛
+                // تبدیل/پیدا کردن MP4 کاملاً سمت سرور انجام می‌شود.
+                body = {
+                    ...data,
+                    storageFilename,
+                };
+            } else if (selectedFile) {
+                // فایل از کامپیوتر ادمین
                 const uploadResult = await uploadVideo();
 
                 if (!uploadResult) {
                     return;
                 }
 
-                videoUrl = uploadResult.videoUrl;
-            }
-
-            // هیچ فیلمی انتخاب نشده
-            else {
+                body = {
+                    ...data,
+                    videoUrl: uploadResult.videoUrl,
+                };
+            } else {
                 toast.error("لطفاً یک فیلم انتخاب کنید.");
                 return;
             }
 
-            // ثبت اطلاعات فیلم در MongoDB
+            setIsUploading(true);
+
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/api/admin/movies`,
                 {
@@ -196,10 +173,7 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({
-                        ...data,
-                        videoUrl,
-                    }),
+                    body: JSON.stringify(body),
                 }
             );
 
@@ -213,11 +187,19 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
             }
 
             toast.success("فیلم با موفقیت اضافه شد.");
+
             onClose();
 
         } catch (error) {
             console.error("Create movie error:", error);
-            toast.error("خطایی در ثبت فیلم رخ داد.");
+
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "خطایی در ثبت فیلم رخ داد."
+            );
+        } finally {
+            setIsUploading(false);
         }
     };
 
@@ -288,7 +270,9 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
                         <input
 
                             id="country"
-                            {...register('rating')}
+                            {...register("rating", {
+                                valueAsNumber: true,
+                            })}
                             className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
                         />
                         {errors.rating && <span className="text-red-400 text-xs mt-1">{errors.rating.message}</span>}
@@ -305,7 +289,7 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
                         <input
                             type="file"
                             id="video"
-                            accept="video/mp4,video/x-matroska,.mp4,.mkv"
+                            accept="video/mp4,.mp4"
                             onChange={(e) => {
                                 const file = e.target.files?.[0] ?? null;
 
@@ -330,26 +314,89 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
                         {storageFilename && !uploadedVideo && (
                             <p className="text-blue-400 text-sm mt-2">
                                 فایل Storage انتخاب شده: {storageFilename}
-                                {storageFilename.toLowerCase().endsWith(".mkv") && (
-                                    <span className="block text-yellow-400 mt-1">
-                                        فایل MKV هنگام ثبت فیلم به MP4 تبدیل می‌شود.
-                                    </span>
-                                )}
                             </p>
                         )}
                     </div>
 
                     {/* نقش */}
-                    <div className='w-full sm:w-75'>
-                        <label htmlFor="genre" className="block text-sm font-medium text-gray-300 mb-1">ژانر </label>
-                        <input
-                            type="text"
-                            id="genre"
-                            {...register('genre')}
-                            className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
-                        />
+                    <div className="w-full sm:w-75">
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                            ژانر
+                        </label>
 
-                        {errors.genre && <span className="text-red-400 text-xs mt-1">{errors.genre.message}</span>}
+                        {/* ژانرهای انتخاب شده */}
+                        <div className="flex flex-wrap gap-2 mb-3">
+                            {watch("genre")?.map((genre) => (
+                                <span
+                                    key={genre}
+                                    className="flex items-center gap-2 bg-[#14c78b]/20 text-[#14c78b] border border-[#14c78b]/40 px-3 py-1 rounded-full text-sm"
+                                >
+                                    {genre}
+
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const currentGenres = watch("genre") || [];
+
+                                            setValue(
+                                                "genre",
+                                                currentGenres.filter(
+                                                    (item) => item !== genre
+                                                ),
+                                                {
+                                                    shouldValidate: true,
+                                                }
+                                            );
+                                        }}
+                                        className="text-red-400 hover:text-red-300"
+                                    >
+                                        ×
+                                    </button>
+                                </span>
+                            ))}
+                        </div>
+
+                        {/* انتخاب ژانر */}
+                        <select
+                            value=""
+                            onChange={(e) => {
+                                const genre = e.target.value;
+
+                                if (!genre) return;
+
+                                const currentGenres = watch("genre") || [];
+
+                                if (!currentGenres.includes(genre)) {
+                                    setValue(
+                                        "genre",
+                                        [...currentGenres, genre],
+                                        {
+                                            shouldValidate: true,
+                                        }
+                                    );
+                                }
+                            }}
+                            className="w-full rounded-md border border-gray-600 bg-gray-700 text-white p-2"
+                        >
+                            <option value="">انتخاب ژانر</option>
+
+                            {GENRE_OPTIONS
+                                .filter(
+                                    (genre) =>
+                                        !watch("genre")?.includes(genre)
+                                )
+                                .map((genre) => (
+                                    <option key={genre} value={genre}>
+                                        {genre}
+                                    </option>
+                                ))}
+                        </select>
+
+                        {errors.genre && (
+                            <p className="text-red-400 text-sm mt-1">
+                                {errors.genre.message}
+                            </p>
+                        )}
                     </div>
 
 
@@ -368,14 +415,45 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
                         {errors.topWeek && <span className="text-red-400 text-xs mt-1">{errors.topWeek.message}</span>}
                     </div>
 
+                    <div className="w-full sm:w-75">
+                        <label
+                            htmlFor="duration"
+                            className="block text-sm font-medium text-gray-300 mb-1"
+                        >
+                            مدت فیلم
+                        </label>
 
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="number"
+                                id="duration"
+                                {...register("duration", {
+                                    valueAsNumber: true,
+                                })}
+                                min={1}
+                                placeholder="مثلاً 120"
+                                className="w-full rounded-md border border-gray-600 bg-gray-700 text-white p-2"
+                            />
+
+                            <span className="text-gray-400 whitespace-nowrap">
+                                دقیقه
+                            </span>
+                        </div>
+
+                        {errors.duration && (
+                            <p className="text-red-400 text-sm mt-1">
+                                {errors.duration.message}
+                            </p>
+                        )}
+                    </div>
                     <div className='w-full sm:w-75'>
                         <label htmlFor="year" className="block text-sm font-medium text-gray-300 mb-1">تاریخ  ساخت </label>
                         <input
                             type="text"
                             id="year"
+
                             placeholder="مثال: 1403/12/30"
-                            {...register('year')}
+                            {...register('year'), { valueAsNumber: true, }}
                             className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
                         />
                         {errors.year && <span className="text-red-400 text-xs mt-1">{errors.year.message}</span>}
@@ -386,7 +464,7 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
                         <input
                             type="text"
                             id="product"
-                            placeholder="مثال: 1403/12/30"
+                            placeholder="مثال: ایران"
                             {...register('product')}
                             className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
                         />
