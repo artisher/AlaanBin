@@ -962,22 +962,7 @@ app.get('/api/movies', async (req, res) => {
                 $gte: Number(req.query.rating)
             };
         }
-        if (req.query.search) {
-            query.$or = [
-                {
-                    title: {
-                        $regex: req.query.search,
-                        $options: "i",
-                    },
-                },
-                {
-                    description: {
-                        $regex: req.query.search,
-                        $options: "i",
-                    },
-                },
-            ];
-        }
+
         if (req.query.search) {
             const search = escapeRegex(String(req.query.search));
 
@@ -990,6 +975,12 @@ app.get('/api/movies', async (req, res) => {
                 },
                 {
                     description: {
+                        $regex: search,
+                        $options: "i",
+                    },
+                },
+                {
+                    aliases: {
                         $regex: search,
                         $options: "i",
                     },
