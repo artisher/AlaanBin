@@ -27,18 +27,15 @@ export const addedMovie = z.object({
     description: z.string().min(1, "توضیحات الزامی است"),
 
     genre: z.array(z.string()).min(1, "حداقل یک ژانر انتخاب کنید"),
+
     aliases: z.array(z.string()),
 
     year: z.number(),
     rating: z.number().optional(),
-
     duration: z.number().min(1, "مدت فیلم الزامی است"),
-
     topWeek: z.boolean(),
-
     poster: z.string(),
     product: z.string(),
-
     videoUrl: z.string().optional(),
 });
 interface CreateMovieModalProps {
@@ -210,7 +207,7 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
             // -------------------------
             // 1. آپلود پوستر
             // -------------------------
-
+          
             let posterUrl = uploadedPoster?.posterUrl;
 
             if (!posterUrl) {
@@ -237,6 +234,7 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
             if (storageFilename) {
                 body = {
                     ...data,
+                   
                     poster: posterUrl,
                     storageFilename,
                 };
@@ -253,10 +251,10 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
 
                 body = {
                     ...data,
+                    
                     poster: posterUrl,
                     videoUrl: uploadResult.videoUrl,
                 };
-
             } else {
                 toast.error("لطفاً یک فیلم انتخاب کنید.");
                 return;
@@ -357,15 +355,18 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
                         <input
                             type="text"
                             id="aliases"
-                            placeholder="مثلاً: atashbas, atash bas"
-                            {...register("aliases")}
+                            placeholder="مثلاً: atashbas, atash bas, آتش بس"
+                            defaultValue=""
                             onChange={(e) => {
                                 const aliases = e.target.value
                                     .split(",")
                                     .map((item) => item.trim())
                                     .filter(Boolean);
 
-                                setValue("aliases", aliases);
+                                setValue("aliases", aliases, {
+                                    shouldValidate: true,
+                                    shouldDirty: true,
+                                });
                             }}
                             className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
                         />
