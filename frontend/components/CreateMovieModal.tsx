@@ -60,7 +60,7 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
         handleSubmit,
         watch,
         setValue,
-       formState: { errors, isSubmitting },
+        formState: { errors, isSubmitting },
     } = useForm<z.infer<typeof addedMovie>>({
         resolver: zodResolver(addedMovie),
 
@@ -78,6 +78,15 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
         },
     });
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [selectedPoster, setSelectedPoster] = useState<File | null>(null);
+
+    const [uploadedPoster, setUploadedPoster] = useState<{
+        filename: string;
+        posterUrl: string;
+    } | null>(null);
+
+
+
     const [isUploading, setIsUploading] = useState(false);
     const [uploadedVideo, setUploadedVideo] = useState<{
         filename: string;
@@ -135,20 +144,103 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
             setIsUploading(false);
         }
     };
+    const uploadPoster = async () => {
+        if (!selectedPoster) {
+            toast.error("لطفاً یک پوستر انتخاب کنید.");
+            return null;
+        }
+
+        const formData = new FormData();
+        formData.append("poster", selectedPoster);
+
+        setIsUploading(true);
+
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/admin/storage/upload-poster`,
+                {
+                    method: "POST",
+                    credentials: "include",
+                    body: formData,
+                }
+            );
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.message || "خطا در آپلود پوستر"
+                );
+            }
+
+            setUploadedPoster({
+                filename: result.filename,
+                posterUrl: result.posterUrl,
+            });
+
+            toast.success("پوستر با موفقیت آپلود شد.");
+
+            return result;
+
+        } catch (error) {
+            console.error("Poster upload error:", error);
+
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "خطا در آپلود پوستر"
+            );
+
+            return null;
+
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+
+
     const onSubmit = async (data: z.infer<typeof addedMovie>) => {
         try {
+            // -------------------------
+            // 1. آپلود پوستر
+            // -------------------------
+
+            let posterUrl = uploadedPoster?.posterUrl;
+
+            if (!posterUrl) {
+                if (!selectedPoster) {
+                    toast.error("لطفاً یک پوستر انتخاب کنید.");
+                    return;
+                }
+
+                const posterResult = await uploadPoster();
+
+                if (!posterResult) {
+                    return;
+                }
+
+                posterUrl = posterResult.posterUrl;
+            }
+
+            // -------------------------
+            // 2. آماده کردن اطلاعات فیلم
+            // -------------------------
+
             let body: Record<string, unknown>;
 
             if (storageFilename) {
-                // فایل از Storage آمده؛
-                // تبدیل/پیدا کردن MP4 کاملاً سمت سرور انجام می‌شود.
                 body = {
                     ...data,
+                    poster: posterUrl,
                     storageFilename,
                 };
+
             } else if (selectedFile) {
-                // فایل از کامپیوتر ادمین
-                const uploadResult = await uploadVideo();
+
+                const uploadResult = uploadedVideo
+                    ? uploadedVideo
+                    : await uploadVideo();
 
                 if (!uploadResult) {
                     return;
@@ -156,12 +248,18 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
 
                 body = {
                     ...data,
+                    poster: posterUrl,
                     videoUrl: uploadResult.videoUrl,
                 };
+
             } else {
                 toast.error("لطفاً یک فیلم انتخاب کنید.");
                 return;
             }
+
+            // -------------------------
+            // 3. ثبت فیلم در MongoDB
+            // -------------------------
 
             setIsUploading(true);
 
@@ -198,6 +296,7 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
                     ? error.message
                     : "خطایی در ثبت فیلم رخ داد."
             );
+
         } finally {
             setIsUploading(false);
         }
@@ -251,18 +350,46 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
                         />
                         {errors.description && <span className="text-red-400 text-xs mt-1">{errors.description.message}</span>}
                     </div>
+                    <div className="w-full sm:w-75">
+                        <label
+                            htmlFor="poster"
+                            className="block text-sm font-medium text-gray-300 mb-1"
+                        >
+                            پوستر فیلم
+                        </label>
 
-                    {/* شماره تلفن */}
-                    <div className='w-full sm:w-75'>
-                        <label htmlFor="poster" className="block text-sm font-medium text-gray-300 mb-1">عکس </label>
                         <input
-                            type="text"
+                            type="file"
                             id="poster"
-                            {...register('poster')}
-                            className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={(e) => {
+                                const file = e.target.files?.[0] ?? null;
+
+                                setSelectedPoster(file);
+                                setUploadedPoster(null);
+                            }}
+                            className="w-full rounded-md border border-gray-600 bg-gray-700 text-white p-2"
                         />
-                        {errors.poster && <span className="text-red-400 text-xs mt-1">{errors.poster.message}</span>}
+
+                        {selectedPoster && (
+                            <p className="text-gray-400 text-sm mt-2">
+                                پوستر انتخاب شده: {selectedPoster.name}
+                            </p>
+                        )}
+
+                        {uploadedPoster && (
+                            <p className="text-green-400 text-sm mt-2">
+                                ✓ پوستر آپلود شد: {uploadedPoster.filename}
+                            </p>
+                        )}
+
+                        {errors.poster && (
+                            <p className="text-red-400 text-xs mt-1">
+                                {errors.poster.message}
+                            </p>
+                        )}
                     </div>
+
 
                     {/* کشور */}
                     <div className='w-full sm:w-75'>
