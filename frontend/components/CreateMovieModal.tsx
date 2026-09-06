@@ -357,16 +357,16 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
                         <input
                             type="text"
                             id="aliases"
-                            placeholder="مثلاً: marmoulak, marmolak"
-                            {...register("aliases", {
-                                setValueAs: (value) =>
-                                    typeof value === "string"
-                                        ? value
-                                            .split(",")
-                                            .map((item) => item.trim())
-                                            .filter(Boolean)
-                                        : [],
-                            })}
+                            placeholder="مثلاً: atashbas, atash bas"
+                            {...register("aliases")}
+                            onChange={(e) => {
+                                const aliases = e.target.value
+                                    .split(",")
+                                    .map((item) => item.trim())
+                                    .filter(Boolean);
+
+                                setValue("aliases", aliases);
+                            }}
                             className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
                         />
 
