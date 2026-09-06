@@ -15,6 +15,9 @@ import multer from "multer";
 import path from "path";
 import { execFile } from "child_process";
 import { promisify } from "util";
+import { randomUUID } from "crypto";
+
+
 
 dotenv.config();
 const app = express();
@@ -57,9 +60,11 @@ const posterStorage = multer.diskStorage({
     },
 
     filename: (req, file, cb) => {
-        const filename = Buffer
-            .from(file.originalname, "latin1")
-            .toString("utf8");
+        const extension = path
+            .extname(file.originalname)
+            .toLowerCase();
+
+        const filename = `poster-${randomUUID()}${extension}`;
 
         cb(null, filename);
     }
