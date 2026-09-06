@@ -79,6 +79,9 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
     });
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [selectedPoster, setSelectedPoster] = useState<File | null>(null);
+    const [posterPreview, setPosterPreview] = useState<string | null>(null);
+
+
 
     const [uploadedPoster, setUploadedPoster] = useState<{
         filename: string;
@@ -367,10 +370,36 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
 
                                 setSelectedPoster(file);
                                 setUploadedPoster(null);
+
+                                if (file) {
+                                    const previewUrl = URL.createObjectURL(file);
+                                    setPosterPreview(previewUrl);
+                                } else {
+                                    setPosterPreview(null);
+                                }
                             }}
                             className="w-full rounded-md border border-gray-600 bg-gray-700 text-white p-2"
                         />
+                        {posterPreview && (
+                            <div className="mt-3">
+                                <p className="text-gray-400 text-sm mb-2">
+                                    پیش‌نمایش پوستر:
+                                </p>
 
+                                <img
+                                    src={posterPreview}
+                                    alt="پیش‌نمایش پوستر"
+                                    className="
+                w-32
+                h-48
+                object-cover
+                rounded-lg
+                border
+                border-gray-600
+            "
+                                />
+                            </div>
+                        )}
                         {selectedPoster && (
                             <p className="text-gray-400 text-sm mt-2">
                                 پوستر انتخاب شده: {selectedPoster.name}
