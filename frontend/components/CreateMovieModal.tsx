@@ -27,6 +27,7 @@ export const addedMovie = z.object({
     description: z.string().min(1, "توضیحات الزامی است"),
 
     genre: z.array(z.string()).min(1, "حداقل یک ژانر انتخاب کنید"),
+    aliases: z.array(z.string()),
 
     year: z.number(),
     rating: z.number().optional(),
@@ -75,6 +76,7 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
             poster: "",
             product: "ایرانی",
             videoUrl: "",
+            aliases: [],
         },
     });
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -341,8 +343,42 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
                         />
                         {errors.title && <span className="text-red-400 text-xs mt-1">{errors.title.message}</span>}
                     </div>
+                    {/* نام‌های جایگزین */}
+                    <div className="w-full sm:w-75">
+                        <label
+                            htmlFor="aliases"
+                            className="block text-sm font-medium text-gray-300 mb-1"
+                        >
+                            نام‌های جایگزین برای جستجو
+                        </label>
 
-                    {/* ایمیل */}
+                        <input
+                            type="text"
+                            id="aliases"
+                            placeholder="مثلاً: marmoulak, marmolak"
+                            {...register("aliases", {
+                                setValueAs: (value) =>
+                                    typeof value === "string"
+                                        ? value
+                                            .split(",")
+                                            .map((item) => item.trim())
+                                            .filter(Boolean)
+                                        : [],
+                            })}
+                            className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
+                        />
+
+                        <p className="text-gray-500 text-xs mt-1">
+                            نام‌های انگلیسی یا فینگلیش را با کاما جدا کنید.
+                        </p>
+
+                        {errors.aliases && (
+                            <span className="text-red-400 text-xs mt-1">
+                                {errors.aliases.message}
+                            </span>
+                        )}
+                    </div>
+                    {/* Descriptions */}
                     <div className='w-full sm:w-75'>
                         <label htmlFor="description" className="block text-sm font-medium text-gray-300 mb-1">توضیحات</label>
                         <input
