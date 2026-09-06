@@ -49,6 +49,43 @@ const storage = multer.diskStorage({
     }
 });
 
+
+//poster 
+const posterStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "/mnt/alanbin/posters");
+    },
+
+    filename: (req, file, cb) => {
+        const filename = Buffer
+            .from(file.originalname, "latin1")
+            .toString("utf8");
+
+        cb(null, filename);
+    }
+});
+
+const posterUpload = multer({
+    storage: posterStorage,
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = [
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+        ];
+
+        if (!allowedTypes.includes(file.mimetype)) {
+            return cb(
+                new Error("فرمت پوستر مجاز نیست")
+            );
+        }
+
+        cb(null, true);
+    }
+});
+
+
+
 const upload = multer({
     storage,
 
@@ -98,6 +135,7 @@ app.post(
         }
     }
 );
+//serve video
 app.get(
     "/videos/:filename",
     checkSubscription,
@@ -137,6 +175,75 @@ app.get(
         }
     }
 );
+// serve poster
+app.get(
+    "/posters/:filename",
+    checkSubscription,
+    async (req, res) => {
+        try {
+            const filename = String(req.params.filename);
+
+            if (
+                filename.includes("/") ||
+                filename.includes("\\") ||
+                filename.includes("..")
+            ) {
+                return res.status(400).json({
+                    message: "نام فایل نامعتبر است"
+                });
+            }
+
+            const extension = path
+                .extname(filename)
+                .toLowerCase();
+
+            const allowedExtensions = [
+                ".jpg",
+                ".jpeg",
+                ".png",
+                ".webp"
+            ];
+
+            if (!allowedExtensions.includes(extension)) {
+                return res.status(400).json({
+                    message: "فرمت تصویر مجاز نیست"
+                });
+            }
+
+            res.setHeader(
+                "X-Accel-Redirect",
+                `/protected-posters/${encodeURIComponent(filename)}`
+            );
+
+            res.setHeader(
+                "Content-Type",
+                extension === ".jpg" || extension === ".jpeg"
+                    ? "image/jpeg"
+                    : extension === ".png"
+                        ? "image/png"
+                        : "image/webp"
+            );
+
+            res.setHeader(
+                "Cache-Control",
+                "public, max-age=86400"
+            );
+
+            res.end();
+
+        } catch (err) {
+            console.error("POSTER ERROR:", err);
+
+            res.status(500).json({
+                message: "خطا در دریافت پوستر"
+            });
+        }
+    }
+);
+
+
+
+
 
 const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) {
@@ -787,6 +894,40 @@ app.post(
             res.status(500).json({
                 success: false,
                 message: err.message || "خطا در تبدیل فیلم"
+            });
+        }
+    }
+);
+app.post(
+    "/api/admin/storage/upload-poster",
+    checkSubscription,
+    adminMiddleware,
+    posterUpload.single("poster"),
+    async (req, res) => {
+        try {
+            if (!req.file) {
+                return res.status(400).json({
+                    success: false,
+                    message: "فایل پوستر ارسال نشده است"
+                });
+            }
+
+            res.status(201).json({
+                success: true,
+                message: "پوستر با موفقیت در Storage آپلود شد",
+                filename: req.file.filename,
+                size: req.file.size,
+                posterUrl: `/posters/${req.file.filename}`
+            });
+
+        } catch (err: any) {
+            console.error("POSTER UPLOAD ERROR:", err);
+
+            res.status(500).json({
+                success: false,
+                message:
+                    err.message ||
+                    "خطا در آپلود پوستر"
             });
         }
     }
