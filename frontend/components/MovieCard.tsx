@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+
 import { Play, Star, X } from "lucide-react";
 import type { Movie } from "@/types/movies";
 
@@ -16,6 +16,13 @@ export function MovieCard({
     onClick,
     favoriteHandler,
 }: MovieCardProps) {
+
+    const posterUrl = movie.poster.startsWith("http")
+        ? movie.poster
+        : `https://alanbin.com${movie.poster}`;
+
+
+
     return (
 
         <div
@@ -57,17 +64,19 @@ export function MovieCard({
 
             {/* Poster */}
 
-            <Image
-                src={movie.poster}
+            <img
+                src={`https://alanbin.com${movie.poster}`}
                 alt={movie.title}
-                fill
-                sizes="(max-width:768px) 155px, 215px"
                 className="
-                object-cover
-                transition-transform
-                duration-700
-                group-hover:scale-110
-                "
+        absolute
+        inset-0
+        w-full
+        h-full
+        object-cover
+        transition-transform
+        duration-700
+        group-hover:scale-110
+    "
             />
 
             {/* Dark Overlay */}
