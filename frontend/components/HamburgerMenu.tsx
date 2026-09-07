@@ -23,11 +23,14 @@ export const HamburgerMenu = ({
     const { logout } = useAuth();
 
     const logoutHandler = async () => {
+        console.log("🔥 LOGOUT HANDLER CLICKED");
+
         await logout();
+
+        console.log("🔥 LOGOUT HANDLER FINISHED");
 
         setIsOpen(false);
         router.push("/");
-        
     };
     const [isOpen, setIsOpen] = useState(false);
 
@@ -219,10 +222,11 @@ cursor-pointer
                                     </button>
 
                                     <button
-                                        onClick={() => {
-                                            closeMenu();
-                                            logoutHandler();
-                                        }}
+                                        // onClick={() => {
+                                        //     closeMenu();
+                                        //     logoutHandler();
+                                        // }}
+                                        onClick={logoutHandler}
                                         className="
 flex
 items-center
