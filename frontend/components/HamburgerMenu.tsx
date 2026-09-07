@@ -220,8 +220,17 @@ cursor-pointer
                                         <UserCircle size={18} />
                                         حساب کاربری
                                     </button>
-
                                     <button
+                                        onClick={() => {
+                                            console.log("🔥 BUTTON CLICKED");
+                                            logoutHandler();
+                                        }}
+                                        className="..."
+                                    >
+                                        <LogOut size={18} />
+                                        خروج
+                                    </button>
+                                    {/* <button
                                         // onClick={() => {
                                         //     closeMenu();
                                         //     logoutHandler();
@@ -246,7 +255,7 @@ cursor-pointer
                                     >
                                         <LogOut size={18} />
                                         خروج
-                                    </button>
+                                    </button> */}
 
                                 </div>
 
