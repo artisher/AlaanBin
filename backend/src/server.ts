@@ -1259,6 +1259,7 @@ app.post("/api/auth/logout", (req, res) => {
     res.json({
         message: "خروج موفق",
     });
+    
 });
 //دیتای منو و اکانت 
 app.get("/api/auth/me", async (req, res) => {
