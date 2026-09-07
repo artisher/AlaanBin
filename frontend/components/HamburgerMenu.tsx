@@ -27,6 +27,7 @@ export const HamburgerMenu = ({
 
         setIsOpen(false);
         router.push("/");
+        
     };
     const [isOpen, setIsOpen] = useState(false);
 

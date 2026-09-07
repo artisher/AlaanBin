@@ -70,6 +70,8 @@ export function AuthProvider({
 
     async function logout() {
         try {
+            console.log("1 - logout شروع شد");
+
             const res = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`,
                 {
@@ -78,15 +80,25 @@ export function AuthProvider({
                 }
             );
 
+            console.log("2 - response:", res.status);
+            console.log("3 - response ok:", res.ok);
+
+            const data = await res.json();
+
+            console.log("4 - response data:", data);
+
             if (!res.ok) {
-                throw new Error("خطا در خروج از حساب");
+                throw new Error(data?.message || "خطا در خروج از حساب");
             }
 
             setUser(null);
 
+            console.log("5 - USER CLEARED");
+
             toast.success("با موفقیت از حساب خارج شدید.");
+
         } catch (error) {
-            console.error("LOGOUT ERROR:", error);
+            console.error("6 - LOGOUT ERROR:", error);
 
             toast.error(
                 error instanceof Error

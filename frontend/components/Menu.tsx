@@ -10,6 +10,9 @@ export const Menu = () => {
 
     const hasActiveSubscription = user?.hasActiveSubscription;
     const isLoggedIn = !!user;
+
+    console.log("MENU USER:", user);
+    console.log("MENU LOGGED IN:", isLoggedIn);
     return (
         <div className="
 sticky
