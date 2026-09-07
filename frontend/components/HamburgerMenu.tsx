@@ -22,17 +22,15 @@ export const HamburgerMenu = ({
 }) => {
     const { logout } = useAuth();
     const logoutHandler = async () => {
-        console.log("1 - CLICK");
-
-        await logout();
-
-        console.log("2 - LOGOUT DONE");
+        console.log("🔥🔥🔥 LOGOUT BUTTON CLICKED");
 
         setIsOpen(false);
 
-        console.log("3 - RELOAD");
+        console.log("🔥🔥🔥 BEFORE RELOAD");
 
         window.location.reload();
+
+        console.log("🔥🔥🔥 AFTER RELOAD");
     };
     const [isOpen, setIsOpen] = useState(false);
 
