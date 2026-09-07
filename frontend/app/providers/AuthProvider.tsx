@@ -88,7 +88,9 @@ export function AuthProvider({
             console.log("4 - response data:", data);
 
             if (!res.ok) {
-                throw new Error(data?.message || "خطا در خروج از حساب");
+                throw new Error(
+                    data?.message || "خطا در خروج از حساب"
+                );
             }
 
             setUser(null);
