@@ -21,13 +21,18 @@ export const HamburgerMenu = ({
     isLoggedIn: boolean;
 }) => {
     const { logout } = useAuth();
-
     const logoutHandler = async () => {
+        console.log("1️⃣ logoutHandler");
+
         await logout();
+
+        console.log("2️⃣ logout finished");
 
         setIsOpen(false);
 
-        window.location.href = "/";
+        console.log("3️⃣ about to reload");
+
+        window.location.reload();
     };
     const [isOpen, setIsOpen] = useState(false);
 
@@ -219,7 +224,7 @@ cursor-pointer
                                     </button>
                                     <button
                                         onClick={() => {
-                                            
+
                                             logoutHandler();
                                         }}
                                         className="..."
