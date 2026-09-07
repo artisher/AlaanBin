@@ -34,6 +34,8 @@ export function AuthProvider({
     const [loading, setLoading] = useState(true);
 
     async function refreshUser() {
+        console.log("🔵 refreshUser START");
+
         try {
             const res = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`,
@@ -42,20 +44,25 @@ export function AuthProvider({
                 }
             );
 
+            console.log("🟡 /me STATUS:", res.status);
+
             if (!res.ok) {
+                console.log("🔴 /me FAILED → setUser(null)");
                 setUser(null);
                 return;
             }
 
             const data = await res.json();
 
+            console.log("🟢 /me USER:", data.user);
+
             setUser(data.user ?? null);
 
-        } catch {
+        } catch (error) {
+            console.log("🔴 refreshUser ERROR:", error);
             setUser(null);
         }
     }
-
     useEffect(() => {
         async function getInitialUser() {
             try {
@@ -71,6 +78,7 @@ export function AuthProvider({
     async function logout() {
         try {
             console.log("1 - logout شروع شد");
+            console.log("🔴 LOGOUT START");
 
             const res = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`,
@@ -92,7 +100,7 @@ export function AuthProvider({
                     data?.message || "خطا در خروج از حساب"
                 );
             }
-
+            console.log("🔴 LOGOUT → setUser(null)");
             setUser(null);
 
             console.log("5 - USER CLEARED");
