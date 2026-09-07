@@ -1,4 +1,3 @@
-
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
@@ -26,11 +25,25 @@ export default async function MoviePage({
         notFound();
     }
 
+    const data = await res.json();
+
     if (!res.ok) {
-        throw new Error("Failed to fetch movie");
+        return (
+            <div className="min-h-screen flex items-center justify-center px-4">
+                <div className="text-center max-w-md">
+                    <h1 className="text-2xl font-bold mb-3">
+                        {data?.message || "خطایی رخ داد"}
+                    </h1>
+
+                    <p className="text-gray-400">
+                        {data?.code === "SUBSCRIPTION_REQUIRED"
+                            ? "برای تماشای این فیلم باید اشتراک فعال داشته باشید."
+                            : "متأسفانه در دریافت اطلاعات فیلم مشکلی پیش آمد."}
+                    </p>
+                </div>
+            </div>
+        );
     }
 
-    const movie = await res.json();
-
-    return <VideoPlayer video={movie} />;
+    return <VideoPlayer video={data} />;
 }

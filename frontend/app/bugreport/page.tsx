@@ -19,7 +19,7 @@ export default function BugReport() {
     const [movie, setMovie] = useState("");
     const [device, setDevice] = useState("");
     const [browser, setBrowser] = useState("");
-
+    const [errorMessage, setErrorMessage] = useState("");
     const [status, setStatus] = useState<
         "idle" | "loading" | "success" | "error"
     >("idle");
@@ -60,6 +60,13 @@ export default function BugReport() {
             setBrowser("");
         } catch (error) {
             console.error("BUG REPORT ERROR:", error);
+
+            setErrorMessage(
+                error instanceof Error
+                    ? error.message
+                    : "ثبت گزارش با خطا مواجه شد."
+            );
+
             setStatus("error");
         }
     };
@@ -487,19 +494,8 @@ export default function BugReport() {
 
                                 {/* Error */}
                                 {status === "error" && (
-                                    <div
-                                        className="
-                                        rounded-xl
-                                        border
-                                        border-red-500/20
-                                        bg-red-500/10
-                                        py-4
-                                        text-center
-                                        text-red-400
-                                        "
-                                    >
-                                        ثبت گزارش با خطا مواجه شد.
-                                        لطفاً دوباره تلاش کنید.
+                                    <div className="rounded-xl border border-red-500/20 bg-red-500/10 py-4 text-center text-red-400">
+                                        {errorMessage || "ثبت گزارش با خطا مواجه شد. لطفاً دوباره تلاش کنید."}
                                     </div>
                                 )}
 
