@@ -22,15 +22,15 @@ export const HamburgerMenu = ({
 }) => {
     const { logout } = useAuth();
     const logoutHandler = async () => {
-        console.log("1️⃣ logoutHandler");
+        console.log("1 - CLICK");
 
         await logout();
 
-        console.log("2️⃣ logout finished");
+        console.log("2 - LOGOUT DONE");
 
         setIsOpen(false);
 
-        console.log("3️⃣ about to reload");
+        console.log("3 - RELOAD");
 
         window.location.reload();
     };
