@@ -72,11 +72,10 @@ export const MovieModal = ({
                 "
                 >
 
-                    <Image
-                        src={movie.poster}
+                    <img
+                        src={`https://alanbin.com${movie.poster}`}
                         alt={movie.title}
-                        fill
-                        priority
+
                         sizes="
                         (max-width: 639px) 100vw,
                         (max-width: 767px) 100vw,
@@ -161,7 +160,7 @@ export const MovieModal = ({
                     WATCH BUTTON
                 ========================= */}
 
-                  
+
 
                     <div
                         className="
@@ -274,7 +273,7 @@ export const MovieModal = ({
                     {/* =========================
                     MOVIE INFO
                 ========================= */}
-  <Link
+                    <Link
                         href={`/movies/${movie._id}`}
                         className="
                         my-8

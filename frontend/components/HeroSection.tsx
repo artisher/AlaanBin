@@ -41,14 +41,13 @@ export const HeroSection = () => {
                         md:text-7xl
                     "
         >
-          فیلم و سریال ایرانی را
+          فیلم و سریال ایرانی
           <br />
           <span className="text-[#14c78b]">
-            بدون VPN
+            همیشه
           </span>
           {" "}
-          تماشا کنید.
-        </h1>
+          در دسترس شما        </h1>
 
         <p
           className="

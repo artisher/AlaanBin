@@ -1,8 +1,7 @@
-import Image from "next/image";
 
 export const VideoPlayer = ({ video }: any) => {
     const movie = video;
-   
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#090909] via-[#111315] to-[#0b0b0b] text-white">
@@ -24,8 +23,8 @@ export const VideoPlayer = ({ video }: any) => {
 
                     {/* Poster */}
                     <div className="group">
-                        <Image
-                            src={movie.poster}
+                        <img
+                            src={`https://alanbin.com${movie.poster}`}
                             alt={movie.title}
                             width={280}
                             height={420}

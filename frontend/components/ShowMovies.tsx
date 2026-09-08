@@ -1,13 +1,10 @@
 "use client";
-import Image from 'next/image';
-import Link from "next/link";
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import type { Movie } from "@/types/movies";
-import { Film, Heart, Play } from 'lucide-react';
-import { MovieModal } from './MovieMedal';
 import { MovieCard } from './MovieCard';
 import { MovieCardSkeleton } from './MovieCardSkeleton';
+import { MovieModal } from './MovieMedal';
 
 export const ShowMovies = () => {
 
