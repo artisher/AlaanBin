@@ -279,7 +279,6 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
                 }
 
             );
-            console.log("📦 MOVIE BODY:", body);
             const result = await response.json();
 
             if (!response.ok) {

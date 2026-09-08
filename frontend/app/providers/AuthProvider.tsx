@@ -34,7 +34,7 @@ export function AuthProvider({
     const [loading, setLoading] = useState(true);
 
     async function refreshUser() {
-        console.log("🔵 refreshUser START");
+     
 
         try {
             const res = await fetch(
@@ -44,22 +44,18 @@ export function AuthProvider({
                 }
             );
 
-            console.log("🟡 /me STATUS:", res.status);
 
             if (!res.ok) {
-                console.log("🔴 /me FAILED → setUser(null)");
                 setUser(null);
                 return;
             }
 
             const data = await res.json();
 
-            console.log("🟢 /me USER:", data.user);
 
             setUser(data.user ?? null);
 
         } catch (error) {
-            console.log("🔴 refreshUser ERROR:", error);
             setUser(null);
         }
     }
@@ -76,46 +72,21 @@ export function AuthProvider({
     }, []);
 
     async function logout() {
-        try {
-            console.log("1 - logout شروع شد");
-            console.log("🔴 LOGOUT START");
-
-            const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`,
-                {
-                    method: "POST",
-                    credentials: "include",
-                }
-            );
-
-            console.log("2 - response:", res.status);
-            console.log("3 - response ok:", res.ok);
-
-            const data = await res.json();
-
-            console.log("4 - response data:", data);
-
-            if (!res.ok) {
-                throw new Error(
-                    data?.message || "خطا در خروج از حساب"
-                );
+        const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`,
+            {
+                method: "POST",
+                credentials: "include",
             }
-            console.log("🔴 LOGOUT → setUser(null)");
-            setUser(null);
+        );
 
-            console.log("5 - USER CLEARED");
-
-            toast.success("با موفقیت از حساب خارج شدید.");
-
-        } catch (error) {
-            console.error("6 - LOGOUT ERROR:", error);
-
-            toast.error(
-                error instanceof Error
-                    ? error.message
-                    : "خروج از حساب با خطا مواجه شد."
-            );
+        if (!res.ok) {
+            throw new Error("خطا در خروج از حساب");
         }
+
+        setUser(null);
+
+        toast.success("با موفقیت از حساب خارج شدید.");
     }
     return (
         <AuthContext.Provider

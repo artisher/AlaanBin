@@ -9,6 +9,7 @@ import { MovieModal } from "./MovieMedal";
 import { MovieCard } from "./MovieCard";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useAuth } from "@/app/providers/AuthProvider";
 
 interface Profile {
     _id: string;
@@ -42,7 +43,7 @@ export const ProfileCard = ({
     const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
     const [loadingFavorites, setLoadingFavorites] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
-
+    const { logout } = useAuth();
     const fetchFavorites = async () => {
         try {
             setLoadingFavorites(true);
@@ -65,7 +66,7 @@ export const ProfileCard = ({
             if (!res.ok) {
                 throw new Error(
                     data.message ||
-                        "خطا در دریافت فیلم‌های مورد علاقه."
+                    "خطا در دریافت فیلم‌های مورد علاقه."
                 );
             }
 
@@ -110,7 +111,7 @@ export const ProfileCard = ({
             if (!res.ok) {
                 throw new Error(
                     data.message ||
-                        "خطا در تغییر وضعیت علاقه‌مندی."
+                    "خطا در تغییر وضعیت علاقه‌مندی."
                 );
             }
 
@@ -144,41 +145,11 @@ export const ProfileCard = ({
         try {
             setLoggingOut(true);
 
-            const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`,
-                {
-                    method: "POST",
-                    credentials: "include",
-                }
-            );
-
-            let data: { message?: string } = {};
-
-            try {
-                data = await res.json();
-            } catch {
-                // پاسخ API JSON نبود.
-            }
-
-            if (!res.ok) {
-                throw new Error(
-                    data.message ||
-                        "خطا در خروج از حساب."
-                );
-            }
-
-            toast.success("با موفقیت از حساب خارج شدید.");
+            await logout();
 
             router.push("/");
-            router.refresh();
         } catch (error) {
             console.error("LOGOUT ERROR:", error);
-
-            toast.error(
-                error instanceof Error
-                    ? error.message
-                    : "خروج از حساب با خطا مواجه شد."
-            );
         } finally {
             setLoggingOut(false);
         }
@@ -317,11 +288,10 @@ export const ProfileCard = ({
 
                         <div className="text-gray-300">
                             {profile.hasActiveSubscription
-                                ? `تاریخ پایان اشتراک : ${
-                                      profile.subscriptionExpireDate
-                                          ? profile.subscriptionExpireDate.split("T")[0]
-                                          : "نامشخص"
-                                  }`
+                                ? `تاریخ پایان اشتراک : ${profile.subscriptionExpireDate
+                                    ? profile.subscriptionExpireDate.split("T")[0]
+                                    : "نامشخص"
+                                }`
                                 : "اشتراک شما به پایان رسیده است."}
                         </div>
                     </div>
