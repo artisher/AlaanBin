@@ -940,7 +940,17 @@ app.post(
 // --- API مربوط به فیلم‌ها ---
 
 // 1. دریافت همه فیلم‌ها
-
+const genreMap: Record<string, string> = {
+    Comedy: "کمدی",
+    Drama: "درام",
+    Action: "اکشن",
+    Crime: "جنایی",
+    Romance: "عاشقانه",
+    Family: "خانوادگی",
+};
+const productMap: Record<string, string> = {
+    IR: "ایرانی",
+};
 app.get('/api/movies', async (req, res) => {
     const escapeRegex = (text: string) => {
         return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -950,11 +960,13 @@ app.get('/api/movies', async (req, res) => {
         const query: any = {};
 
         if (req.query.genre) {
-            query.genre = req.query.genre;
+            const genre = String(req.query.genre);
+            query.genre = genreMap[genre] || genre;
         }
 
         if (req.query.product) {
-            query.product = req.query.product;
+            const product = String(req.query.product);
+            query.product = productMap[product] || product;
         }
 
         if (req.query.rating) {
@@ -1017,6 +1029,13 @@ app.get('/api/movies', async (req, res) => {
         const limit = Number(req.query.limit) || 20;
 
         const totalMovies = await Movie.countDocuments(query);
+ 
+
+        const allMovies = await Movie.find({})
+            .select("title genre product")
+            .limit(20);
+
+        
         const totalPages = Math.max(1, Math.ceil(totalMovies / limit));
         const movies = await Movie.find(query)
             .sort(sort)
@@ -1259,7 +1278,7 @@ app.post("/api/auth/logout", (req, res) => {
     res.json({
         message: "خروج موفق",
     });
-    
+
 });
 //دیتای منو و اکانت 
 app.get("/api/auth/me", async (req, res) => {
