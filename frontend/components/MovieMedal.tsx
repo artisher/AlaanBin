@@ -62,72 +62,64 @@ export const MovieModal = ({
 
                 <div
                     className="
-                    relative
-                    h-[210px]
-                    w-full
-                    shrink-0
-                    sm:h-[260px]
-                    md:h-[650px]
-                    lg:h-[680px]
-                "
+        relative
+        h-[210px]
+        w-full
+        shrink-0
+        sm:h-[260px]
+        md:h-[650px]
+        lg:h-[680px]
+        overflow-hidden
+    "
                 >
-
                     <img
                         src={`https://alanbin.com${movie.poster}`}
                         alt={movie.title}
-
-                        sizes="
-                        (max-width: 639px) 100vw,
-                        (max-width: 767px) 100vw,
-                        380px
-                    "
-                        className="object-cover"
+                        className="h-full w-full object-cover"
                     />
 
                     {/* Dark overlay */}
-
                     <div
                         className="
-                        absolute
-                        inset-0
-                        bg-gradient-to-t
-                        from-black/80
-                        via-black/10
-                        to-transparent
-                    "
+            absolute
+            inset-0
+            bg-gradient-to-t
+            from-black/80
+            via-black/10
+            to-transparent
+        "
                     />
 
                     {/* Play */}
-
                     <Link
                         href={`/movies/${movie._id}`}
                         aria-label={`مشاهده ${movie.title}`}
                         className="
-                        absolute
-                        inset-0
-                        z-10
-                        flex
-                        items-center
-                        justify-center
-                    "
+            absolute
+            inset-0
+            z-10
+            flex
+            items-center
+            justify-center
+        "
                     >
                         <div
                             className="
-                            flex
-                            h-16
-                            w-16
-                            items-center
-                            justify-center
-                            rounded-full
-                            bg-[#14c78b]
-                            text-black
-                            shadow-[0_0_35px_rgba(20,199,139,.55)]
-                            transition-all
-                            duration-300
-                            hover:scale-110
-                            sm:h-20
-                            sm:w-20
-                        "
+                flex
+                h-16
+                w-16
+                items-center
+                justify-center
+                rounded-full
+                bg-[#14c78b]
+                text-black
+                shadow-[0_0_35px_rgba(20,199,139,.55)]
+                transition-all
+                duration-300
+                hover:scale-110
+                sm:h-20
+                sm:w-20
+            "
                         >
                             <Play
                                 size={30}
@@ -136,7 +128,6 @@ export const MovieModal = ({
                             />
                         </div>
                     </Link>
-
                 </div>
 
 
