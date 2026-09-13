@@ -14,44 +14,83 @@ export const RegisterComponent = () => {
     const [city, setCity] = useState("")
     const [role, setRole] = useState("user")
 
-    const handleRegister = async (e: React.FormEvent) => {
-        e.preventDefault();
 
-        try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
+const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (fullName.trim().length < 2) {
+        toast.error("نام و نام خانوادگی باید حداقل ۲ کاراکتر باشد.");
+        return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email.trim())) {
+        toast.error("لطفاً یک ایمیل معتبر وارد کنید.");
+        return;
+    }
+
+    if (password.length < 8) {
+        toast.error("رمز عبور باید حداقل ۸ کاراکتر باشد.");
+        return;
+    }
+
+    const phoneRegex = /^\+?[0-9]{8,15}$/;
+
+    if (!phoneRegex.test(phoneNumber.trim())) {
+        toast.error("لطفاً یک شماره موبایل معتبر وارد کنید.");
+        return;
+    }
+
+    try {
+        const res = await fetch(
+            `${ process.env.NEXT_PUBLIC_API_URL }/api/auth/register`,
+            {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    fullName,
-                    phoneNumber,
-                    email,
+                    fullName: fullName.trim(),
+                    phoneNumber: phoneNumber.trim(),
+                    email: email.trim(),
                     password,
-                    country,
-                    city,
-                    role
+                    country: country.trim(),
+                    city: city.trim(),
                 }),
             }
-            );
-            const data = await res.json();
+        );
 
-            if (!res.ok) {
-                toast.error("An error occurred. Check the console.");
-                console.log(data.message);
+        const contentType = res.headers.get("content-type");
 
+        if (!contentType?.includes("application/json")) {
+            const text = await res.text();
 
-            } else {
-                toast.success("Account created successfully. Now you can log in.");
-                router.push("/home");
-            }
+          
 
-
-        } catch (err) {
-            toast.error("Something went wrong. Check the console for more information.");
-            console.error(err);
+            toast.error("سرور پاسخ نامعتبر ارسال کرد.");
+            return;
         }
-    };
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            toast.error(data.message || "ثبت‌نام انجام نشد.");
+            console.error("REGISTER ERROR:", data);
+            return;
+        }
+
+        toast.success("حساب کاربری با موفقیت ساخته شد.");
+        router.push("/home");
+
+    } catch (err) {
+        console.error("REGISTER ERROR:", err);
+        toast.error("خطایی در اتصال به سرور رخ داد.");
+    }
+};
+
+
+
     return (
         <div className="min-h-screen bg-[#0B0F14] flex items-center justify-center px-4 py-10">
             <div
