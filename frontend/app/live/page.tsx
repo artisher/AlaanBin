@@ -46,7 +46,7 @@ export default function LivePage() {
                     {CHANNELS.map((channel) => (
                         <Link
                             key={channel.id}
-                            href={`/ live / ${ channel.id } `}
+                            href={`/live/${ channel.id }`}
                             className="
                                 group
                                 relative
