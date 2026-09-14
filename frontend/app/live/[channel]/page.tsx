@@ -10,7 +10,7 @@ const CHANNELS = {
     },
     varzesh: {
         title: "شبکه ورزش",
-        streamUrl: "https://alanbin.com/live/varzesh/index.m3u8",
+        streamUrl: "https://alanbin.com/api/live/varzesh/index.m3u8",
     },
 } as const;
 
