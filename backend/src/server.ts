@@ -402,7 +402,47 @@ app.get(
 
             let playlist =
                 await response.text();
+            const lines = playlist.split("\n");
 
+            const header = lines.filter(
+                line =>
+                    line.startsWith("#EXTM3U") ||
+                    line.startsWith("#EXT-X-VERSION") ||
+                    line.startsWith("#EXT-X-TARGETDURATION")
+            );
+
+            const segments: string[] = [];
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+
+                if (line.startsWith("#EXTINF:")) {
+                    const segment = lines[i + 1]?.trim();
+
+                    if (segment && !segment.startsWith("#")) {
+                        segments.push(
+                            `${line}\n${segment}`
+                        );
+                    }
+                }
+            }
+
+            const lastSegments = segments.slice(-10);
+
+            const mediaSequence =
+                lastSegments.length > 0
+                    ? Number(
+                        lastSegments[0]
+                            .match(/#EXTINF:[^,]+,(\d+)/)?.[1]
+                    )
+                    : 0;
+
+            playlist = [
+                ...header,
+                `#EXT-X-MEDIA-SEQUENCE:${mediaSequence}`,
+                ...lastSegments,
+            ]
+                .join("\n");
             playlist =
                 playlist
                     .split("\n")
