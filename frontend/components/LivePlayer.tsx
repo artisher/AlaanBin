@@ -10,44 +10,150 @@ type LivePlayerProps = {
 export default function LivePlayer({
     streamUrl,
 }: LivePlayerProps) {
-    const videoRef = useRef<HTMLVideoElement>(null);
+
+    const videoRef =
+        useRef<HTMLVideoElement>(null);
 
     useEffect(() => {
-        const video = videoRef.current;
+
+        const video =
+            videoRef.current;
 
         if (!video) return;
 
         let hls: Hls | null = null;
 
-        if (Hls.isSupported()) {
-            hls = new Hls({
-                enableWorker: true,
-                lowLatencyMode: true,
-            });
+        let cancelled = false;
 
-            hls.loadSource(streamUrl);
-            hls.attachMedia(video);
 
-            hls.on(Hls.Events.ERROR, (_, data) => {
-                console.error(
-                    "HLS FULL ERROR:",
-                    JSON.stringify(data, null, 2)
+        const startPlayer = async () => {
+
+            try {
+
+                /*
+                 * First request:
+                 * Backend creates the session
+                 */
+                const response =
+                    await fetch(
+                        streamUrl,
+                        {
+                            cache: "no-store",
+                        }
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        `Playlist request failed: ${response.status}`
+                    );
+                }
+
+
+                const sessionId =
+                    response.headers.get(
+                        "X-Varzesh-Session"
+                    );
+
+
+                if (!sessionId) {
+
+                    throw new Error(
+                        "Varzesh session ID not received"
+                    );
+                }
+
+
+                if (cancelled) return;
+
+
+                /*
+                 * From now on HLS.js keeps using
+                 * the same session.
+                 */
+                const sessionStreamUrl =
+                    `${streamUrl}?session=${encodeURIComponent(sessionId)}`;
+
+
+                console.log(
+                    "🎬 Varzesh session:",
+                    sessionId
                 );
-            });
-        } else if (
-            video.canPlayType("application/vnd.apple.mpegurl")
-        ) {
-            video.src = streamUrl;
-        } else {
-            console.error(
-                "HLS is not supported in this browser"
-            );
-        }
+
+
+                if (Hls.isSupported()) {
+
+                    hls =
+                        new Hls({
+                            enableWorker: true,
+                            lowLatencyMode: true,
+                        });
+
+
+                    hls.loadSource(
+                        sessionStreamUrl
+                    );
+
+                    hls.attachMedia(
+                        video
+                    );
+
+
+                    hls.on(
+                        Hls.Events.ERROR,
+                        (_, data) => {
+
+                            console.error(
+                                "HLS FULL ERROR:",
+                                JSON.stringify(
+                                    data,
+                                    null,
+                                    2
+                                )
+                            );
+                        }
+                    );
+
+                } else if (
+                    video.canPlayType(
+                        "application/vnd.apple.mpegurl"
+                    )
+                ) {
+
+                    video.src =
+                        sessionStreamUrl;
+
+                } else {
+
+                    console.error(
+                        "HLS is not supported in this browser"
+                    );
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "❌ VARZESH PLAYER ERROR:",
+                    error
+                );
+            }
+        };
+
+
+        startPlayer();
+
 
         return () => {
+
+            cancelled = true;
+
             hls?.destroy();
+
         };
+
     }, [streamUrl]);
+
 
     return (
         <video
