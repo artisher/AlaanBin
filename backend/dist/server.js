@@ -20,6 +20,9 @@ const multer_1 = __importDefault(require("multer"));
 const path_1 = __importDefault(require("path"));
 const child_process_1 = require("child_process");
 const util_1 = require("util");
+const crypto_1 = require("crypto");
+const stream_1 = require("stream");
+const crypto_2 = __importDefault(require("crypto"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
@@ -45,6 +48,33 @@ const storage = multer_1.default.diskStorage({
             .from(file.originalname, "latin1")
             .toString("utf8");
         cb(null, filename);
+    }
+});
+//poster 
+const posterStorage = multer_1.default.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "/mnt/alanbin/posters");
+    },
+    filename: (req, file, cb) => {
+        const extension = path_1.default
+            .extname(file.originalname)
+            .toLowerCase();
+        const filename = `poster-${(0, crypto_1.randomUUID)()}${extension}`;
+        cb(null, filename);
+    }
+});
+const posterUpload = (0, multer_1.default)({
+    storage: posterStorage,
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = [
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+        ];
+        if (!allowedTypes.includes(file.mimetype)) {
+            return cb(new Error("فرمت پوستر مجاز نیست"));
+        }
+        cb(null, true);
     }
 });
 const upload = (0, multer_1.default)({
@@ -84,6 +114,7 @@ app.post("/api/admin/storage/upload", auth_middleware_1.default, admin_1.adminMi
         });
     }
 });
+//serve video
 app.get("/videos/:filename", auth_middleware_1.default, async (req, res) => {
     try {
         const filename = String(req.params.filename);
@@ -104,6 +135,261 @@ app.get("/videos/:filename", auth_middleware_1.default, async (req, res) => {
         res.status(500).json({
             message: "خطا در دریافت ویدیو"
         });
+    }
+});
+// serve poster
+app.get("/posters/:filename", auth_middleware_1.default, async (req, res) => {
+    try {
+        const filename = String(req.params.filename);
+        if (filename.includes("/") ||
+            filename.includes("\\") ||
+            filename.includes("..")) {
+            return res.status(400).json({
+                message: "نام فایل نامعتبر است"
+            });
+        }
+        const extension = path_1.default
+            .extname(filename)
+            .toLowerCase();
+        const allowedExtensions = [
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".webp"
+        ];
+        if (!allowedExtensions.includes(extension)) {
+            return res.status(400).json({
+                message: "فرمت تصویر مجاز نیست"
+            });
+        }
+        res.setHeader("X-Accel-Redirect", `/protected-posters/${encodeURIComponent(filename)}`);
+        res.setHeader("Content-Type", extension === ".jpg" || extension === ".jpeg"
+            ? "image/jpeg"
+            : extension === ".png"
+                ? "image/png"
+                : "image/webp");
+        res.setHeader("Cache-Control", "public, max-age=86400");
+        res.end();
+    }
+    catch (err) {
+        console.error("POSTER ERROR:", err);
+        res.status(500).json({
+            message: "خطا در دریافت پوستر"
+        });
+    }
+});
+// ===============================
+// LIVE VARZESH STREAM
+// ===============================
+// ===============================
+// LIVE VARZESH STREAM
+// ===============================
+const VARZESH_NCDN_URL = "https://ncdn.telewebion.net/varzesh/live/108050p/index.m3u8";
+const varzeshSessions = new Map();
+const VARZESH_SESSION_TTL = 2 * 60 * 1000;
+// Resolve current Telewebion origin
+async function resolveVarzeshOrigin() {
+    const response = await fetch(VARZESH_NCDN_URL, {
+        redirect: "manual",
+    });
+    if (response.status < 300 ||
+        response.status >= 400) {
+        throw new Error(`NCDN redirect failed: ${response.status}`);
+    }
+    const location = response.headers.get("location");
+    if (!location) {
+        throw new Error("NCDN did not return Location header");
+    }
+    const url = new URL(location);
+    const origin = url.origin;
+    if (!origin.endsWith(".telewebion.net")) {
+        throw new Error("Invalid Telewebion origin");
+    }
+    console.log("📡 Varzesh origin:", origin);
+    return origin;
+}
+// Create a playlist session
+function createVarzeshSession(origin) {
+    const sessionId = crypto_2.default.randomUUID();
+    varzeshSessions.set(sessionId, {
+        origin,
+        createdAt: Date.now(),
+    });
+    return sessionId;
+}
+// Get playlist session
+function getVarzeshSession(sessionId) {
+    const session = varzeshSessions.get(sessionId);
+    if (!session) {
+        return null;
+    }
+    if (Date.now() -
+        session.createdAt >
+        VARZESH_SESSION_TTL) {
+        varzeshSessions.delete(sessionId);
+        return null;
+    }
+    return session;
+}
+// Playlist
+app.get("/api/live/varzesh/index.m3u8", async (req, res) => {
+    try {
+        const origin = await resolveVarzeshOrigin();
+        // This playlist is now permanently
+        // associated with this origin.
+        const sessionId = createVarzeshSession(origin);
+        const playlistUrl = `${origin}/ek/varzesh/live/108050p/index.m3u8`;
+        const response = await fetch(playlistUrl);
+        if (!response.ok) {
+            throw new Error(`Origin playlist failed: ${response.status}`);
+        }
+        let playlist = await response.text();
+        playlist =
+            playlist
+                .split("\n")
+                .map(line => {
+                const trimmed = line.trim();
+                if (!trimmed ||
+                    trimmed.startsWith("#")) {
+                    return line;
+                }
+                return `/api/live/varzesh/segment/${sessionId}/${encodeURIComponent(trimmed)}`;
+            })
+                .join("\n");
+        res.setHeader("Content-Type", "application/vnd.apple.mpegurl");
+        res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        res.setHeader("Access-Control-Allow-Origin", "https://www.alanbin.com");
+        res.send(playlist);
+    }
+    catch (err) {
+        console.error("❌ VARZESH PLAYLIST ERROR:", err);
+        res.status(502).json({
+            message: "خطا در دریافت پخش زنده شبکه ورزش"
+        });
+    }
+});
+// Segments
+app.get("/api/live/varzesh/segment/:sessionId/:segment", async (req, res) => {
+    try {
+        const sessionId = String(req.params.sessionId);
+        const segment = String(req.params.segment);
+        const session = getVarzeshSession(sessionId);
+        if (!session) {
+            return res
+                .status(410)
+                .json({
+                message: "Live session expired"
+            });
+        }
+        /*
+         * جلوگیری از path traversal
+         */
+        if (segment.includes("/") ||
+            segment.includes("\\") ||
+            segment.includes("..") ||
+            !segment.endsWith(".ts")) {
+            return res
+                .status(400)
+                .json({
+                message: "Segment نامعتبر است"
+            });
+        }
+        /*
+         * IMPORTANT:
+         * Use the SAME origin that produced
+         * the playlist.
+         */
+        const origin = session.origin;
+        const segmentUrl = `${origin}/ek/varzesh/live/108050p/${segment}`;
+        console.log("🎬 Varzesh segment:", segment.slice(0, 30), "→", origin);
+        const response = await fetch(segmentUrl);
+        if (!response.ok) {
+            console.log("⚠️ Segment failed:", response.status, "session:", sessionId);
+            return res
+                .status(response.status)
+                .end();
+        }
+        res.setHeader("Content-Type", "video/mp2t");
+        res.setHeader("Cache-Control", "no-store");
+        res.setHeader("Access-Control-Allow-Origin", "https://www.alanbin.com");
+        if (response.headers.has("content-length")) {
+            res.setHeader("Content-Length", response.headers.get("content-length"));
+        }
+        if (!response.body) {
+            return res
+                .status(502)
+                .end();
+        }
+        stream_1.Readable
+            .fromWeb(response.body)
+            .pipe(res);
+    }
+    catch (err) {
+        console.error("❌ VARZESH SEGMENT ERROR:", err);
+        if (!res.headersSent) {
+            res
+                .status(502)
+                .end();
+        }
+    }
+});
+// Segments
+app.get("/api/live/varzesh/segment/:sessionId/:segment", async (req, res) => {
+    try {
+        const sessionId = String(req.params.sessionId);
+        const segment = String(req.params.segment);
+        const session = getVarzeshSession(sessionId);
+        if (!session) {
+            return res.status(410).json({
+                message: "Live session expired"
+            });
+        }
+        /*
+         * جلوگیری از path traversal
+         */
+        if (segment.includes("/") ||
+            segment.includes("\\") ||
+            segment.includes("..") ||
+            !segment.endsWith(".ts")) {
+            return res.status(400).json({
+                message: "Segment نامعتبر است"
+            });
+        }
+        let origin = await resolveVarzeshOrigin();
+        let segmentUrl = `${origin}/ek/varzesh/live/108050p/${segment}`;
+        let response = await fetch(segmentUrl);
+        /*
+         * اگر origin عوض شده باشد،
+         * یک بار origin جدید می‌گیریم
+         * و دوباره segment را امتحان می‌کنیم.
+         */
+        if (!response.ok) {
+            console.log("⚠️ Segment failed:", response.status, "session:", sessionId);
+            return res
+                .status(response.status)
+                .end();
+        }
+        if (!response.ok) {
+            return res.status(response.status).end();
+        }
+        res.setHeader("Content-Type", "video/mp2t");
+        res.setHeader("Cache-Control", "no-store");
+        res.setHeader("Access-Control-Allow-Origin", "https://www.alanbin.com");
+        if (response.headers.has("content-length")) {
+            res.setHeader("Content-Length", response.headers.get("content-length"));
+        }
+        if (!response.body) {
+            return res.status(502).end();
+        }
+        stream_1.Readable
+            .fromWeb(response.body)
+            .pipe(res);
+    }
+    catch (err) {
+        console.error("❌ VARZESH SEGMENT ERROR:", err);
+        if (!res.headersSent) {
+            res.status(502).end();
+        }
     }
 });
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -206,14 +492,146 @@ app.put("/api/admin/users/:id", auth_middleware_1.default, admin_1.adminMiddlewa
     }
 });
 // 2. اضافه کردن فیلم جدید
-app.post('/api/admin/movies', auth_middleware_1.default, admin_1.adminMiddleware, async (req, res) => {
+app.post("/api/admin/movies", auth_middleware_1.default, admin_1.adminMiddleware, async (req, res) => {
     try {
-        const newMovie = new Movie_1.Movie(req.body);
+        const { storageFilename, videoUrl, ...movieData } = req.body;
+        let finalVideoUrl = videoUrl;
+        /*
+         * فیلمی که از Storage انتخاب شده
+         */
+        if (storageFilename) {
+            if (typeof storageFilename !== "string") {
+                return res.status(400).json({
+                    message: "نام فایل Storage نامعتبر است"
+                });
+            }
+            if (storageFilename.includes("/") ||
+                storageFilename.includes("\\") ||
+                storageFilename.includes("..")) {
+                return res.status(400).json({
+                    message: "نام فایل Storage نامعتبر است"
+                });
+            }
+            const extension = path_1.default
+                .extname(storageFilename)
+                .toLowerCase();
+            if (extension !== ".mkv" && extension !== ".mp4") {
+                return res.status(400).json({
+                    message: "فرمت فایل پشتیبانی نمی‌شود"
+                });
+            }
+            const moviesPath = "/mnt/alanbin/movies";
+            const files = await fs_1.default.promises.readdir(moviesPath, { withFileTypes: true });
+            /*
+             * فایل واقعی را پیدا می‌کنیم
+             * بدون حساسیت به بزرگ/کوچک بودن حروف
+             */
+            const actualFilename = files
+                .filter(file => file.isFile())
+                .map(file => file.name)
+                .find(name => name.toLowerCase() ===
+                storageFilename.toLowerCase());
+            if (!actualFilename) {
+                return res.status(404).json({
+                    message: "فایل در Storage پیدا نشد"
+                });
+            }
+            const actualExtension = path_1.default
+                .extname(actualFilename)
+                .toLowerCase();
+            /*
+             * اگر MP4 است، مستقیماً استفاده می‌کنیم
+             */
+            if (actualExtension === ".mp4") {
+                finalVideoUrl = `/videos/${actualFilename}`;
+            }
+            /*
+             * اگر MKV است:
+             * اول بررسی می‌کنیم MP4 هم‌نام وجود دارد یا نه
+             */
+            else if (actualExtension === ".mkv") {
+                const baseName = path_1.default.basename(actualFilename, path_1.default.extname(actualFilename));
+                const mp4Filename = files
+                    .filter(file => file.isFile())
+                    .map(file => file.name)
+                    .find(name => path_1.default.extname(name).toLowerCase() === ".mp4" &&
+                    path_1.default.basename(name, path_1.default.extname(name)).toLowerCase() ===
+                        baseName.toLowerCase());
+                /*
+                 * MP4 از قبل وجود دارد
+                 */
+                if (mp4Filename) {
+                    console.log("✅ Existing MP4 found:", mp4Filename);
+                    finalVideoUrl =
+                        `/videos/${mp4Filename}`;
+                }
+                /*
+                 * MP4 وجود ندارد → تبدیل MKV
+                 */
+                else {
+                    const outputFilename = `${baseName}.mp4`;
+                    const inputPath = path_1.default.join(moviesPath, actualFilename);
+                    const outputPath = path_1.default.join(moviesPath, outputFilename);
+                    console.log("🎬 Converting MKV:", actualFilename);
+                    await execFileAsync("ffmpeg", [
+                        "-i",
+                        inputPath,
+                        "-map",
+                        "0:v:0",
+                        "-map",
+                        "0:a:0?",
+                        "-c:v",
+                        "copy",
+                        "-c:a",
+                        "aac",
+                        "-b:a",
+                        "192k",
+                        "-movflags",
+                        "+faststart",
+                        "-y",
+                        outputPath
+                    ]);
+                    console.log("✅ Conversion finished:", outputFilename);
+                    finalVideoUrl =
+                        `/videos/${outputFilename}`;
+                }
+            }
+        }
+        /*
+         * اگر از Storage نیامده، باید videoUrl داشته باشیم
+         */
+        if (!finalVideoUrl) {
+            return res.status(400).json({
+                message: "آدرس ویدیو مشخص نشده است"
+            });
+        }
+        /*
+         * جلوگیری از ثبت دوباره همان فیلم
+         */
+        const existingMovie = await Movie_1.Movie.findOne({
+            videoUrl: finalVideoUrl
+        });
+        if (existingMovie) {
+            return res.status(409).json({
+                message: "این فیلم قبلاً به سایت اضافه شده است"
+            });
+        }
+        /*
+         * ثبت نهایی فیلم
+         */
+        const newMovie = new Movie_1.Movie({
+            ...movieData,
+            videoUrl: finalVideoUrl
+        });
         const savedMovie = await newMovie.save();
         res.status(201).json(savedMovie);
     }
     catch (err) {
-        res.status(400).json({ message: err.message });
+        console.error("ADMIN CREATE MOVIE ERROR:", err);
+        res.status(500).json({
+            message: err.message ||
+                "خطا در ثبت فیلم"
+        });
     }
 });
 // 3. حذف فیلم
@@ -265,25 +683,75 @@ app.get("/api/admin/movies", auth_middleware_1.default, admin_1.adminMiddleware,
 app.get("/api/admin/storage/movies", auth_middleware_1.default, admin_1.adminMiddleware, async (req, res) => {
     try {
         const moviesPath = "/mnt/alanbin/movies";
-        const files = await fs_1.default.promises.readdir(moviesPath, {
-            withFileTypes: true
-        });
-        const storageMovies = files
+        const files = await fs_1.default.promises.readdir(moviesPath, { withFileTypes: true });
+        const videoFiles = files
             .filter(file => file.isFile() &&
-            (file.name.toLowerCase().endsWith(".mp4") ||
-                file.name.toLowerCase().endsWith(".mkv")))
+            (file.name
+                .toLowerCase()
+                .endsWith(".mp4") ||
+                file.name
+                    .toLowerCase()
+                    .endsWith(".mkv")))
             .map(file => file.name);
+        /*
+         * فیلم‌هایی که قبلاً در سایت ثبت شده‌اند
+         *
+         * فقط basename را نگه می‌داریم:
+         *
+         * /videos/atashbas.mp4
+         *             ↓
+         * atashbas
+         */
         const movies = await Movie_1.Movie.find()
             .select("videoUrl title");
-        const importedFiles = new Set(movies
+        const importedMovies = new Set(movies
             .map(movie => movie.videoUrl)
             .filter(Boolean)
-            .map(videoUrl => videoUrl
-            .replace(/^\/videos\//i, "")
-            .toLowerCase()));
-        const result = storageMovies.map(filename => ({
-            filename,
-            imported: importedFiles.has(filename.toLowerCase())
+            .map(videoUrl => {
+            const filename = videoUrl
+                .replace(/^\/videos\//i, "");
+            return path_1.default
+                .basename(filename, path_1.default.extname(filename))
+                .toLowerCase();
+        }));
+        /*
+         * گروه‌بندی MP4 و MKV بر اساس basename
+         */
+        const groupedMovies = new Map();
+        for (const filename of videoFiles) {
+            const ext = path_1.default
+                .extname(filename)
+                .toLowerCase();
+            const baseName = path_1.default
+                .basename(filename, path_1.default.extname(filename));
+            const key = baseName.toLowerCase();
+            const existing = groupedMovies.get(key);
+            if (!existing) {
+                groupedMovies.set(key, {
+                    /*
+                     * اگر MKV باشد آن را برای نمایش انتخاب می‌کنیم
+                     */
+                    filename,
+                    hasMkv: ext === ".mkv",
+                    hasMp4: ext === ".mp4"
+                });
+            }
+            else {
+                if (ext === ".mkv") {
+                    existing.hasMkv = true;
+                    existing.filename = filename;
+                }
+                if (ext === ".mp4") {
+                    existing.hasMp4 = true;
+                }
+            }
+        }
+        /*
+         * تبدیل Map به خروجی نهایی
+         */
+        const result = Array.from(groupedMovies.entries()).map(([key, movie]) => ({
+            filename: movie.filename,
+            imported: importedMovies.has(key)
         }));
         res.json({
             success: true,
@@ -374,8 +842,44 @@ app.post("/api/admin/storage/convert", auth_middleware_1.default, admin_1.adminM
         });
     }
 });
+app.post("/api/admin/storage/upload-poster", auth_middleware_1.default, admin_1.adminMiddleware, posterUpload.single("poster"), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: "فایل پوستر ارسال نشده است"
+            });
+        }
+        res.status(201).json({
+            success: true,
+            message: "پوستر با موفقیت در Storage آپلود شد",
+            filename: req.file.filename,
+            size: req.file.size,
+            posterUrl: `/posters/${req.file.filename}`
+        });
+    }
+    catch (err) {
+        console.error("POSTER UPLOAD ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: err.message ||
+                "خطا در آپلود پوستر"
+        });
+    }
+});
 // --- API مربوط به فیلم‌ها ---
 // 1. دریافت همه فیلم‌ها
+const genreMap = {
+    Comedy: "کمدی",
+    Drama: "درام",
+    Action: "اکشن",
+    Crime: "جنایی",
+    Romance: "عاشقانه",
+    Family: "خانوادگی",
+};
+const productMap = {
+    IR: "ایرانی",
+};
 app.get('/api/movies', async (req, res) => {
     const escapeRegex = (text) => {
         return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -384,31 +888,17 @@ app.get('/api/movies', async (req, res) => {
         // ---------- Filter ----------
         const query = {};
         if (req.query.genre) {
-            query.genre = req.query.genre;
+            const genre = String(req.query.genre);
+            query.genre = genreMap[genre] || genre;
         }
         if (req.query.product) {
-            query.product = req.query.product;
+            const product = String(req.query.product);
+            query.product = productMap[product] || product;
         }
         if (req.query.rating) {
             query.rating = {
                 $gte: Number(req.query.rating)
             };
-        }
-        if (req.query.search) {
-            query.$or = [
-                {
-                    title: {
-                        $regex: req.query.search,
-                        $options: "i",
-                    },
-                },
-                {
-                    description: {
-                        $regex: req.query.search,
-                        $options: "i",
-                    },
-                },
-            ];
         }
         if (req.query.search) {
             const search = escapeRegex(String(req.query.search));
@@ -421,6 +911,12 @@ app.get('/api/movies', async (req, res) => {
                 },
                 {
                     description: {
+                        $regex: search,
+                        $options: "i",
+                    },
+                },
+                {
+                    aliases: {
                         $regex: search,
                         $options: "i",
                     },
@@ -450,6 +946,9 @@ app.get('/api/movies', async (req, res) => {
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 20;
         const totalMovies = await Movie_1.Movie.countDocuments(query);
+        const allMovies = await Movie_1.Movie.find({})
+            .select("title genre product")
+            .limit(20);
         const totalPages = Math.max(1, Math.ceil(totalMovies / limit));
         const movies = await Movie_1.Movie.find(query)
             .sort(sort)

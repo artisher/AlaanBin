@@ -7,6 +7,10 @@ exports.Movie = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const movieSchema = new mongoose_1.default.Schema({
     title: { type: String, required: true },
+    aliases: {
+        type: [String],
+        default: []
+    },
     description: String,
     poster: String,
     videoUrl: {

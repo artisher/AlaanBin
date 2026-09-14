@@ -17,7 +17,7 @@ import { execFile } from "child_process";
 import { promisify } from "util";
 import { randomUUID } from "crypto";
 import { Readable } from "stream";
-
+import crypto from "crypto";
 
 dotenv.config();
 const app = express();
@@ -251,38 +251,46 @@ app.get(
 // LIVE VARZESH STREAM
 // ===============================
 
+// ===============================
+// LIVE VARZESH STREAM
+// ===============================
+
 const VARZESH_NCDN_URL =
     "https://ncdn.telewebion.net/varzesh/live/108050p/index.m3u8";
 
-let varzeshOrigin = "";
-let varzeshOriginUpdatedAt = 0;
+const varzeshSessions = new Map<
+    string,
+    {
+        origin: string;
+        createdAt: number;
+    }
+>();
 
-const VARZESH_ORIGIN_CACHE_TIME = 30 * 1000; // 30 seconds
+const VARZESH_SESSION_TTL =
+    2 * 60 * 1000;
 
 
-async function resolveVarzeshOrigin(force = false) {
+// Resolve current Telewebion origin
+async function resolveVarzeshOrigin() {
 
-    const now = Date.now();
+    const response = await fetch(
+        VARZESH_NCDN_URL,
+        {
+            redirect: "manual",
+        }
+    );
 
     if (
-        !force &&
-        varzeshOrigin &&
-        now - varzeshOriginUpdatedAt < VARZESH_ORIGIN_CACHE_TIME
+        response.status < 300 ||
+        response.status >= 400
     ) {
-        return varzeshOrigin;
-    }
-
-    const response = await fetch(VARZESH_NCDN_URL, {
-        redirect: "manual",
-    });
-
-    if (response.status !== 302) {
         throw new Error(
             `NCDN redirect failed: ${response.status}`
         );
     }
 
-    const location = response.headers.get("location");
+    const location =
+        response.headers.get("location");
 
     if (!location) {
         throw new Error(
@@ -290,25 +298,76 @@ async function resolveVarzeshOrigin(force = false) {
         );
     }
 
-    const url = new URL(location);
+    const url =
+        new URL(location);
 
-    const origin = url.origin;
+    const origin =
+        url.origin;
 
-    if (!origin.endsWith(".telewebion.net")) {
+    if (
+        !origin.endsWith(".telewebion.net")
+    ) {
         throw new Error(
             "Invalid Telewebion origin"
         );
     }
 
-    varzeshOrigin = origin;
-    varzeshOriginUpdatedAt = now;
-
     console.log(
         "📡 Varzesh origin:",
-        varzeshOrigin
+        origin
     );
 
-    return varzeshOrigin;
+    return origin;
+}
+
+
+// Create a playlist session
+function createVarzeshSession(
+    origin: string
+) {
+
+    const sessionId =
+        crypto.randomUUID();
+
+    varzeshSessions.set(
+        sessionId,
+        {
+            origin,
+            createdAt: Date.now(),
+        }
+    );
+
+    return sessionId;
+}
+
+
+// Get playlist session
+function getVarzeshSession(
+    sessionId: string
+) {
+
+    const session =
+        varzeshSessions.get(
+            sessionId
+        );
+
+    if (!session) {
+        return null;
+    }
+
+    if (
+        Date.now() -
+        session.createdAt >
+        VARZESH_SESSION_TTL
+    ) {
+        varzeshSessions.delete(
+            sessionId
+        );
+
+        return null;
+    }
+
+    return session;
 }
 
 
@@ -322,12 +381,18 @@ app.get(
             const origin =
                 await resolveVarzeshOrigin();
 
+            // This playlist is now permanently
+            // associated with this origin.
+            const sessionId =
+                createVarzeshSession(origin);
+
             const playlistUrl =
                 `${origin}/ek/varzesh/live/108050p/index.m3u8`;
 
-            const response = await fetch(
-                playlistUrl
-            );
+            const response =
+                await fetch(
+                    playlistUrl
+                );
 
             if (!response.ok) {
                 throw new Error(
@@ -338,27 +403,24 @@ app.get(
             let playlist =
                 await response.text();
 
-            /*
-             * تبدیل segmentهای relative
-             * به endpoint خود AlanBin
-             */
-            playlist = playlist
-                .split("\n")
-                .map(line => {
+            playlist =
+                playlist
+                    .split("\n")
+                    .map(line => {
 
-                    const trimmed =
-                        line.trim();
+                        const trimmed =
+                            line.trim();
 
-                    if (
-                        !trimmed ||
-                        trimmed.startsWith("#")
-                    ) {
-                        return line;
-                    }
+                        if (
+                            !trimmed ||
+                            trimmed.startsWith("#")
+                        ) {
+                            return line;
+                        }
 
-                    return `/api/live/varzesh/segment/${encodeURIComponent(trimmed)}`;
-                })
-                .join("\n");
+                        return `/api/live/varzesh/segment/${sessionId}/${encodeURIComponent(trimmed)}`;
+                    })
+                    .join("\n");
 
 
             res.setHeader(
@@ -396,14 +458,181 @@ app.get(
 
 // Segments
 app.get(
-    "/api/live/varzesh/segment/:segment",
+    "/api/live/varzesh/segment/:sessionId/:segment",
     async (req, res) => {
 
         try {
 
+            const sessionId =
+                String(
+                    req.params.sessionId
+                );
+
+            const segment =
+                String(
+                    req.params.segment
+                );
+
+
+            const session =
+                getVarzeshSession(
+                    sessionId
+                );
+
+            if (!session) {
+
+                return res
+                    .status(410)
+                    .json({
+                        message:
+                            "Live session expired"
+                    });
+            }
+
+
+            /*
+             * جلوگیری از path traversal
+             */
+            if (
+                segment.includes("/") ||
+                segment.includes("\\") ||
+                segment.includes("..") ||
+                !segment.endsWith(".ts")
+            ) {
+
+                return res
+                    .status(400)
+                    .json({
+                        message:
+                            "Segment نامعتبر است"
+                    });
+            }
+
+
+            /*
+             * IMPORTANT:
+             * Use the SAME origin that produced
+             * the playlist.
+             */
+            const origin =
+                session.origin;
+
+
+            const segmentUrl =
+                `${origin}/ek/varzesh/live/108050p/${segment}`;
+
+
+            console.log(
+                "🎬 Varzesh segment:",
+                segment.slice(0, 30),
+                "→",
+                origin
+            );
+
+
+            const response =
+                await fetch(
+                    segmentUrl
+                );
+
+
+            if (!response.ok) {
+
+                console.log(
+                    "⚠️ Segment failed:",
+                    response.status,
+                    "session:",
+                    sessionId
+                );
+
+                return res
+                    .status(response.status)
+                    .end();
+            }
+
+
+            res.setHeader(
+                "Content-Type",
+                "video/mp2t"
+            );
+
+            res.setHeader(
+                "Cache-Control",
+                "no-store"
+            );
+
+            res.setHeader(
+                "Access-Control-Allow-Origin",
+                "https://www.alanbin.com"
+            );
+
+
+            if (
+                response.headers.has(
+                    "content-length"
+                )
+            ) {
+
+                res.setHeader(
+                    "Content-Length",
+                    response.headers.get(
+                        "content-length"
+                    )!
+                );
+            }
+
+
+            if (!response.body) {
+
+                return res
+                    .status(502)
+                    .end();
+            }
+
+
+            Readable
+                .fromWeb(
+                    response.body as any
+                )
+                .pipe(res);
+
+        } catch (err) {
+
+            console.error(
+                "❌ VARZESH SEGMENT ERROR:",
+                err
+            );
+
+            if (!res.headersSent) {
+                res
+                    .status(502)
+                    .end();
+            }
+        }
+    }
+);
+
+// Segments
+app.get(
+    "/api/live/varzesh/segment/:sessionId/:segment",
+    async (req, res) => {
+
+        try {
+            const sessionId =
+                String(req.params.sessionId);
+
             const segment =
                 String(req.params.segment);
 
+            const session =
+                getVarzeshSession(sessionId);
+
+            if (!session) {
+                return res.status(410).json({
+                    message:
+                        "Live session expired"
+                });
+            }
             /*
              * جلوگیری از path traversal
              */
@@ -439,19 +668,16 @@ app.get(
             if (!response.ok) {
 
                 console.log(
-                    "⚠️ Segment failed, refreshing origin..."
+                    "⚠️ Segment failed:",
+                    response.status,
+                    "session:",
+                    sessionId
                 );
 
-                origin =
-                    await resolveVarzeshOrigin(true);
-
-                segmentUrl =
-                    `${origin}/ek/varzesh/live/108050p/${segment}`;
-
-                response =
-                    await fetch(segmentUrl);
+                return res
+                    .status(response.status)
+                    .end();
             }
-
 
             if (!response.ok) {
 
