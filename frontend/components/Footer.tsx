@@ -110,7 +110,7 @@ export const Footer = () => {
               واتساپ
               <br />
               <span className="text-white" dir="ltr">
-                +43 676 4479470
+                +43 677 618 21284
               </span>
             </p>
 
@@ -118,7 +118,7 @@ export const Footer = () => {
               ایمیل
               <br />
               <span className="text-white">
-                support@alanbin.com
+                Alanbin.Support@gmail.com
               </span>
             </p>
 

@@ -266,7 +266,7 @@ return (
                                     </h3>
 
                                     <p className="text-gray-400 mt-2">
-                                        support@alanbin.com
+                                        Alanbin.Support@gmail.com
                                     </p>
 
                                 </div>

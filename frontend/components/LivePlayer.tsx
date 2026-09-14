@@ -29,11 +29,10 @@ export default function LivePlayer({
             hls.attachMedia(video);
 
             hls.on(Hls.Events.ERROR, (_, data) => {
-                console.error("HLS ERROR:", data);
-                console.error("TYPE:", data.type);
-                console.error("DETAIL:", data.details);
-                console.error("FATAL:", data.fatal);
-                console.error("URL:", data.url);
+                console.error(
+                    "HLS FULL ERROR:",
+                    JSON.stringify(data, null, 2)
+                );
             });
         } else if (
             video.canPlayType("application/vnd.apple.mpegurl")
