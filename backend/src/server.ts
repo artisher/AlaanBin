@@ -263,6 +263,8 @@ const varzeshSessions = new Map<
     {
         origin: string;
         createdAt: number;
+        refreshRequested: boolean;
+        failoverCount: number;
     }
 >();
 
@@ -323,24 +325,18 @@ async function resolveVarzeshOrigin() {
 
 
 // Create a playlist session
-function createVarzeshSession(
-    origin: string
-) {
+function createVarzeshSession(origin: string) {
+    const sessionId = crypto.randomUUID();
 
-    const sessionId =
-        crypto.randomUUID();
-
-    varzeshSessions.set(
-        sessionId,
-        {
-            origin,
-            createdAt: Date.now(),
-        }
-    );
+    varzeshSessions.set(sessionId, {
+        origin,
+        createdAt: Date.now(),
+        refreshRequested: false,
+        failoverCount: 0,
+    });
 
     return sessionId;
 }
-
 
 // ===============================
 // Get session
@@ -378,6 +374,47 @@ function getVarzeshSession(
 
     return session;
 }
+
+
+
+async function refreshVarzeshSession(
+    sessionId: string
+) {
+    const session =
+        getVarzeshSession(sessionId);
+
+    if (!session) {
+        throw new Error(
+            "Varzesh session not found"
+        );
+    }
+
+    const newOrigin =
+        await resolveVarzeshOrigin();
+
+    console.log(
+        "🔄 Varzesh origin changed:",
+        session.origin,
+        "→",
+        newOrigin
+    );
+
+    session.origin =
+        newOrigin;
+
+    session.refreshRequested =
+        false;
+
+    session.failoverCount += 1;
+
+    return session;
+}
+
+
+
+
+
+
 
 async function buildVarzeshPlaylist(
     origin: string,
@@ -546,7 +583,17 @@ app.get(
                     );
                 }
             }
+            if (session.refreshRequested) {
 
+                console.log(
+                    "🔄 Refreshing Varzesh origin..."
+                );
+
+                session =
+                    await refreshVarzeshSession(
+                        sessionId
+                    );
+            }
 
             /*
              * هر بار playlist را
@@ -559,8 +606,8 @@ app.get(
                 );
 
 
-          
-    
+
+
             res.setHeader(
                 "Content-Type",
                 "application/vnd.apple.mpegurl"
@@ -684,14 +731,24 @@ app.get(
                     "⚠️ Segment failed:",
                     response.status,
                     "session:",
-                    sessionId
+                    sessionId,
+                    "origin:",
+                    session.origin
                 );
+
+                if (response.status === 451) {
+
+                    session.refreshRequested = true;
+
+                    console.log(
+                        "🔄 Varzesh failover requested"
+                    );
+                }
 
                 return res
                     .status(response.status)
                     .end();
             }
-
 
             res.setHeader(
                 "Content-Type",

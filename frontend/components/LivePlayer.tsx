@@ -84,23 +84,24 @@ export default function LivePlayer({
 
                 if (Hls.isSupported()) {
 
-                    hls =
-                        new Hls({
-                            enableWorker: true,
-                            lowLatencyMode: true,
-                        });
+                    hls = new Hls({
+                        enableWorker: true,
+                        lowLatencyMode: true,
+                    });
 
+                    const player = hls;
 
-                    hls.loadSource(
+                    player.loadSource(
                         sessionStreamUrl
                     );
 
-                    hls.attachMedia(
+                    player.attachMedia(
                         video
                     );
 
+                    let recovering = false;
 
-                    hls.on(
+                    player.on(
                         Hls.Events.ERROR,
                         (_, data) => {
 
@@ -112,9 +113,46 @@ export default function LivePlayer({
                                     2
                                 )
                             );
+
+                            const is451 =
+                                data.response?.code === 451;
+
+                            const isFragmentError =
+                                data.details ===
+                                Hls.ErrorDetails.FRAG_LOAD_ERROR;
+
+                            if (
+                                data.fatal &&
+                                is451 &&
+                                isFragmentError &&
+                                !recovering
+                            ) {
+
+                                recovering = true;
+
+                                console.log(
+                                    "🔄 451 detected → refreshing Varzesh playlist..."
+                                );
+
+                                player.stopLoad();
+
+                                const refreshUrl =
+                                    `${streamUrl}?session=${encodeURIComponent(
+                                        sessionId
+                                    )}&refresh=${Date.now()}`;
+
+                                player.loadSource(
+                                    refreshUrl
+                                );
+
+                                player.startLoad();
+
+                                setTimeout(() => {
+                                    recovering = false;
+                                }, 3000);
+                            }
                         }
                     );
-
                 } else if (
                     video.canPlayType(
                         "application/vnd.apple.mpegurl"
