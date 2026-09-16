@@ -258,14 +258,18 @@ app.get(
 const VARZESH_NCDN_URL =
     "https://ncdn.telewebion.net/varzesh/live/108050p/index.m3u8";
 
+type VarzeshSession = {
+    origin: string;
+    createdAt: number;
+    refreshRequested: boolean;
+    failoverCount: number;
+    failedOrigins: Set<string>;
+    refreshPromise?: Promise<void>;
+};
+
 const varzeshSessions = new Map<
     string,
-    {
-        origin: string;
-        createdAt: number;
-        refreshRequested: boolean;
-        failoverCount: number;
-    }
+    VarzeshSession
 >();
 
 const VARZESH_SESSION_TTL =
@@ -326,14 +330,20 @@ async function resolveVarzeshOrigin() {
 
 // Create a playlist session
 function createVarzeshSession(origin: string) {
-    const sessionId = crypto.randomUUID();
 
-    varzeshSessions.set(sessionId, {
-        origin,
-        createdAt: Date.now(),
-        refreshRequested: false,
-        failoverCount: 0,
-    });
+    const sessionId =
+        crypto.randomUUID();
+
+    varzeshSessions.set(
+        sessionId,
+        {
+            origin,
+            createdAt: Date.now(),
+            refreshRequested: false,
+            failoverCount: 0,
+            failedOrigins: new Set<string>(),
+        }
+    );
 
     return sessionId;
 }
@@ -389,23 +399,94 @@ async function refreshVarzeshSession(
         );
     }
 
-    const newOrigin =
-        await resolveVarzeshOrigin();
+    /*
+     * اگر یک درخواست دیگر در حال
+     * گرفتن Origin جدید است،
+     * منتظر همان درخواست بمان.
+     */
+    if (session.refreshPromise) {
 
-    console.log(
-        "🔄 Varzesh origin changed:",
-        session.origin,
-        "→",
-        newOrigin
-    );
+        await session.refreshPromise;
 
-    session.origin =
-        newOrigin;
+        return session;
+    }
 
-    session.refreshRequested =
-        false;
+    session.refreshPromise =
+        (async () => {
 
-    session.failoverCount += 1;
+            const oldOrigin =
+                session.origin;
+
+            let newOrigin = oldOrigin;
+
+            /*
+             * حداکثر چند بار NCDN را
+             * امتحان می‌کنیم تا Origin
+             * قبلاً خراب‌شده تکرار نشود.
+             */
+            for (
+                let attempt = 0;
+                attempt < 5;
+                attempt++
+            ) {
+
+                newOrigin =
+                    await resolveVarzeshOrigin();
+
+                if (
+                    !session.failedOrigins.has(
+                        newOrigin
+                    )
+                ) {
+                    break;
+                }
+
+                console.log(
+                    "⚠️ Ignoring previously failed origin:",
+                    newOrigin
+                );
+            }
+
+            /*
+             * اگر باز هم Origin خراب قبلی
+             * برگشت، فعلاً همان را نگه نمی‌داریم.
+             */
+            if (
+                session.failedOrigins.has(
+                    newOrigin
+                )
+            ) {
+                throw new Error(
+                    "No new healthy Varzesh origin found"
+                );
+            }
+
+            session.origin =
+                newOrigin;
+
+            session.refreshRequested =
+                false;
+
+            session.failoverCount += 1;
+
+            console.log(
+                "🔄 Varzesh origin changed:",
+                oldOrigin,
+                "→",
+                newOrigin
+            );
+
+        })();
+
+    try {
+
+        await session.refreshPromise;
+
+    } finally {
+
+        session.refreshPromise =
+            undefined;
+    }
 
     return session;
 }
@@ -738,10 +819,17 @@ app.get(
 
                 if (response.status === 451) {
 
-                    session.refreshRequested = true;
+                    session.failedOrigins.add(
+                        session.origin
+                    );
+
+                    session.refreshRequested =
+                        true;
 
                     console.log(
-                        "🔄 Varzesh failover requested"
+                        "🔄 Varzesh failover requested",
+                        "failed origin:",
+                        session.origin
                     );
                 }
 
