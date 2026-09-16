@@ -399,11 +399,6 @@ async function refreshVarzeshSession(
         );
     }
 
-    /*
-     * اگر یک درخواست دیگر در حال
-     * گرفتن Origin جدید است،
-     * منتظر همان درخواست بمان.
-     */
     if (session.refreshPromise) {
 
         await session.refreshPromise;
@@ -417,13 +412,19 @@ async function refreshVarzeshSession(
             const oldOrigin =
                 session.origin;
 
-            let newOrigin = oldOrigin;
-
             /*
-             * حداکثر چند بار NCDN را
-             * امتحان می‌کنیم تا Origin
-             * قبلاً خراب‌شده تکرار نشود.
+             * فقط Origin فعلی را رد می‌کنیم.
+             * Originهای قدیمی ممکن است دوباره سالم شوند.
              */
+            session.failedOrigins.clear();
+
+            session.failedOrigins.add(
+                oldOrigin
+            );
+
+            let newOrigin =
+                oldOrigin;
+
             for (
                 let attempt = 0;
                 attempt < 5;
@@ -434,30 +435,22 @@ async function refreshVarzeshSession(
                     await resolveVarzeshOrigin();
 
                 if (
-                    !session.failedOrigins.has(
-                        newOrigin
-                    )
+                    newOrigin !== oldOrigin
                 ) {
                     break;
                 }
 
                 console.log(
-                    "⚠️ Ignoring previously failed origin:",
+                    "⚠️ NCDN returned same origin:",
                     newOrigin
                 );
             }
 
-            /*
-             * اگر باز هم Origin خراب قبلی
-             * برگشت، فعلاً همان را نگه نمی‌داریم.
-             */
             if (
-                session.failedOrigins.has(
-                    newOrigin
-                )
+                newOrigin === oldOrigin
             ) {
                 throw new Error(
-                    "No new healthy Varzesh origin found"
+                    "NCDN returned the same failed origin"
                 );
             }
 
