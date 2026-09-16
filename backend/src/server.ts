@@ -567,13 +567,20 @@ async function buildVarzeshPlaylist(
         );
     }
 
-    const mediaSequence =
-        Number(
-            lastSegments[0]
-                .match(
-                    /#EXTINF:[^,]+,(\d+)/
-                )?.[1]
+    const mediaSequenceLine =
+        lines.find(
+            line =>
+                line.startsWith(
+                    "#EXT-X-MEDIA-SEQUENCE:"
+                )
         );
+
+    const mediaSequence =
+        mediaSequenceLine
+            ? Number(
+                mediaSequenceLine.split(":")[1]
+            )
+            : 0;
 
     let output = [
         ...header,
