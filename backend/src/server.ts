@@ -566,20 +566,19 @@ async function buildVarzeshPlaylist(
             "No live segments found"
         );
     }
+    const firstSegment =
+        lastSegments[0];
 
-    const mediaSequenceLine =
-        lines.find(
-            line =>
-                line.startsWith(
-                    "#EXT-X-MEDIA-SEQUENCE:"
-                )
+    const firstSequence =
+        Number(
+            firstSegment.match(
+                /#EXTINF:[^,]+,(\d+)/
+            )?.[1]
         );
 
     const mediaSequence =
-        mediaSequenceLine
-            ? Number(
-                mediaSequenceLine.split(":")[1]
-            )
+        Number.isFinite(firstSequence)
+            ? firstSequence
             : 0;
 
     let output = [
