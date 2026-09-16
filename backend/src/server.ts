@@ -326,7 +326,129 @@ async function resolveVarzeshOrigin() {
     return origin;
 }
 
+async function isVarzeshOriginHealthy(
+    origin: string
+) {
+    try {
+        const playlistUrl =
+            `${origin}/ek/varzesh/live/108050p/index.m3u8`;
 
+        const response =
+            await fetch(
+                playlistUrl,
+                {
+                    cache: "no-store",
+                    headers: {
+                        Origin: "https://telewebion.net",
+                        Referer: "https://telewebion.net/",
+                    },
+                }
+            );
+
+        if (!response.ok) {
+            console.log(
+                "❌ Origin playlist unhealthy:",
+                origin,
+                response.status
+            );
+
+            return false;
+        }
+
+        const playlist =
+            await response.text();
+
+        const lines =
+            playlist
+                .split("\n")
+                .map(line => line.trim());
+
+        let latestSegment: string | null =
+            null;
+
+        for (
+            let i = 0;
+            i < lines.length - 1;
+            i++
+        ) {
+            if (
+                lines[i].startsWith("#EXTINF:")
+            ) {
+                const segment =
+                    lines[i + 1];
+
+                if (
+                    segment &&
+                    !segment.startsWith("#") &&
+                    segment.endsWith(".ts")
+                ) {
+                    latestSegment =
+                        segment;
+                }
+            }
+        }
+
+        if (!latestSegment) {
+            console.log(
+                "❌ No segment found:",
+                origin
+            );
+
+            return false;
+        }
+
+        const segmentUrl =
+            `${origin}/ek/varzesh/live/108050p/${latestSegment}`;
+
+        console.log(
+            "🩺 Checking live segment:",
+            origin,
+            latestSegment.slice(0, 30)
+        );
+
+        const segmentResponse =
+            await fetch(
+                segmentUrl,
+                {
+                    cache: "no-store",
+                    headers: {
+                        Origin: "https://telewebion.net",
+                        Referer: "https://telewebion.net/",
+                    },
+                    signal: AbortSignal.timeout(
+                        5000
+                    ),
+                }
+            );
+
+        if (!segmentResponse.ok) {
+            console.log(
+                "❌ Origin segment unhealthy:",
+                origin,
+                segmentResponse.status
+            );
+
+            return false;
+        }
+
+        console.log(
+            "✅ Origin is healthy:",
+            origin
+        );
+
+        return true;
+
+    } catch (error) {
+
+        console.log(
+            "❌ Origin health-check failed:",
+            origin,
+            error
+        );
+
+        return false;
+    }
+}
 
 // Create a playlist session
 function createVarzeshSession(origin: string) {
@@ -400,9 +522,7 @@ async function refreshVarzeshSession(
     }
 
     if (session.refreshPromise) {
-
         await session.refreshPromise;
-
         return session;
     }
 
@@ -412,50 +532,91 @@ async function refreshVarzeshSession(
             const oldOrigin =
                 session.origin;
 
-            /*
-             * فقط Origin فعلی را رد می‌کنیم.
-             * Originهای قدیمی ممکن است دوباره سالم شوند.
-             */
-            session.failedOrigins.clear();
-
-            session.failedOrigins.add(
-                oldOrigin
+            console.log(
+                "🔄 Searching for healthy Varzesh origin..."
             );
 
-            let newOrigin =
+            /*
+             * We only exclude the origin that
+             * just failed.
+             *
+             * Older origins may become healthy again.
+             */
+            const excludedOrigin =
                 oldOrigin;
 
+            let healthyOrigin:
+                string | null = null;
+
+            /*
+             * Ask NCDN for several candidate origins.
+             */
             for (
                 let attempt = 0;
-                attempt < 5;
+                attempt < 8;
                 attempt++
             ) {
 
-                newOrigin =
-                    await resolveVarzeshOrigin();
+                try {
 
-                if (
-                    newOrigin !== oldOrigin
-                ) {
+                    const candidate =
+                        await resolveVarzeshOrigin();
+
+                    if (
+                        candidate ===
+                        excludedOrigin
+                    ) {
+                        console.log(
+                            "⚠️ Skipping failed origin:",
+                            candidate
+                        );
+
+                        continue;
+                    }
+
+                    console.log(
+                        "🩺 Testing candidate origin:",
+                        candidate
+                    );
+
+                    const healthy =
+                        await isVarzeshOriginHealthy(
+                            candidate
+                        );
+
+                    if (!healthy) {
+
+                        console.log(
+                            "❌ Candidate rejected:",
+                            candidate
+                        );
+
+                        continue;
+                    }
+
+                    healthyOrigin =
+                        candidate;
+
                     break;
-                }
 
-                console.log(
-                    "⚠️ NCDN returned same origin:",
-                    newOrigin
-                );
+                } catch (error) {
+
+                    console.error(
+                        "❌ Origin candidate check failed:",
+                        error
+                    );
+                }
             }
 
-            if (
-                newOrigin === oldOrigin
-            ) {
+            if (!healthyOrigin) {
+
                 throw new Error(
-                    "NCDN returned the same failed origin"
+                    "No new healthy Varzesh origin found"
                 );
             }
 
             session.origin =
-                newOrigin;
+                healthyOrigin;
 
             session.refreshRequested =
                 false;
@@ -463,10 +624,10 @@ async function refreshVarzeshSession(
             session.failoverCount += 1;
 
             console.log(
-                "🔄 Varzesh origin changed:",
+                "✅ Healthy Varzesh origin selected:",
                 oldOrigin,
                 "→",
-                newOrigin
+                healthyOrigin
             );
 
         })();
@@ -483,7 +644,6 @@ async function refreshVarzeshSession(
 
     return session;
 }
-
 
 
 
