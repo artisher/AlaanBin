@@ -1,10 +1,15 @@
 "use client";
-import { ManageUser } from '@/components/ManageUser';
-import { MangeFilms } from '@/components/MangeFilms';
-import { ManageRequests } from '@/components/ManageRequests';
-import { useState } from 'react';
+
+import { ManageUser } from "@/components/ManageUser";
+import { MangeFilms } from "@/components/MangeFilms";
+import { ManageSeries } from "@/components/ManageSeries";
+import { ManageRequests } from "@/components/ManageRequests";
+
+import { useState } from "react";
+
 import type { User } from "@/types/user";
 import type { Movie } from "@/types/movies";
+import type { Series } from "@/types/Series";
 import type { UserRequest } from "@/types/request";
 
 type StorageMovie = {
@@ -16,45 +21,55 @@ export const AdminMainComponent = ({
     moviesList = [],
     userList = [],
     requestsList = [],
-    storageMovies = []
+    storageMovies = [],
+    seriesList = [],
 }: {
     moviesList?: Movie[];
     userList?: User[];
     requestsList?: UserRequest[];
     storageMovies?: StorageMovie[];
+    seriesList?: Series[];
 }) => {
+    const [activeTab, setActiveTab] = useState<
+        "users" | "movies" | "series" | "requests"
+    >("users");
 
-    const [activeTab, setActiveTab] = useState<'users' | 'movies' | 'requests'>('users');
     const tabs = [
-        { id: 'movies', label: 'فیلم‌ها' },
-        { id: 'users', label: 'کاربران' },
-        { id: 'requests', label: 'درخواست‌ها' },
+        { id: "movies", label: "فیلم‌ها" },
+        { id: "series", label: "سریال‌ها" },
+        { id: "users", label: "کاربران" },
+        { id: "requests", label: "درخواست‌ها" },
     ];
-
 
     return (
         <div>
             <div className="min-h-screen bg-dark text-gray-200 flex flex-col md:flex-row">
 
-                {/* سایدبار / منوی تب‌ها */}
+                {/* Sidebar */}
                 <aside className="w-full md:w-64 bg-card border-l border-gray-800 flex flex-col">
                     <div className="p-6 border-b border-gray-700">
-                        <h1 className="text-2xl font-bold text-primary">پنل ادمین</h1>
+                        <h1 className="text-2xl font-bold text-primary">
+                            پنل ادمین
+                        </h1>
                     </div>
+
                     <nav className="flex-1 p-4 space-y-2">
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
-                                onClick={() => setActiveTab(tab.id as any)}
+                                onClick={() =>
+                                    setActiveTab(tab.id as typeof activeTab)
+                                }
                                 className={`w-full text-right px-4 py-3 rounded-lg transition-all duration-200 ${activeTab === tab.id
-                                    ? 'bg-primary text-dark font-bold shadow-lg shadow-green-900/20'
-                                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                                        ? "bg-primary text-dark font-bold shadow-lg shadow-green-900/20"
+                                        : "text-gray-400 hover:bg-gray-800 hover:text-white"
                                     }`}
                             >
                                 {tab.label}
                             </button>
                         ))}
                     </nav>
+
                     <div className="p-4 border-t border-gray-700">
                         <button className="w-full text-left px-4 py-2 text-red-400 hover:bg-gray-800 rounded-lg transition">
                             خروج از حساب
@@ -62,35 +77,57 @@ export const AdminMainComponent = ({
                     </div>
                 </aside>
 
-                {/* محتوای اصلی */}
+                {/* Main */}
                 <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+
                     <header className="mb-8 flex justify-between items-center">
                         <h2 className="text-2xl font-bold text-white">
-                            {tabs.find(t => t.id === activeTab)?.label}
+                            {tabs.find((t) => t.id === activeTab)?.label}
                         </h2>
+
                         <div className="flex items-center gap-3">
-                            <span className="text-gray-400 text-sm">خوش آمدید، ادمین</span>
+                            <span className="text-gray-400 text-sm">
+                                خوش آمدید، ادمین
+                            </span>
+
                             <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-dark font-bold">
                                 A
                             </div>
                         </div>
                     </header>
 
-                    {/* نمایش محتوای تب فعال */}
                     <div className="animate-fade-in">
-                        {activeTab === 'movies' && (
+
+                        {/* Movies */}
+                        {activeTab === "movies" && (
                             <MangeFilms
                                 moviesList={moviesList}
                                 storageMovies={storageMovies}
                             />
                         )}
-                        {activeTab === 'users' && <ManageUser userList={userList} />}
-                        {activeTab === 'requests' && (
-                            <ManageRequests requestsList={requestsList} />
+
+                        {/* Series */}
+                        {activeTab === "series" && (
+                            <ManageSeries
+                                seriesList={seriesList}
+                            />
                         )}
+
+                        {/* Users */}
+                        {activeTab === "users" && (
+                            <ManageUser userList={userList} />
+                        )}
+
+                        {/* Requests */}
+                        {activeTab === "requests" && (
+                            <ManageRequests
+                                requestsList={requestsList}
+                            />
+                        )}
+
                     </div>
                 </main>
             </div>
         </div>
-    )
-}
+    );
+};

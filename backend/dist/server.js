@@ -10,6 +10,8 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const cors_1 = __importDefault(require("cors"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const Movie_1 = require("./models/Movie");
+const Series_1 = require("./models/Series");
+const Episode_1 = require("./models/Episode");
 const User_1 = require("./models/User");
 const auth_middleware_1 = __importDefault(require("./middleware/auth.middleware"));
 const admin_1 = require("./middleware/admin");
@@ -186,7 +188,7 @@ app.get("/posters/:filename", auth_middleware_1.default, async (req, res) => {
 // ===============================
 const VARZESH_NCDN_URL = "https://ncdn.telewebion.net/varzesh/live/108050p/index.m3u8";
 const varzeshSessions = new Map();
-const VARZESH_SESSION_TTL = 2 * 60 * 1000;
+const VARZESH_SESSION_TTL = 10 * 60 * 1000;
 // Resolve current Telewebion origin
 async function resolveVarzeshOrigin() {
     const response = await fetch(VARZESH_NCDN_URL, {
@@ -208,16 +210,77 @@ async function resolveVarzeshOrigin() {
     console.log("📡 Varzesh origin:", origin);
     return origin;
 }
+async function isVarzeshOriginHealthy(origin) {
+    try {
+        const playlistUrl = `${origin}/ek/varzesh/live/108050p/index.m3u8`;
+        const response = await fetch(playlistUrl, {
+            cache: "no-store",
+            headers: {
+                Origin: "https://telewebion.net",
+                Referer: "https://telewebion.net/",
+            },
+        });
+        if (!response.ok) {
+            console.log("❌ Origin playlist unhealthy:", origin, response.status);
+            return false;
+        }
+        const playlist = await response.text();
+        const lines = playlist
+            .split("\n")
+            .map(line => line.trim());
+        let latestSegment = null;
+        for (let i = 0; i < lines.length - 1; i++) {
+            if (lines[i].startsWith("#EXTINF:")) {
+                const segment = lines[i + 1];
+                if (segment &&
+                    !segment.startsWith("#") &&
+                    segment.endsWith(".ts")) {
+                    latestSegment =
+                        segment;
+                }
+            }
+        }
+        if (!latestSegment) {
+            console.log("❌ No segment found:", origin);
+            return false;
+        }
+        const segmentUrl = `${origin}/ek/varzesh/live/108050p/${latestSegment}`;
+        console.log("🩺 Checking live segment:", origin, latestSegment.slice(0, 30));
+        const segmentResponse = await fetch(segmentUrl, {
+            cache: "no-store",
+            headers: {
+                Origin: "https://telewebion.net",
+                Referer: "https://telewebion.net/",
+            },
+            signal: AbortSignal.timeout(5000),
+        });
+        if (!segmentResponse.ok) {
+            console.log("❌ Origin segment unhealthy:", origin, segmentResponse.status);
+            return false;
+        }
+        console.log("✅ Origin is healthy:", origin);
+        return true;
+    }
+    catch (error) {
+        console.log("❌ Origin health-check failed:", origin, error);
+        return false;
+    }
+}
 // Create a playlist session
 function createVarzeshSession(origin) {
     const sessionId = crypto_2.default.randomUUID();
     varzeshSessions.set(sessionId, {
         origin,
         createdAt: Date.now(),
+        refreshRequested: false,
+        failoverCount: 0,
+        failedOrigins: new Set(),
     });
     return sessionId;
 }
-// Get playlist session
+// ===============================
+// Get session
+// ===============================
 function getVarzeshSession(sessionId) {
     const session = varzeshSessions.get(sessionId);
     if (!session) {
@@ -229,36 +292,172 @@ function getVarzeshSession(sessionId) {
         varzeshSessions.delete(sessionId);
         return null;
     }
+    // Refresh session lifetime
+    session.createdAt =
+        Date.now();
     return session;
 }
-// Playlist
+async function refreshVarzeshSession(sessionId) {
+    const session = getVarzeshSession(sessionId);
+    if (!session) {
+        throw new Error("Varzesh session not found");
+    }
+    if (session.refreshPromise) {
+        await session.refreshPromise;
+        return session;
+    }
+    session.refreshPromise =
+        (async () => {
+            const oldOrigin = session.origin;
+            console.log("🔄 Searching for healthy Varzesh origin...");
+            /*
+             * We only exclude the origin that
+             * just failed.
+             *
+             * Older origins may become healthy again.
+             */
+            const excludedOrigin = oldOrigin;
+            let healthyOrigin = null;
+            /*
+             * Ask NCDN for several candidate origins.
+             */
+            for (let attempt = 0; attempt < 8; attempt++) {
+                try {
+                    const candidate = await resolveVarzeshOrigin();
+                    if (candidate ===
+                        excludedOrigin) {
+                        console.log("⚠️ Skipping failed origin:", candidate);
+                        continue;
+                    }
+                    console.log("🩺 Testing candidate origin:", candidate);
+                    const healthy = await isVarzeshOriginHealthy(candidate);
+                    if (!healthy) {
+                        console.log("❌ Candidate rejected:", candidate);
+                        continue;
+                    }
+                    healthyOrigin =
+                        candidate;
+                    break;
+                }
+                catch (error) {
+                    console.error("❌ Origin candidate check failed:", error);
+                }
+            }
+            if (!healthyOrigin) {
+                throw new Error("No new healthy Varzesh origin found");
+            }
+            session.origin =
+                healthyOrigin;
+            session.refreshRequested =
+                false;
+            session.failoverCount += 1;
+            console.log("✅ Healthy Varzesh origin selected:", oldOrigin, "→", healthyOrigin);
+        })();
+    try {
+        await session.refreshPromise;
+    }
+    finally {
+        session.refreshPromise =
+            undefined;
+    }
+    return session;
+}
+async function buildVarzeshPlaylist(origin, sessionId) {
+    const playlistUrl = `${origin}/ek/varzesh/live/108050p/index.m3u8`;
+    const response = await fetch(playlistUrl, {
+        cache: "no-store",
+    });
+    if (!response.ok) {
+        throw new Error(`Origin playlist failed: ${response.status}`);
+    }
+    const playlist = await response.text();
+    const lines = playlist.split("\n");
+    const header = lines.filter(line => line.startsWith("#EXTM3U") ||
+        line.startsWith("#EXT-X-VERSION") ||
+        line.startsWith("#EXT-X-TARGETDURATION"));
+    const segments = [];
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line.startsWith("#EXTINF:")) {
+            const segment = lines[i + 1]?.trim();
+            if (segment &&
+                !segment.startsWith("#")) {
+                segments.push(`${line}\n${segment}`);
+            }
+        }
+    }
+    // فقط آخرین سگمنت‌ها
+    const lastSegments = segments.slice(-10);
+    if (!lastSegments.length) {
+        throw new Error("No live segments found");
+    }
+    const firstSegment = lastSegments[0];
+    const firstSequence = Number(firstSegment.match(/#EXTINF:[^,]+,(\d+)/)?.[1]);
+    const mediaSequence = Number.isFinite(firstSequence)
+        ? firstSequence
+        : 0;
+    let output = [
+        ...header,
+        `#EXT-X-MEDIA-SEQUENCE:${mediaSequence}`,
+        ...lastSegments,
+    ].join("\n");
+    output =
+        output
+            .split("\n")
+            .map(line => {
+            const trimmed = line.trim();
+            if (!trimmed ||
+                trimmed.startsWith("#")) {
+                return line;
+            }
+            return `/api/live/varzesh/segment/${sessionId}/${encodeURIComponent(trimmed)}`;
+        })
+            .join("\n");
+    return output;
+}
+// ===============================
+// PLAYLIST
+// ===============================
 app.get("/api/live/varzesh/index.m3u8", async (req, res) => {
     try {
-        const origin = await resolveVarzeshOrigin();
-        // This playlist is now permanently
-        // associated with this origin.
-        const sessionId = createVarzeshSession(origin);
-        const playlistUrl = `${origin}/ek/varzesh/live/108050p/index.m3u8`;
-        const response = await fetch(playlistUrl);
-        if (!response.ok) {
-            throw new Error(`Origin playlist failed: ${response.status}`);
+        /*
+         * اگر session از قبل داریم،
+         * همان session را استفاده کن.
+         */
+        let sessionId = String(req.query.session || "");
+        let session = sessionId
+            ? getVarzeshSession(sessionId)
+            : null;
+        /*
+         * اولین درخواست:
+         * origin جدید بگیر
+         * session بساز
+         */
+        if (!session) {
+            const origin = await resolveVarzeshOrigin();
+            sessionId =
+                createVarzeshSession(origin);
+            session =
+                getVarzeshSession(sessionId);
+            if (!session) {
+                throw new Error("Failed to create session");
+            }
         }
-        let playlist = await response.text();
-        playlist =
-            playlist
-                .split("\n")
-                .map(line => {
-                const trimmed = line.trim();
-                if (!trimmed ||
-                    trimmed.startsWith("#")) {
-                    return line;
-                }
-                return `/api/live/varzesh/segment/${sessionId}/${encodeURIComponent(trimmed)}`;
-            })
-                .join("\n");
+        if (session.refreshRequested) {
+            console.log("🔄 Refreshing Varzesh origin...");
+            session =
+                await refreshVarzeshSession(sessionId);
+        }
+        /*
+         * هر بار playlist را
+         * دوباره از همان origin بگیر
+         */
+        const playlist = await buildVarzeshPlaylist(session.origin, sessionId);
         res.setHeader("Content-Type", "application/vnd.apple.mpegurl");
         res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
         res.setHeader("Access-Control-Allow-Origin", "https://www.alanbin.com");
+        res.setHeader("X-Varzesh-Session", sessionId);
+        res.setHeader("Access-Control-Expose-Headers", "X-Varzesh-Session");
         res.send(playlist);
     }
     catch (err) {
@@ -268,7 +467,9 @@ app.get("/api/live/varzesh/index.m3u8", async (req, res) => {
         });
     }
 });
-// Segments
+// ===============================
+// SEGMENTS
+// ===============================
 app.get("/api/live/varzesh/segment/:sessionId/:segment", async (req, res) => {
     try {
         const sessionId = String(req.params.sessionId);
@@ -281,9 +482,6 @@ app.get("/api/live/varzesh/segment/:sessionId/:segment", async (req, res) => {
                 message: "Live session expired"
             });
         }
-        /*
-         * جلوگیری از path traversal
-         */
         if (segment.includes("/") ||
             segment.includes("\\") ||
             segment.includes("..") ||
@@ -294,17 +492,19 @@ app.get("/api/live/varzesh/segment/:sessionId/:segment", async (req, res) => {
                 message: "Segment نامعتبر است"
             });
         }
-        /*
-         * IMPORTANT:
-         * Use the SAME origin that produced
-         * the playlist.
-         */
-        const origin = session.origin;
-        const segmentUrl = `${origin}/ek/varzesh/live/108050p/${segment}`;
-        console.log("🎬 Varzesh segment:", segment.slice(0, 30), "→", origin);
-        const response = await fetch(segmentUrl);
+        const segmentUrl = `${session.origin}/ek/varzesh/live/108050p/${segment}`;
+        console.log("🎬 Varzesh segment:", segment.slice(0, 30), "→", session.origin);
+        const response = await fetch(segmentUrl, {
+            cache: "no-store",
+        });
         if (!response.ok) {
-            console.log("⚠️ Segment failed:", response.status, "session:", sessionId);
+            console.log("⚠️ Segment failed:", response.status, "session:", sessionId, "origin:", session.origin);
+            if (response.status === 451) {
+                session.failedOrigins.add(session.origin);
+                session.refreshRequested =
+                    true;
+                console.log("🔄 Varzesh failover requested", "failed origin:", session.origin);
+            }
             return res
                 .status(response.status)
                 .end();
@@ -330,65 +530,6 @@ app.get("/api/live/varzesh/segment/:sessionId/:segment", async (req, res) => {
             res
                 .status(502)
                 .end();
-        }
-    }
-});
-// Segments
-app.get("/api/live/varzesh/segment/:sessionId/:segment", async (req, res) => {
-    try {
-        const sessionId = String(req.params.sessionId);
-        const segment = String(req.params.segment);
-        const session = getVarzeshSession(sessionId);
-        if (!session) {
-            return res.status(410).json({
-                message: "Live session expired"
-            });
-        }
-        /*
-         * جلوگیری از path traversal
-         */
-        if (segment.includes("/") ||
-            segment.includes("\\") ||
-            segment.includes("..") ||
-            !segment.endsWith(".ts")) {
-            return res.status(400).json({
-                message: "Segment نامعتبر است"
-            });
-        }
-        let origin = await resolveVarzeshOrigin();
-        let segmentUrl = `${origin}/ek/varzesh/live/108050p/${segment}`;
-        let response = await fetch(segmentUrl);
-        /*
-         * اگر origin عوض شده باشد،
-         * یک بار origin جدید می‌گیریم
-         * و دوباره segment را امتحان می‌کنیم.
-         */
-        if (!response.ok) {
-            console.log("⚠️ Segment failed:", response.status, "session:", sessionId);
-            return res
-                .status(response.status)
-                .end();
-        }
-        if (!response.ok) {
-            return res.status(response.status).end();
-        }
-        res.setHeader("Content-Type", "video/mp2t");
-        res.setHeader("Cache-Control", "no-store");
-        res.setHeader("Access-Control-Allow-Origin", "https://www.alanbin.com");
-        if (response.headers.has("content-length")) {
-            res.setHeader("Content-Length", response.headers.get("content-length"));
-        }
-        if (!response.body) {
-            return res.status(502).end();
-        }
-        stream_1.Readable
-            .fromWeb(response.body)
-            .pipe(res);
-    }
-    catch (err) {
-        console.error("❌ VARZESH SEGMENT ERROR:", err);
-        if (!res.headersSent) {
-            res.status(502).end();
         }
     }
 });
@@ -965,6 +1106,130 @@ app.get('/api/movies', async (req, res) => {
         console.error(err);
         res.status(500).json({
             message: "خطا در دریافت فیلم‌ها"
+        });
+    }
+});
+//serial
+app.post("/api/admin/series", auth_middleware_1.default, admin_1.adminMiddleware, async (req, res) => {
+    try {
+        const newSeries = new Series_1.Series(req.body);
+        const savedSeries = await newSeries.save();
+        res.status(201).json({
+            success: true,
+            message: "سریال با موفقیت اضافه شد",
+            series: savedSeries,
+        });
+    }
+    catch (err) {
+        console.error("ADMIN CREATE SERIES ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: err.message || "خطا در ثبت سریال",
+        });
+    }
+});
+// episod
+app.post("/api/admin/series/:seriesId/episodes", auth_middleware_1.default, admin_1.adminMiddleware, async (req, res) => {
+    try {
+        const seriesId = String(req.params.seriesId);
+        if (!mongoose_1.default.Types.ObjectId.isValid(seriesId)) {
+            return res.status(400).json({
+                success: false,
+                message: "شناسه سریال نامعتبر است",
+            });
+        }
+        const series = await Series_1.Series.findById(seriesId);
+        if (!series) {
+            return res.status(404).json({
+                success: false,
+                message: "سریال پیدا نشد",
+            });
+        }
+        const { seasonNumber = 1, episodeNumber, title, videoUrl, duration, } = req.body;
+        if (!episodeNumber || !title || !videoUrl) {
+            return res.status(400).json({
+                success: false,
+                message: "شماره قسمت، عنوان و آدرس ویدیو الزامی است",
+            });
+        }
+        const existingEpisode = await Episode_1.Episode.findOne({
+            seriesId,
+            seasonNumber,
+            episodeNumber,
+        });
+        if (existingEpisode) {
+            return res.status(409).json({
+                success: false,
+                message: "این قسمت قبلاً ثبت شده است",
+            });
+        }
+        const episode = new Episode_1.Episode({
+            seriesId,
+            seasonNumber,
+            episodeNumber,
+            title,
+            videoUrl,
+            duration,
+        });
+        const savedEpisode = await episode.save();
+        res.status(201).json({
+            success: true,
+            message: "قسمت با موفقیت اضافه شد",
+            episode: savedEpisode,
+        });
+    }
+    catch (err) {
+        console.error("ADMIN CREATE EPISODE ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: err.message || "خطا در ثبت قسمت",
+        });
+    }
+});
+//showSeries 
+app.get("/api/series", async (req, res) => {
+    try {
+        const series = await Series_1.Series.find().sort({ year: -1 });
+        res.json({
+            series,
+        });
+    }
+    catch (err) {
+        console.error("GET SERIES ERROR:", err);
+        res.status(500).json({
+            message: "خطا در دریافت سریال‌ها",
+        });
+    }
+});
+app.get("/api/series/:id", auth_middleware_1.default, async (req, res) => {
+    try {
+        const id = String(req.params.id);
+        if (!mongoose_1.default.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                message: "شناسه سریال نامعتبر است",
+            });
+        }
+        const series = await Series_1.Series.findById(id);
+        if (!series) {
+            return res.status(404).json({
+                message: "سریال پیدا نشد",
+            });
+        }
+        const episodes = await Episode_1.Episode.find({
+            seriesId: id,
+        }).sort({
+            seasonNumber: 1,
+            episodeNumber: 1,
+        });
+        res.json({
+            series,
+            episodes,
+        });
+    }
+    catch (err) {
+        console.error("GET SERIES ERROR:", err);
+        res.status(500).json({
+            message: "خطا در دریافت سریال",
         });
     }
 });

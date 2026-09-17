@@ -15,7 +15,31 @@ export default async function AdminDashboard() {
             },
         }
     );
+    const resSeries = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/series`,
+        {
+            cache: "no-store",
+            headers: {
+                Cookie: cookieStore.toString(),
+            },
+        }
+    );
 
+    if (resSeries.status === 401) {
+        redirect("/login");
+    }
+
+    if (!resSeries.ok) {
+        throw new Error(
+            `خطا در دریافت سریال‌ها: ${resSeries.status}`
+        );
+    }
+
+    const seriesList = await resSeries.json();
+
+    if (!seriesList || !Array.isArray(seriesList.series)) {
+        throw new Error("Invalid series response");
+    }
     // ادمین لاگین نیست یا توکن معتبر نیست
     if (resMovie.status === 401) {
         redirect("/login");
@@ -114,6 +138,7 @@ export default async function AdminDashboard() {
                 moviesList={moviesList.movies}
                 userList={userList}
                 requestsList={requestsList.requests}
+                seriesList={seriesList.series}
                 storageMovies={storageList.movies}
             />
         </div>

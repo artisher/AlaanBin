@@ -4,7 +4,11 @@ import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import cors from 'cors';
 import mongoose from 'mongoose';
+
 import { Movie } from './models/Movie';
+import { Series } from "./models/Series";
+import { Episode } from "./models/Episode";
+
 import { User } from './models/User';
 import checkSubscription from './middleware/auth.middleware';
 import { adminMiddleware } from './middleware/admin';
@@ -1611,6 +1615,121 @@ app.get(
         }
     }
 );
+app.get(
+    "/api/admin/storage/series",
+    checkSubscription,
+    adminMiddleware,
+    async (req, res) => {
+        try {
+            const seriesDir = "/mnt/alanbin/series";
+
+            const entries = await fs.promises.readdir(seriesDir, {
+                withFileTypes: true,
+            });
+
+            const series = [];
+
+            for (const entry of entries) {
+                if (!entry.isDirectory()) continue;
+
+                const seriesPath = path.join(
+                    seriesDir,
+                    entry.name
+                );
+
+                const files = await fs.promises.readdir(
+                    seriesPath
+                );
+
+                const videos = files.filter((file) =>
+                    [".mp4", ".mkv"].includes(
+                        path.extname(file).toLowerCase()
+                    )
+                );
+
+                series.push({
+                    name: entry.name,
+                    path: entry.name,
+                    files: videos,
+                });
+            }
+
+            res.json({
+                success: true,
+                series,
+            });
+        } catch (err: any) {
+            console.error(
+                "GET SERIES STORAGE ERROR:",
+                err
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    err.message ||
+                    "خطا در دریافت سریال‌های Storage",
+            });
+        }
+    }
+);
+
+
+
+
+app.get(
+    "/api/admin/storage/series",
+    checkSubscription,
+    adminMiddleware,
+    async (req, res) => {
+        try {
+            const seriesDir = "/mnt/alanbin/series";
+
+            const entries = await fs.promises.readdir(seriesDir, {
+                withFileTypes: true,
+            });
+
+            const series = [];
+
+            for (const entry of entries) {
+                if (!entry.isDirectory()) continue;
+
+                const seriesPath = path.join(seriesDir, entry.name);
+
+                const files = await fs.promises.readdir(seriesPath);
+
+                const videos = files.filter((file) =>
+                    [".mp4", ".mkv"].includes(
+                        path.extname(file).toLowerCase()
+                    )
+                );
+
+                series.push({
+                    name: entry.name,
+                    path: entry.name,
+                    files: videos,
+                });
+            }
+
+            res.json({
+                series,
+            });
+        } catch (err: any) {
+            console.error("GET SERIES STORAGE ERROR:", err);
+
+            res.status(500).json({
+                success: false,
+                message: err.message || "خطا در دریافت سریال‌های Storage",
+            });
+        }
+    }
+);
+
+
+
+
+
+
 app.post(
     "/api/admin/storage/convert",
     checkSubscription,
@@ -1871,6 +1990,178 @@ app.get('/api/movies', async (req, res) => {
         });
     }
 });
+
+//serial
+app.post(
+    "/api/admin/series",
+    checkSubscription,
+    adminMiddleware,
+    async (req, res) => {
+        try {
+            const newSeries = new Series(req.body);
+
+            const savedSeries = await newSeries.save();
+
+            res.status(201).json({
+                success: true,
+                message: "سریال با موفقیت اضافه شد",
+                series: savedSeries,
+            });
+        } catch (err: any) {
+            console.error("ADMIN CREATE SERIES ERROR:", err);
+
+            res.status(500).json({
+                success: false,
+                message: err.message || "خطا در ثبت سریال",
+            });
+        }
+    }
+);
+
+// episod
+app.post(
+    "/api/admin/series/:seriesId/episodes",
+    checkSubscription,
+    adminMiddleware,
+    async (req, res) => {
+        try {
+            const seriesId = String(req.params.seriesId);
+
+            if (!mongoose.Types.ObjectId.isValid(seriesId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "شناسه سریال نامعتبر است",
+                });
+            }
+
+            const series = await Series.findById(seriesId);
+
+            if (!series) {
+                return res.status(404).json({
+                    success: false,
+                    message: "سریال پیدا نشد",
+                });
+            }
+
+            const {
+                seasonNumber = 1,
+                episodeNumber,
+                title,
+                videoUrl,
+                duration,
+            } = req.body;
+
+            if (!episodeNumber || !title || !videoUrl) {
+                return res.status(400).json({
+                    success: false,
+                    message: "شماره قسمت، عنوان و آدرس ویدیو الزامی است",
+                });
+            }
+
+            const existingEpisode = await Episode.findOne({
+                seriesId,
+                seasonNumber,
+                episodeNumber,
+            });
+
+            if (existingEpisode) {
+                return res.status(409).json({
+                    success: false,
+                    message: "این قسمت قبلاً ثبت شده است",
+                });
+            }
+
+            const episode = new Episode({
+                seriesId,
+                seasonNumber,
+                episodeNumber,
+                title,
+                videoUrl,
+                duration,
+            });
+
+            const savedEpisode = await episode.save();
+
+            res.status(201).json({
+                success: true,
+                message: "قسمت با موفقیت اضافه شد",
+                episode: savedEpisode,
+            });
+        } catch (err: any) {
+            console.error("ADMIN CREATE EPISODE ERROR:", err);
+
+            res.status(500).json({
+                success: false,
+                message: err.message || "خطا در ثبت قسمت",
+            });
+        }
+    }
+);
+//showSeries 
+app.get("/api/series", async (req, res) => {
+    try {
+        const series = await Series.find().sort({ year: -1 });
+
+        res.json({
+            series,
+        });
+    } catch (err) {
+        console.error("GET SERIES ERROR:", err);
+
+        res.status(500).json({
+            message: "خطا در دریافت سریال‌ها",
+        });
+    }
+});
+
+
+
+app.get(
+    "/api/series/:id",
+    checkSubscription,
+    async (req, res) => {
+        try {
+            const id = String(req.params.id);
+
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                return res.status(400).json({
+                    message: "شناسه سریال نامعتبر است",
+                });
+            }
+
+            const series = await Series.findById(id);
+
+            if (!series) {
+                return res.status(404).json({
+                    message: "سریال پیدا نشد",
+                });
+            }
+
+            const episodes = await Episode.find({
+                seriesId: id,
+            }).sort({
+                seasonNumber: 1,
+                episodeNumber: 1,
+            });
+
+            res.json({
+                series,
+                episodes,
+            });
+
+        } catch (err) {
+            console.error("GET SERIES ERROR:", err);
+
+            res.status(500).json({
+                message: "خطا در دریافت سریال",
+            });
+        }
+    }
+);
+
+
+
+
 
 app.get("/api/movies/top", async (req, res) => {
 
