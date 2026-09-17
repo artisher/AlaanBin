@@ -1,9 +1,16 @@
+
 "use client";
 
 import type { Series } from "@/types/Series";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { CreateSeriesModal } from "./CreateSeriesModal";
+
+interface StorageSeries {
+  name: string;
+  path: string;
+  files: string[];
+}
 
 interface ManageSeriesProps {
   seriesList: Series[];
@@ -18,24 +25,73 @@ export const ManageSeries = ({
 
   const [addSeries, setAddSeries] = useState(false);
 
+  const [storageSeries, setStorageSeries] = useState<
+    StorageSeries[]
+  >([]);
+
+  const [isScanningStorage, setIsScanningStorage] =
+    useState(false);
+
+  const handleScanStorage = async () => {
+    try {
+      setIsScanningStorage(true);
+
+      const res = await fetch(
+        `${ process.env.NEXT_PUBLIC_API_URL } /api/admin / storage / series`,
+        {
+          credentials: "include",
+          cache: "no-store",
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(
+          data.message || "خطا در بررسی Storage"
+        );
+      }
+
+      setStorageSeries(data.series || []);
+
+      toast.success(
+        `${ data.series?.length || 0 } سریال در Storage پیدا شد`
+      );
+    } catch (error: any) {
+      console.error(
+        "SCAN SERIES STORAGE ERROR:",
+        error
+      );
+
+      toast.error(
+        error.message || "خطا در بررسی Storage"
+      );
+    } finally {
+      setIsScanningStorage(false);
+    }
+  };
+
   const handleCloseModal = () => {
     setAddSeries(false);
   };
 
   const handleSaveSeries = (newSeries: Series) => {
     setSeries((prev) => [newSeries, ...prev]);
-    toast.success("سریال اضافه شد");
     setAddSeries(false);
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("آیا از حذف این سریال مطمئن هستید؟")) {
+    if (
+      !confirm(
+        "آیا از حذف این سریال مطمئن هستید؟"
+      )
+    ) {
       return;
     }
 
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/series/${id}`,
+        `${ process.env.NEXT_PUBLIC_API_URL } /api/admin / series / ${ id } `,
         {
           method: "DELETE",
           credentials: "include",
@@ -56,7 +112,10 @@ export const ManageSeries = ({
 
       toast.success("سریال حذف شد");
     } catch (error: any) {
-      console.error("DELETE SERIES ERROR:", error);
+      console.error(
+        "DELETE SERIES ERROR:",
+        error
+      );
 
       toast.error(
         error.message || "خطا در حذف سریال"
@@ -65,22 +124,83 @@ export const ManageSeries = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-xl font-bold text-white">
           مدیریت سریال‌ها
         </h2>
 
-        <button
-          onClick={() => setAddSeries(true)}
-          className="rounded bg-primary px-4 py-2 font-bold text-dark transition hover:bg-green-400"
-        >
-          + افزودن سریال
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={handleScanStorage}
+            disabled={isScanningStorage}
+            className="rounded bg-gray-700 px-4 py-2 font-bold text-white transition hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isScanningStorage
+              ? "در حال بررسی..."
+              : "🔄 بررسی Storage"}
+          </button>
+
+          <button
+            onClick={() => setAddSeries(true)}
+            className="rounded bg-primary px-4 py-2 font-bold text-dark transition hover:bg-green-400"
+          >
+            + افزودن سریال
+          </button>
+        </div>
       </div>
 
-      {/* Series List */}
+      {/* Storage Series */}
+      {storageSeries.length > 0 && (
+        <div className="rounded-lg border border-yellow-600/30 bg-card p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-lg font-bold text-white">
+              🆕 سریال‌های موجود در Storage
+            </h3>
+
+            <span className="text-sm text-yellow-400">
+              {storageSeries.length} سریال
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {storageSeries.map((item) => (
+              <div
+                key={item.path}
+                className="rounded-lg border border-gray-700 bg-gray-900/50 p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold text-white">
+                      {item.name}
+                    </p>
+
+                    <p className="mt-1 text-sm text-gray-400">
+                      {item.files.length} فایل ویدیویی
+                    </p>
+                  </div>
+                </div>
+
+                {item.files.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {item.files.map((file) => (
+                      <div
+                        key={file}
+                        className="rounded bg-gray-800 px-3 py-2 text-sm text-gray-300"
+                      >
+                        {file}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Existing Series */}
       {series.length === 0 ? (
         <div className="rounded-lg border border-gray-700 bg-card p-8 text-center">
           <p className="text-gray-400">
@@ -107,11 +227,12 @@ export const ManageSeries = ({
               </p>
 
               <div className="mt-4 flex items-center justify-between">
-                {/* فعلاً این دکمه را بعداً وصل می‌کنیم */}
                 <button
                   className="text-sm text-primary transition hover:text-green-400"
                   onClick={() => {
-                    toast("مدیریت قسمت‌ها در مرحله بعد اضافه می‌شود");
+                    toast(
+                      "مدیریت قسمت‌ها در مرحله بعد اضافه می‌شود"
+                    );
                   }}
                 >
                   مدیریت قسمت‌ها
@@ -131,7 +252,6 @@ export const ManageSeries = ({
         </div>
       )}
 
-      {/* Create Modal */}
       <CreateSeriesModal
         isOpen={addSeries}
         onClose={handleCloseModal}
@@ -140,3 +260,4 @@ export const ManageSeries = ({
     </div>
   );
 };
+
