@@ -37,9 +37,7 @@ export default function SeriesPage() {
                 setSeries(data.series);
                 setEpisodes(data.episodes || []);
 
-                if (data.episodes?.length > 0) {
-                    setSelectedEpisode(data.episodes[0]);
-                }
+              
             } catch (err: any) {
                 console.error("FETCH SERIES ERROR:", err);
                 setError(err.message || "خطا در دریافت سریال");

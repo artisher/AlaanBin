@@ -1,3 +1,4 @@
+
 export interface Series {
     _id: string;
     title: string;
@@ -10,6 +11,7 @@ export interface Series {
     year: number;
     product: string;
 }
+
 export interface Episode {
     _id: string;
     seriesId: string;
@@ -19,3 +21,4 @@ export interface Episode {
     videoUrl: string;
     duration?: number;
 }
+

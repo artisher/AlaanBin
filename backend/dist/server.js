@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.parseEpisodeFilename = parseEpisodeFilename;
 const express_1 = __importDefault(require("express"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
@@ -139,6 +140,34 @@ app.get("/videos/:filename", auth_middleware_1.default, async (req, res) => {
         });
     }
 });
+// serve series 
+app.get("/series-videos/:seriesName/:filename", auth_middleware_1.default, async (req, res) => {
+    try {
+        const seriesName = String(req.params.seriesName);
+        const filename = String(req.params.filename);
+        // جلوگیری از Path Traversal
+        if (seriesName.includes("/") ||
+            seriesName.includes("\\") ||
+            seriesName.includes("..") ||
+            filename.includes("/") ||
+            filename.includes("\\") ||
+            filename.includes("..") ||
+            !filename.toLowerCase().endsWith(".mp4")) {
+            return res.status(400).json({
+                message: "مسیر فایل نامعتبر است",
+            });
+        }
+        res.setHeader("X-Accel-Redirect", `/ protected - series - videos / ${encodeURIComponent(seriesName)}/${encodeURIComponent(filename)}`);
+        res.setHeader("Content-Type", "video/mp4");
+        res.end();
+    }
+    catch (err) {
+        console.error("SERIES VIDEO ERROR:", err);
+        res.status(500).json({
+            message: "خطا در پخش قسمت سریال",
+        });
+    }
+});
 // serve poster
 app.get("/posters/:filename", auth_middleware_1.default, async (req, res) => {
     try {
@@ -164,7 +193,7 @@ app.get("/posters/:filename", auth_middleware_1.default, async (req, res) => {
                 message: "فرمت تصویر مجاز نیست"
             });
         }
-        res.setHeader("X-Accel-Redirect", `/protected-posters/${encodeURIComponent(filename)}`);
+        res.setHeader("X-Accel-Redirect", `/ protected - posters / ${encodeURIComponent(filename)} `);
         res.setHeader("Content-Type", extension === ".jpg" || extension === ".jpeg"
             ? "image/jpeg"
             : extension === ".png"
@@ -196,7 +225,7 @@ async function resolveVarzeshOrigin() {
     });
     if (response.status < 300 ||
         response.status >= 400) {
-        throw new Error(`NCDN redirect failed: ${response.status}`);
+        throw new Error(`NCDN redirect failed: ${response.status} `);
     }
     const location = response.headers.get("location");
     if (!location) {
@@ -212,7 +241,7 @@ async function resolveVarzeshOrigin() {
 }
 async function isVarzeshOriginHealthy(origin) {
     try {
-        const playlistUrl = `${origin}/ek/varzesh/live/108050p/index.m3u8`;
+        const playlistUrl = `${origin} /ek/varzesh / live / 108050p / index.m3u8`;
         const response = await fetch(playlistUrl, {
             cache: "no-store",
             headers: {
@@ -244,7 +273,7 @@ async function isVarzeshOriginHealthy(origin) {
             console.log("❌ No segment found:", origin);
             return false;
         }
-        const segmentUrl = `${origin}/ek/varzesh/live/108050p/${latestSegment}`;
+        const segmentUrl = `${origin} /ek/varzesh / live / 108050p / ${latestSegment} `;
         console.log("🩺 Checking live segment:", origin, latestSegment.slice(0, 30));
         const segmentResponse = await fetch(segmentUrl, {
             cache: "no-store",
@@ -363,12 +392,12 @@ async function refreshVarzeshSession(sessionId) {
     return session;
 }
 async function buildVarzeshPlaylist(origin, sessionId) {
-    const playlistUrl = `${origin}/ek/varzesh/live/108050p/index.m3u8`;
+    const playlistUrl = `${origin} /ek/varzesh / live / 108050p / index.m3u8`;
     const response = await fetch(playlistUrl, {
         cache: "no-store",
     });
     if (!response.ok) {
-        throw new Error(`Origin playlist failed: ${response.status}`);
+        throw new Error(`Origin playlist failed: ${response.status} `);
     }
     const playlist = await response.text();
     const lines = playlist.split("\n");
@@ -382,7 +411,7 @@ async function buildVarzeshPlaylist(origin, sessionId) {
             const segment = lines[i + 1]?.trim();
             if (segment &&
                 !segment.startsWith("#")) {
-                segments.push(`${line}\n${segment}`);
+                segments.push(`${line} \n${segment} `);
             }
         }
     }
@@ -398,7 +427,7 @@ async function buildVarzeshPlaylist(origin, sessionId) {
         : 0;
     let output = [
         ...header,
-        `#EXT-X-MEDIA-SEQUENCE:${mediaSequence}`,
+        `#EXT - X - MEDIA - SEQUENCE:${mediaSequence} `,
         ...lastSegments,
     ].join("\n");
     output =
@@ -410,7 +439,7 @@ async function buildVarzeshPlaylist(origin, sessionId) {
                 trimmed.startsWith("#")) {
                 return line;
             }
-            return `/api/live/varzesh/segment/${sessionId}/${encodeURIComponent(trimmed)}`;
+            return `/ api / live / varzesh / segment / ${sessionId}/${encodeURIComponent(trimmed)}`;
         })
             .join("\n");
     return output;
@@ -548,6 +577,18 @@ mongoose_1.default.connect(MONGODB_URI)
     console.error("❌ Mongo connection failed:");
     console.error(err);
 });
+//helper 
+function parseEpisodeFilename(filename) {
+    const match = filename.match(/S(\d+)E(\d+)/i);
+    if (!match) {
+        return null;
+    }
+    return {
+        seasonNumber: Number(match[1]),
+        episodeNumber: Number(match[2]),
+        title: `قسمت ${Number(match[2])} `,
+    };
+}
 // --- API مربوط به یوزرها ---
 //admin API
 // 1. دریافت همه یوزرها
@@ -909,6 +950,70 @@ app.get("/api/admin/storage/movies", auth_middleware_1.default, admin_1.adminMid
         });
     }
 });
+app.get("/api/admin/storage/series", auth_middleware_1.default, admin_1.adminMiddleware, async (req, res) => {
+    try {
+        const seriesDir = "/mnt/alanbin/series";
+        const entries = await fs_1.default.promises.readdir(seriesDir, {
+            withFileTypes: true,
+        });
+        const series = [];
+        for (const entry of entries) {
+            if (!entry.isDirectory())
+                continue;
+            const seriesPath = path_1.default.join(seriesDir, entry.name);
+            const files = await fs_1.default.promises.readdir(seriesPath);
+            const videos = files.filter((file) => [".mp4", ".mkv"].includes(path_1.default.extname(file).toLowerCase()));
+            series.push({
+                name: entry.name,
+                path: entry.name,
+                files: videos,
+            });
+        }
+        res.json({
+            success: true,
+            series,
+        });
+    }
+    catch (err) {
+        console.error("GET SERIES STORAGE ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: err.message ||
+                "خطا در دریافت سریال‌های Storage",
+        });
+    }
+});
+app.get("/api/admin/storage/series", auth_middleware_1.default, admin_1.adminMiddleware, async (req, res) => {
+    try {
+        const seriesDir = "/mnt/alanbin/series";
+        const entries = await fs_1.default.promises.readdir(seriesDir, {
+            withFileTypes: true,
+        });
+        const series = [];
+        for (const entry of entries) {
+            if (!entry.isDirectory())
+                continue;
+            const seriesPath = path_1.default.join(seriesDir, entry.name);
+            const files = await fs_1.default.promises.readdir(seriesPath);
+            const videos = files.filter((file) => [".mp4", ".mkv"].includes(path_1.default.extname(file).toLowerCase()));
+            series.push({
+                name: entry.name,
+                path: entry.name,
+                files: videos,
+            });
+        }
+        res.json({
+            series,
+        });
+    }
+    catch (err) {
+        console.error("GET SERIES STORAGE ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: err.message || "خطا در دریافت سریال‌های Storage",
+        });
+    }
+});
 app.post("/api/admin/storage/convert", auth_middleware_1.default, admin_1.adminMiddleware, async (req, res) => {
     try {
         const { filename } = req.body;
@@ -1198,6 +1303,153 @@ app.get("/api/series", async (req, res) => {
         console.error("GET SERIES ERROR:", err);
         res.status(500).json({
             message: "خطا در دریافت سریال‌ها",
+        });
+    }
+});
+app.post("/api/admin/series/:seriesId/episodes/import", auth_middleware_1.default, admin_1.adminMiddleware, async (req, res) => {
+    try {
+        const seriesId = String(req.params.seriesId);
+        const { seriesName, filename } = req.body;
+        if (!mongoose_1.default.Types.ObjectId.isValid(seriesId)) {
+            return res.status(400).json({
+                success: false,
+                message: "شناسه سریال نامعتبر است",
+            });
+        }
+        if (!seriesName || !filename) {
+            return res.status(400).json({
+                success: false,
+                message: "نام سریال و فایل الزامی است",
+            });
+        }
+        const series = await Series_1.Series.findById(seriesId);
+        if (!series) {
+            return res.status(404).json({
+                success: false,
+                message: "سریال پیدا نشد",
+            });
+        }
+        // جلوگیری از Path Traversal
+        if (seriesName.includes("/") ||
+            seriesName.includes("\\") ||
+            seriesName.includes("..") ||
+            filename.includes("/") ||
+            filename.includes("\\") ||
+            filename.includes("..")) {
+            return res.status(400).json({
+                success: false,
+                message: "مسیر فایل نامعتبر است",
+            });
+        }
+        const parsed = parseEpisodeFilename(filename);
+        if (!parsed) {
+            return res.status(400).json({
+                success: false,
+                message: "نام فایل باید به شکل S01E01.mkv یا S01E01.mp4 باشد",
+            });
+        }
+        const seriesPath = "/mnt/alanbin/series";
+        const folderPath = path_1.default.join(seriesPath, seriesName);
+        const files = await fs_1.default.promises.readdir(folderPath);
+        const actualFilename = files.find((file) => file.toLowerCase() === filename.toLowerCase());
+        if (!actualFilename) {
+            return res.status(404).json({
+                success: false,
+                message: "فایل در Storage پیدا نشد",
+            });
+        }
+        const actualExtension = path_1.default
+            .extname(actualFilename)
+            .toLowerCase();
+        const baseName = path_1.default.basename(actualFilename, path_1.default.extname(actualFilename));
+        let finalFilename = "";
+        /*
+         * اگر MP4 است
+         */
+        if (actualExtension === ".mp4") {
+            finalFilename = actualFilename;
+        }
+        /*
+         * اگر MKV است
+         */
+        else if (actualExtension === ".mkv") {
+            const mp4Filename = files.find((file) => path_1.default.extname(file).toLowerCase() === ".mp4" &&
+                path_1.default
+                    .basename(file, path_1.default.extname(file))
+                    .toLowerCase() === baseName.toLowerCase());
+            /*
+             * MP4 از قبل وجود دارد
+             */
+            if (mp4Filename) {
+                console.log("✅ Existing episode MP4 found:", mp4Filename);
+                finalFilename = mp4Filename;
+            }
+            /*
+             * MP4 وجود ندارد → تبدیل
+             */
+            else {
+                const outputFilename = `${baseName}.mp4`;
+                const inputPath = path_1.default.join(folderPath, actualFilename);
+                const outputPath = path_1.default.join(folderPath, outputFilename);
+                console.log("🎬 Converting episode MKV:", actualFilename);
+                await execFileAsync("ffmpeg", [
+                    "-i",
+                    inputPath,
+                    "-map",
+                    "0:v:0",
+                    "-map",
+                    "0:a:0?",
+                    "-c:v",
+                    "copy",
+                    "-c:a",
+                    "aac",
+                    "-b:a",
+                    "192k",
+                    "-movflags",
+                    "+faststart",
+                    "-y",
+                    outputPath,
+                ]);
+                console.log("✅ Episode conversion finished:", outputFilename);
+                finalFilename = outputFilename;
+            }
+        }
+        /*
+         * بررسی تکراری نبودن Episode
+         */
+        const existingEpisode = await Episode_1.Episode.findOne({
+            seriesId,
+            seasonNumber: parsed.seasonNumber,
+            episodeNumber: parsed.episodeNumber,
+        });
+        if (existingEpisode) {
+            return res.status(409).json({
+                success: false,
+                message: "این قسمت قبلاً ثبت شده است",
+                episode: existingEpisode,
+            });
+        }
+        const videoUrl = `/series-videos/${encodeURIComponent(seriesName)}/${encodeURIComponent(finalFilename)}`;
+        const episode = new Episode_1.Episode({
+            seriesId,
+            seasonNumber: parsed.seasonNumber,
+            episodeNumber: parsed.episodeNumber,
+            title: parsed.title,
+            videoUrl,
+        });
+        const savedEpisode = await episode.save();
+        res.status(201).json({
+            success: true,
+            message: "قسمت با موفقیت اضافه شد",
+            episode: savedEpisode,
+        });
+    }
+    catch (err) {
+        console.error("IMPORT SERIES EPISODE ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: err.message ||
+                "خطا در اضافه کردن قسمت",
         });
     }
 });
