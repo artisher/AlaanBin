@@ -22,9 +22,7 @@ export default function SeriesPage() {
             try {
                 setLoading(true);
 
-                const res = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}/api/series/${id}`
-                );
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/series/${id}`, { credentials: "include", cache: "no-store", });
 
                 const data = await res.json();
 
@@ -37,7 +35,7 @@ export default function SeriesPage() {
                 setSeries(data.series);
                 setEpisodes(data.episodes || []);
 
-              
+
             } catch (err: any) {
                 console.error("FETCH SERIES ERROR:", err);
                 setError(err.message || "خطا در دریافت سریال");
@@ -128,8 +126,8 @@ export default function SeriesPage() {
                                         setSelectedEpisode(episode)
                                     }
                                     className={`rounded-xl border p-4 text-right transition ${isSelected
-                                            ? "border-[#14c78b] bg-[#14c78b]/10"
-                                            : "border-white/10 bg-[#111827] hover:border-white/20"
+                                        ? "border-[#14c78b] bg-[#14c78b]/10"
+                                        : "border-white/10 bg-[#111827] hover:border-white/20"
                                         }`}
                                 >
                                     <div className="font-semibold">
