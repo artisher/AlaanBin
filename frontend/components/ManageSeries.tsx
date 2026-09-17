@@ -32,9 +32,16 @@ export const ManageSeries = ({
     const [isScanningStorage, setIsScanningStorage] =
         useState(false);
 
+    const [importingEpisode, setImportingEpisode] =
+        useState<string | null>(null);
+
+    const [importedEpisodes, setImportedEpisodes] =
+        useState<Set<string>>(new Set());
+
     const handleScanStorage = async () => {
         try {
             setIsScanningStorage(true);
+
             const res = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/api/admin/storage/series`,
                 {
@@ -70,6 +77,62 @@ export const ManageSeries = ({
         }
     };
 
+    const handleImportEpisode = async (
+        seriesItem: Series,
+        storageItem: StorageSeries,
+        filename: string
+    ) => {
+        const importKey = `${storageItem.name}/${filename}`;
+
+        try {
+            setImportingEpisode(importKey);
+
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/admin/series/${seriesItem._id}/episodes/import`,
+                {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        seriesName: storageItem.name,
+                        filename,
+                    }),
+                }
+            );
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(
+                    data.message || "خطا در اضافه کردن قسمت"
+                );
+            }
+
+            setImportedEpisodes((prev) => {
+                const next = new Set(prev);
+                next.add(importKey);
+                return next;
+            });
+
+            toast.success(
+                `${filename} با موفقیت اضافه شد`
+            );
+        } catch (error: any) {
+            console.error(
+                "IMPORT EPISODE ERROR:",
+                error
+            );
+
+            toast.error(
+                error.message || "خطا در اضافه کردن قسمت"
+            );
+        } finally {
+            setImportingEpisode(null);
+        }
+    };
+
     const handleCloseModal = () => {
         setAddSeries(false);
     };
@@ -90,7 +153,7 @@ export const ManageSeries = ({
 
         try {
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL} /api/admin / series / ${id} `,
+                `${process.env.NEXT_PUBLIC_API_URL}/api/admin/series/${id}`,
                 {
                     method: "DELETE",
                     credentials: "include",
@@ -120,6 +183,28 @@ export const ManageSeries = ({
                 error.message || "خطا در حذف سریال"
             );
         }
+    };
+
+    const findMatchingSeries = (
+        storageName: string
+    ) => {
+        const normalizedStorageName =
+            storageName.trim().toLowerCase();
+
+        return series.find((item) => {
+            const title =
+                item.title?.trim().toLowerCase();
+
+            const aliases =
+                item.aliases?.map((alias) =>
+                    alias.trim().toLowerCase()
+                ) || [];
+
+            return (
+                title === normalizedStorageName ||
+                aliases.includes(normalizedStorageName)
+            );
+        });
     };
 
     return (
@@ -164,37 +249,97 @@ export const ManageSeries = ({
                     </div>
 
                     <div className="space-y-3">
-                        {storageSeries.map((item) => (
-                            <div
-                                key={item.path}
-                                className="rounded-lg border border-gray-700 bg-gray-900/50 p-4"
-                            >
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="font-semibold text-white">
-                                            {item.name}
-                                        </p>
+                        {storageSeries.map((item) => {
+                            const matchedSeries =
+                                findMatchingSeries(item.name);
 
-                                        <p className="mt-1 text-sm text-gray-400">
-                                            {item.files.length} فایل ویدیویی
-                                        </p>
+                            return (
+                                <div
+                                    key={item.path}
+                                    className="rounded-lg border border-gray-700 bg-gray-900/50 p-4"
+                                >
+                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                        <div>
+                                            <p className="font-semibold text-white">
+                                                {item.name}
+                                            </p>
+
+                                            <p className="mt-1 text-sm text-gray-400">
+                                                {item.files.length} فایل ویدیویی
+                                            </p>
+                                        </div>
+
+                                        {matchedSeries ? (
+                                            <span className="text-sm text-green-400">
+                                                ✓ {matchedSeries.title}
+                                            </span>
+                                        ) : (
+                                            <span className="text-sm text-yellow-400">
+                                                ⚠ سریال ثبت نشده
+                                            </span>
+                                        )}
                                     </div>
+
+                                    {item.files.length > 0 && (
+                                        <div className="mt-3 space-y-2">
+                                            {item.files.map(
+                                                (file) => {
+                                                    const importKey =
+                                                        `${item.name}/${file}`;
+
+                                                    const isImporting =
+                                                        importingEpisode ===
+                                                        importKey;
+
+                                                    const isImported =
+                                                        importedEpisodes.has(
+                                                            importKey
+                                                        );
+
+                                                    return (
+                                                        <div
+                                                            key={file}
+                                                            className="flex flex-col gap-2 rounded bg-gray-800 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
+                                                        >
+                                                            <span className="text-sm text-gray-300">
+                                                                {file}
+                                                            </span>
+
+                                                            {matchedSeries ? (
+                                                                <button
+                                                                    onClick={() =>
+                                                                        handleImportEpisode(
+                                                                            matchedSeries,
+                                                                            item,
+                                                                            file
+                                                                        )
+                                                                    }
+                                                                    disabled={
+                                                                        isImporting ||
+                                                                        isImported
+                                                                    }
+                                                                    className="rounded bg-primary px-3 py-1.5 text-sm font-bold text-dark transition hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-50"
+                                                                >
+                                                                    {isImporting
+                                                                        ? "در حال افزودن..."
+                                                                        : isImported
+                                                                          ? "✓ اضافه شده"
+                                                                          : "＋ افزودن قسمت"}
+                                                                </button>
+                                                            ) : (
+                                                                <span className="text-xs text-gray-500">
+                                                                    ابتدا سریال را ثبت کنید
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                }
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
-
-                                {item.files.length > 0 && (
-                                    <div className="mt-3 space-y-2">
-                                        {item.files.map((file) => (
-                                            <div
-                                                key={file}
-                                                className="rounded bg-gray-800 px-3 py-2 text-sm text-gray-300"
-                                            >
-                                                {file}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -230,7 +375,7 @@ export const ManageSeries = ({
                                     className="text-sm text-primary transition hover:text-green-400"
                                     onClick={() => {
                                         toast(
-                                            "مدیریت قسمت‌ها در مرحله بعد اضافه می‌شود"
+                                            "برای افزودن قسمت‌ها از بخش Storage استفاده کنید"
                                         );
                                     }}
                                 >
