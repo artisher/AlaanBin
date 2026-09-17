@@ -211,13 +211,11 @@ app.get(
 
             res.setHeader(
                 "X-Accel-Redirect",
-                `/ protected - series - videos / ${encodeURIComponent(seriesName)}/${encodeURIComponent(filename)}`
+                `/protected-series-videos/${encodeURIComponent(seriesName)}/${encodeURIComponent(filename)}`
             );
 
-            res.setHeader(
-                "Content-Type",
-                "video/mp4"
-            );
+
+            res.setHeader("Content-Type", "video/mp4");
 
             res.end();
         } catch (err) {
