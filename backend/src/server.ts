@@ -267,7 +267,7 @@ app.get(
 
             res.setHeader(
                 "X-Accel-Redirect",
-                `/ protected - posters / ${encodeURIComponent(filename)} `
+                `/protected-posters/${encodeURIComponent(filename)}`
             );
 
             res.setHeader(
