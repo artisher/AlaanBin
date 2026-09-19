@@ -97,7 +97,7 @@ export default function SeriesPage() {
                                 key={selectedEpisode._id}
                                 controls
                                 className="aspect-video w-full"
-                                src={selectedEpisode.videoUrl}
+                                src={`${process.env.NEXT_PUBLIC_API_URL}${selectedEpisode.videoUrl}`}
                             />
                         </div>
 
