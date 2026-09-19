@@ -2456,15 +2456,16 @@ app.delete(
     async (req, res) => {
         try {
             const { id } = req.params;
+            const seriesId = String(id);
 
-            if (!mongoose.Types.ObjectId.isValid(id)) {
+            if (!mongoose.Types.ObjectId.isValid(seriesId)) {
                 return res.status(400).json({
                     success: false,
                     message: "شناسه سریال نامعتبر است",
                 });
             }
 
-            const series = await Series.findById(id);
+            const series = await Series.findById(seriesId);
 
             if (!series) {
                 return res.status(404).json({
@@ -2474,10 +2475,10 @@ app.delete(
             }
 
             await Episode.deleteMany({
-                seriesId: id,
+                seriesId: seriesId,
             });
 
-            await Series.findByIdAndDelete(id);
+            await Series.findByIdAndDelete(seriesId);
 
             res.status(200).json({
                 success: true,
@@ -2498,7 +2499,6 @@ app.delete(
         }
     }
 );
-
 
 
 app.get("/api/movies/top", async (req, res) => {
