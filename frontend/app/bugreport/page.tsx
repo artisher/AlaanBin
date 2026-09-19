@@ -140,7 +140,28 @@ export default function BugReport() {
 
                             </ul>
                         </div>
+                        <div className="rounded-3xl border border-white/10 bg-[#111827] p-7">
 
+                            <div className="flex items-center gap-4">
+
+                                <Mail
+                                    size={28}
+                                    className="text-[#14c78b]"
+                                />
+
+                                <div>
+                                    <p className="text-sm text-gray-500">
+                                        ایمیل پشتیبانی
+                                    </p>
+
+                                    <p className="mt-1 text-white font-semibold">
+                                        Alanbin.Support@gmail.com
+                                    </p>
+                                </div>
+
+                            </div>
+
+                        </div>
                         {/* Response Time */}
                         <div className="rounded-3xl border border-[#14c78b]/20 bg-[#14c78b]/10 p-7">
 
@@ -167,28 +188,7 @@ export default function BugReport() {
                         </div>
 
                         {/* Support */}
-                        <div className="rounded-3xl border border-white/10 bg-[#111827] p-7">
 
-                            <div className="flex items-center gap-4">
-
-                                <Mail
-                                    size={28}
-                                    className="text-[#14c78b]"
-                                />
-
-                                <div>
-                                    <p className="text-sm text-gray-500">
-                                        ایمیل پشتیبانی
-                                    </p>
-
-                                    <p className="mt-1 text-white font-semibold">
-                                        support@alanbin.com
-                                    </p>
-                                </div>
-
-                            </div>
-
-                        </div>
 
                     </div>
 

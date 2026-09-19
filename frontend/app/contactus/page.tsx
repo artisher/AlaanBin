@@ -62,67 +62,67 @@ export default function ContactUs() {
     };
 
 
-return (
+    return (
 
-    <section className="bg-[#0B0F14] min-h-screen py-24">
+        <section className="bg-[#0B0F14] min-h-screen py-24">
 
-        <div className="max-w-7xl mx-auto px-6">
+            <div className="max-w-7xl mx-auto px-6">
 
-            {/* Hero */}
+                {/* Hero */}
 
-            <div className="text-center mb-20">
+                <div className="text-center mb-20">
 
-                <span className="text-[#14c78b] tracking-[5px] uppercase font-semibold">
-                    CONTACT US
-                </span>
+                    <span className="text-[#14c78b] tracking-[5px] uppercase font-semibold">
+                        CONTACT US
+                    </span>
 
-                <h1 className="text-5xl font-extrabold mt-5 text-white">
-                    با ما در ارتباط باش
-                </h1>
+                    <h1 className="text-5xl font-extrabold mt-5 text-white">
+                        با ما در ارتباط باش
+                    </h1>
 
-                <p className="text-gray-400 max-w-2xl mx-auto mt-6 leading-9 text-lg">
-                    اگر سوال، پیشنهاد یا مشکلی داری خوشحال می‌شیم ازت بشنویم.
-                    تیم الان بین همیشه آماده پاسخگویی به کاربران خودشه.
-                </p>
+                    <p className="text-gray-400 max-w-2xl mx-auto mt-6 leading-9 text-lg">
+                        اگر سوال، پیشنهاد یا مشکلی داری خوشحال می‌شیم ازت بشنویم.
+                        تیم الان بین همیشه آماده پاسخگویی به کاربران خودشه.
+                    </p>
 
-            </div>
+                </div>
 
-            <div className="grid lg:grid-cols-2 gap-10">
+                <div className="grid lg:grid-cols-2 gap-10">
 
-                {/* Form */}
+                    {/* Form */}
 
-                <div
-                    className="
+                    <div
+                        className="
                         rounded-3xl
                         bg-[#111827]
                         border
                         border-white/10
                         p-8
                         "
-                >
-
-                    <h2 className="text-2xl font-bold mb-8  text-white">
-                        ارسال پیام
-                    </h2>
-
-                    <form
-                        onSubmit={handleSubmit}
-                        className="space-y-6"
                     >
 
+                        <h2 className="text-2xl font-bold mb-8  text-white">
+                            ارسال پیام
+                        </h2>
 
-                        <div>
-                            <label className="block mb-3 text-gray-300">
-                                موضوع
-                            </label>
+                        <form
+                            onSubmit={handleSubmit}
+                            className="space-y-6"
+                        >
 
-                            <input
-                                type="text"
-                                required
-                                value={subject}
-                                onChange={(e) => setSubject(e.target.value)}
-                                placeholder="موضوع پیام"
-                                className="
+
+                            <div>
+                                <label className="block mb-3 text-gray-300">
+                                    موضوع
+                                </label>
+
+                                <input
+                                    type="text"
+                                    required
+                                    value={subject}
+                                    onChange={(e) => setSubject(e.target.value)}
+                                    placeholder="موضوع پیام"
+                                    className="
             w-full
             h-14
             text-white
@@ -136,31 +136,31 @@ return (
             focus:border-[#14c78b]
             placeholder:text-white
         "
-                            />
-                        </div>
-
-
-                        <div>
-
-                            <label className="block mb-3 text-gray-300">
-                                پیام
-                            </label>
-
-                            <div className="relative">
-
-                                <MessageSquare
-                                    size={20}
-                                    className="absolute right-4 top-5 text-[#14c78b]"
                                 />
+                            </div>
 
-                                <textarea
-                                    rows={6}
-                                    required
-                                    value={message}
-                                    onChange={(e) => setMessage(e.target.value)}
-                                    placeholder="پیام خود را بنویسید..."
 
-                                    className="
+                            <div>
+
+                                <label className="block mb-3 text-gray-300">
+                                    پیام
+                                </label>
+
+                                <div className="relative">
+
+                                    <MessageSquare
+                                        size={20}
+                                        className="absolute right-4 top-5 text-[#14c78b]"
+                                    />
+
+                                    <textarea
+                                        rows={6}
+                                        required
+                                        value={message}
+                                        onChange={(e) => setMessage(e.target.value)}
+                                        placeholder="پیام خود را بنویسید..."
+
+                                        className="
                                         w-full
                                         text-white
                                         rounded-xl
@@ -176,17 +176,17 @@ return (
                                         focus:border-[#14c78b]
                                           placeholder:text-white
                                         "
-                                />
+                                    />
+
+                                </div>
 
                             </div>
 
-                        </div>
+                            <button
 
-                        <button
+                                type="submit"
 
-                            type="submit"
-
-                            className="
+                                className="
                                 w-full
                                 h-14
                                 rounded-xl
@@ -202,51 +202,51 @@ return (
                                 hover:shadow-[0_0_30px_rgba(20,199,139,.4)]
                                 cursor-pointer
                                 "
-                        >
+                            >
 
-                            <Send size={20} />
+                                <Send size={20} />
 
-                            ارسال پیام
+                                ارسال پیام
 
-                        </button>
+                            </button>
 
-                        {status === "loading" && (
+                            {status === "loading" && (
 
-                            <div className="text-center text-gray-400">
-                                در حال ارسال پیام...
-                            </div>
+                                <div className="text-center text-gray-400">
+                                    در حال ارسال پیام...
+                                </div>
 
-                        )}
-                       
-                        
+                            )}
 
-                    </form>
 
-                </div>
-                {/* Contact Info */}
 
-                <div className="space-y-8">
+                        </form>
 
-                    <div
-                        className="
+                    </div>
+                    {/* Contact Info */}
+
+                    <div className="space-y-8">
+
+                        <div
+                            className="
                             rounded-3xl
                             bg-[#111827]
                             border
                             border-white/10
                             p-8
                             "
-                    >
+                        >
 
-                        <h2 className="text-2xl font-bold mb-8  text-white">
-                            اطلاعات تماس
-                        </h2>
+                            <h2 className="text-2xl font-bold mb-8  text-white">
+                                اطلاعات تماس
+                            </h2>
 
-                        <div className="space-y-6">
+                            <div className="space-y-6">
 
-                            <div className="flex items-start gap-5">
+                                <div className="flex items-start gap-5">
 
-                                <div
-                                    className="
+                                    <div
+                                        className="
                                         w-14
                                         h-14
                                         rounded-2xl
@@ -255,28 +255,28 @@ return (
                                         items-center
                                         justify-center
                                         "
-                                >
-                                    <Mail className="text-[#14c78b]" />
+                                    >
+                                        <Mail className="text-[#14c78b]" />
+                                    </div>
+
+                                    <div>
+
+                                        <h3 className="font-bold text-lg  text-white">
+                                            ایمیل
+                                        </h3>
+
+                                        <p className="text-gray-400 mt-2">
+                                            Alanbin.Support@gmail.com
+                                        </p>
+
+                                    </div>
+
                                 </div>
 
-                                <div>
+                                <div className="flex items-start gap-5">
 
-                                    <h3 className="font-bold text-lg  text-white">
-                                        ایمیل
-                                    </h3>
-
-                                    <p className="text-gray-400 mt-2">
-                                        Alanbin.Support@gmail.com
-                                    </p>
-
-                                </div>
-
-                            </div>
-
-                            <div className="flex items-start gap-5">
-
-                                <div
-                                    className="
+                                    <div
+                                        className="
                                         w-14
                                         h-14
                                         rounded-2xl
@@ -285,30 +285,43 @@ return (
                                         items-center
                                         justify-center
                                         "
-                                >
-                                    <Phone className="text-[#14c78b]" />
+                                    >
+                                        <Phone className="text-[#14c78b]" />
+                                    </div>
+
+                                    <div>
+
+                                        <h3 className="font-bold text-lg  text-white" >
+                                            پشتیبانی
+                                        </h3>
+
+                                        <p className="text-gray-400 mt-2 leading-8">
+                                            پاسخگویی از طریق ایمیل و واتساپ
+                                            <br />
+
+                                            <a
+                                                href="https://wa.me/4367761821284"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-[#14c78b] hover:underline transition"
+                                                dir="ltr"
+                                            >
+                                                +43 677 618 21284
+                                            </a>
+
+                                            <br />
+
+                                            همه روزه از ساعت ۹ تا ۲۳
+                                        </p>
+
+                                    </div>
+
                                 </div>
 
-                                <div>
+                                <div className="flex items-start gap-5">
 
-                                    <h3 className="font-bold text-lg  text-white" >
-                                        پشتیبانی
-                                    </h3>
-
-                                    <p className="text-gray-400 mt-2 leading-8">
-                                        پاسخگویی از طریق ایمیل و واتساپ
-                                        <br />
-                                        همه روزه از ساعت ۹ تا ۲۳
-                                    </p>
-
-                                </div>
-
-                            </div>
-
-                            <div className="flex items-start gap-5">
-
-                                <div
-                                    className="
+                                    <div
+                                        className="
                                         w-14
                                         h-14
                                         rounded-2xl
@@ -317,20 +330,22 @@ return (
                                         items-center
                                         justify-center
                                         "
-                                >
-                                    <MapPin className="text-[#14c78b]" />
-                                </div>
+                                    >
+                                        <MapPin className="text-[#14c78b]" />
+                                    </div>
 
-                                <div>
+                                    <div>
 
-                                    <h3 className="font-bold text-lg  text-white">
-                                        محل فعالیت
-                                    </h3>
+                                        <h3 className="font-bold text-lg  text-white">
+                                            محل فعالیت
+                                        </h3>
 
-                                    <p className="text-gray-400 mt-2 leading-8">
-                                        خدمات <span className="font-bold text-white">الان بین</span> برای کاربران
-                                        فارسی‌زبان مقیم اروپا ارائه می‌شود.
-                                    </p>
+                                        <p className="text-gray-400 mt-2 leading-8">
+                                            خدمات <span className="font-bold text-white">الان بین</span> برای کاربران
+                                            فارسی‌زبان مقیم اروپا ارائه می‌شود.
+                                        </p>
+
+                                    </div>
 
                                 </div>
 
@@ -338,10 +353,8 @@ return (
 
                         </div>
 
-                    </div>
-
-                    <div
-                        className="
+                        <div
+                            className="
                             rounded-3xl
                             border
                             border-[#14c78b]/20
@@ -350,17 +363,19 @@ return (
                             to-[#111827]
                             p-8
                             "
-                    >
+                        >
 
-                        <h3 className="text-2xl font-bold  text-white">
-                            همیشه کنار شما هستیم
-                        </h3>
+                            <h3 className="text-2xl font-bold  text-white">
+                                همیشه کنار شما هستیم
+                            </h3>
 
-                        <p className="mt-5 text-gray-300 leading-9">
-                            اگر درباره اشتراک، پخش فیلم‌ها، مشکلات حساب کاربری
-                            یا هر موضوع دیگری سوالی دارید، تیم پشتیبانی الان بین
-                            در کوتاه‌ترین زمان ممکن پاسخگوی شما خواهد بود.
-                        </p>
+                            <p className="mt-5 text-gray-300 leading-9">
+                                اگر درباره اشتراک، پخش فیلم‌ها، مشکلات حساب کاربری
+                                یا هر موضوع دیگری سوالی دارید، تیم پشتیبانی الان بین
+                                در کوتاه‌ترین زمان ممکن پاسخگوی شما خواهد بود.
+                            </p>
+
+                        </div>
 
                     </div>
 
@@ -368,9 +383,7 @@ return (
 
             </div>
 
-        </div>
+        </section>
 
-    </section>
-
-);
+    );
 }

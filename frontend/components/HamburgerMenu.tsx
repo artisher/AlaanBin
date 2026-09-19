@@ -215,42 +215,30 @@ cursor-pointer
                                         <UserCircle size={18} />
                                         حساب کاربری
                                     </button>
-                                    <button
-                                        onClick={() => {
 
-                                            logoutHandler();
-                                        }}
-                                        className="..."
+                                    <button
+
+                                        onClick={logoutHandler}
+                                        className="
+                                  flex
+                                  items-center
+                                  justify-center
+                                  gap-2
+                                  h-11
+                                  rounded-xl
+                                  border
+                                  border-red-500/20
+                                  bg-red-500/10
+                                  text-red-400
+                                  hover:bg-red-500
+                                  hover:text-white
+                                  transition
+                                  cursor-pointer
+                                  "
                                     >
                                         <LogOut size={18} />
                                         خروج
                                     </button>
-                                    {/* <button
-                                        // onClick={() => {
-                                        //     closeMenu();
-                                        //     logoutHandler();
-                                        // }}
-                                        onClick={logoutHandler}
-                                        className="
-flex
-items-center
-justify-center
-gap-2
-h-11
-rounded-xl
-border
-border-red-500/20
-bg-red-500/10
-text-red-400
-hover:bg-red-500
-hover:text-white
-transition
-cursor-pointer
-"
-                                    >
-                                        <LogOut size={18} />
-                                        خروج
-                                    </button> */}
 
                                 </div>
 

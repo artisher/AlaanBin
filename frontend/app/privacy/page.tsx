@@ -126,7 +126,7 @@ export default function PrivacyPage() {
                     <div className="mt-8">
 
                         <span className="text-[#14c78b] font-bold text-lg">
-                            support@alanbin.com
+                            Alanbin.Support@gmail.com
                         </span>
 
                     </div>
