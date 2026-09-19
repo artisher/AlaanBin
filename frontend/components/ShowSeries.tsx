@@ -73,7 +73,7 @@ export const ShowSeries = () => {
                             key={item._id}
                             series={item}
                             onClick={() =>
-                                router.push(`/ series / ${item._id} `)
+                                router.push(`/series/${item._id}`)
                             }
                         />
                     ))}
