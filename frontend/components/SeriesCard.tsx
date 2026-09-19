@@ -1,4 +1,4 @@
-import Image from "next/image";
+
 import type { Series } from "@/types/Series";
 
 interface SeriesCardProps {
@@ -16,10 +16,10 @@ export const SeriesCard = ({
       className="group cursor-pointer"
     >
       <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-[#111827]">
-        <Image
+        <img
           src={series.poster}
           alt={series.title}
-          fill
+         
           className="object-cover transition duration-300 group-hover:scale-105"
         />
       </div>

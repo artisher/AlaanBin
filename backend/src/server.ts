@@ -2448,8 +2448,56 @@ app.get(
         }
     }
 );
+//delete series
+app.delete(
+    "/api/admin/series/:id",
+    checkSubscription,
+    adminMiddleware,
+    async (req, res) => {
+        try {
+            const { id } = req.params;
 
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "شناسه سریال نامعتبر است",
+                });
+            }
 
+            const series = await Series.findById(id);
+
+            if (!series) {
+                return res.status(404).json({
+                    success: false,
+                    message: "سریال پیدا نشد",
+                });
+            }
+
+            await Episode.deleteMany({
+                seriesId: id,
+            });
+
+            await Series.findByIdAndDelete(id);
+
+            res.status(200).json({
+                success: true,
+                message: "سریال و قسمت‌های آن با موفقیت حذف شدند",
+            });
+        } catch (err: any) {
+            console.error(
+                "ADMIN DELETE SERIES ERROR:",
+                err
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    err.message ||
+                    "خطا در حذف سریال",
+            });
+        }
+    }
+);
 
 
 
