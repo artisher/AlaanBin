@@ -17,7 +17,7 @@ export const ShowSeries = () => {
         const fetchSeries = async () => {
             try {
                 const res = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL} /api/series`,
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/series`,
                     {
                         cache: "no-store",
                     }
@@ -30,8 +30,8 @@ export const ShowSeries = () => {
                         data.message || "خطا در دریافت سریال‌ها"
                     );
                 }
-                console.log("SERIES DATA:", data);
-                console.log("SERIES:", data.series);
+            
+          
                 setSeries(data.series ?? []);
             } catch (error) {
                 console.error("FETCH SERIES ERROR:", error);
