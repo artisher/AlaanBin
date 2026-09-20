@@ -202,7 +202,15 @@ export function MovieCard({
                 </div>
 
                 {/* ================= Genres ================= */}
-
+                <p
+                    className="
+                        mt-1
+                        text-xs
+                        text-gray-500
+                    "
+                >
+                    {movie.year}
+                </p>
                 <div
                     className="
                         absolute
@@ -274,7 +282,7 @@ export function MovieCard({
                     {movie.title}
                 </h2>
 
-            
+
 
             </div>
 
