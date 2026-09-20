@@ -2,13 +2,14 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { ReactNode } from "react";
-
+import { ReactNode, useRef } from "react";
+import { Pagination } from "swiper/modules";
+import "swiper/css/pagination";
 import { Swiper, SwiperSlide } from "swiper/react";
+import type { Swiper as SwiperType } from "swiper";
 import { Navigation } from "swiper/modules";
 
 import "swiper/css";
-import "swiper/css/navigation";
 
 interface ContentRowProps {
     title: string;
@@ -21,9 +22,10 @@ export const ContentRow = ({
     href,
     children,
 }: ContentRowProps) => {
+    const swiperRef = useRef<SwiperType | null>(null);
+
     return (
         <section className="w-full">
-            {/* Header */}
             <div className="mb-5 flex items-center justify-between">
                 <h2 className="text-xl font-bold text-white md:text-2xl">
                     {title}
@@ -42,13 +44,10 @@ export const ContentRow = ({
                 </Link>
             </div>
 
-            {/* Slider */}
             <div className="relative">
                 <Swiper
-                    modules={[Navigation]}
-                    navigation={{
-                        nextEl: ".content-next",
-                        prevEl: ".content-prev",
+                    onSwiper={(swiper: SwiperType) => {
+                        swiperRef.current = swiper;
                     }}
                     spaceBetween={16}
                     slidesPerView={2}
@@ -70,28 +69,18 @@ export const ContentRow = ({
                             spaceBetween: 20,
                         },
                     }}
-                    className="content-row-swiper"
                 >
                     {children}
                 </Swiper>
 
-                {/* Previous */}
                 <button
+                    onClick={() => swiperRef.current?.slidePrev()}
                     className="
-                        content-prev
-                        absolute
-                        right-2
-                        top-1/2
-                        z-20
-                        flex
-                        h-11
-                        w-11
-                        -translate-y-1/2
-                        items-center
-                        justify-center
+                        absolute right-2 top-1/2 z-20
+                        flex h-11 w-11 -translate-y-1/2
+                        items-center justify-center
                         rounded-full
-                        border
-                        border-white/10
+                        border border-white/10
                         bg-black/70
                         text-white
                         backdrop-blur-md
@@ -104,23 +93,14 @@ export const ContentRow = ({
                     <ChevronRight size={22} />
                 </button>
 
-                {/* Next */}
                 <button
+                    onClick={() => swiperRef.current?.slideNext()}
                     className="
-                        content-next
-                        absolute
-                        left-2
-                        top-1/2
-                        z-20
-                        flex
-                        h-11
-                        w-11
-                        -translate-y-1/2
-                        items-center
-                        justify-center
+                        absolute left-2 top-1/2 z-20
+                        flex h-11 w-11 -translate-y-1/2
+                        items-center justify-center
                         rounded-full
-                        border
-                        border-white/10
+                        border border-white/10
                         bg-black/70
                         text-white
                         backdrop-blur-md
