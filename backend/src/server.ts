@@ -2188,7 +2188,9 @@ app.get("/api/series", async (req, res) => {
                 $gte: Number(req.query.rating),
             };
         }
-
+        if (req.query.topWeek === "true") {
+            query.topWeek = true;
+        }
         // Search
         if (req.query.search) {
             const search = escapeRegex(String(req.query.search));
