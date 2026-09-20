@@ -10,6 +10,7 @@ import type { Series } from "@/types/Series";
 import { ContentRow } from "./ContentRow";
 import { MovieCard } from "./MovieCard";
 import { SeriesCard } from "./SeriesCard";
+import { MovieModal } from "./MovieMedal";
 
 type ContentItem = Movie | Series;
 
@@ -28,6 +29,9 @@ export const HomeContent = () => {
 
     const [loading, setLoading] = useState(true);
 
+
+    const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     useEffect(() => {
         const fetchHomeContent = async () => {
             try {
@@ -134,11 +138,11 @@ export const HomeContent = () => {
 
         fetchHomeContent();
     }, []);
-
-    const renderMovieRow = (
-        movies: Movie[],
-        href: string
-    ) => {
+    const handleMovieClick = (movie: Movie) => {
+        setSelectedMovie(movie);
+        setIsModalOpen(true);
+    };
+    const renderMovieRow = (movies: Movie[]) => {
         return movies.map((movie) => (
             <div
                 key={movie._id}
@@ -146,9 +150,7 @@ export const HomeContent = () => {
             >
                 <MovieCard
                     movie={movie}
-                    onClick={() =>
-                        router.push(`/movies/${movie._id}`)
-                    }
+                    onClick={() => handleMovieClick(movie)}
                 />
             </div>
         ));
@@ -190,18 +192,14 @@ export const HomeContent = () => {
                         <MovieCard
                             movie={item as Movie}
                             onClick={() =>
-                                router.push(
-                                    `/movies/${item._id}`
-                                )
+                                handleMovieClick(item as Movie)
                             }
                         />
                     ) : (
                         <SeriesCard
                             series={item as Series}
                             onClick={() =>
-                                router.push(
-                                    `/series/${item._id}`
-                                )
+                                router.push(`/series/${item._id}`)
                             }
                         />
                     )}
@@ -240,10 +238,7 @@ export const HomeContent = () => {
                     title="جدیدترین فیلم‌ها"
                     href="/movies?sort=newest"
                 >
-                    {renderMovieRow(
-                        newMovies,
-                        "/movies?sort=newest"
-                    )}
+                    {renderMovieRow(newMovies)}
                 </ContentRow>
             )}
 
@@ -274,10 +269,7 @@ export const HomeContent = () => {
                     title="کمدی"
                     href="/movies?genre=Comedy"
                 >
-                    {renderMovieRow(
-                        comedyMovies,
-                        "/movies?genre=Comedy"
-                    )}
+                    {renderMovieRow(newMovies)}
                 </ContentRow>
             )}
 
@@ -287,10 +279,7 @@ export const HomeContent = () => {
                     title="درام"
                     href="/movies?genre=Drama"
                 >
-                    {renderMovieRow(
-                        dramaMovies,
-                        "/movies?genre=Drama"
-                    )}
+                    {renderMovieRow(newMovies)}
                 </ContentRow>
             )}
 
@@ -300,10 +289,7 @@ export const HomeContent = () => {
                     title="عاشقانه"
                     href="/movies?genre=Romance"
                 >
-                    {renderMovieRow(
-                        romanceMovies,
-                        "/movies?genre=Romance"
-                    )}
+                    {renderMovieRow(newMovies)}
                 </ContentRow>
             )}
 
@@ -313,10 +299,7 @@ export const HomeContent = () => {
                     title="اکشن"
                     href="/movies?genre=Action"
                 >
-                    {renderMovieRow(
-                        actionMovies,
-                        "/movies?genre=Action"
-                    )}
+                    {renderMovieRow(newMovies)}
                 </ContentRow>
             )}
 
@@ -348,7 +331,18 @@ export const HomeContent = () => {
                         مشاهده همه فیلم‌ها
                     </Link>
                 </div>
+
             </section>
+            {selectedMovie && (
+                <MovieModal
+                    movie={selectedMovie}
+                    isOpen={isModalOpen}
+                    onClose={() => {
+                        setIsModalOpen(false);
+                        setSelectedMovie(null);
+                    }}
+                />
+            )}
         </div>
     );
 };
