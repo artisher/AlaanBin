@@ -157,7 +157,7 @@ app.get("/series-videos/:seriesName/:filename", auth_middleware_1.default, async
                 message: "مسیر فایل نامعتبر است",
             });
         }
-        res.setHeader("X-Accel-Redirect", `/ protected - series - videos / ${encodeURIComponent(seriesName)}/${encodeURIComponent(filename)}`);
+        res.setHeader("X-Accel-Redirect", `/protected-series-videos/${encodeURIComponent(seriesName)}/${encodeURIComponent(filename)}`);
         res.setHeader("Content-Type", "video/mp4");
         res.end();
     }
@@ -193,7 +193,7 @@ app.get("/posters/:filename", auth_middleware_1.default, async (req, res) => {
                 message: "فرمت تصویر مجاز نیست"
             });
         }
-        res.setHeader("X-Accel-Redirect", `/ protected - posters / ${encodeURIComponent(filename)} `);
+        res.setHeader("X-Accel-Redirect", `/protected-posters/${encodeURIComponent(filename)}`);
         res.setHeader("Content-Type", extension === ".jpg" || extension === ".jpeg"
             ? "image/jpeg"
             : extension === ".png"
@@ -1192,9 +1192,6 @@ app.get('/api/movies', async (req, res) => {
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 20;
         const totalMovies = await Movie_1.Movie.countDocuments(query);
-        const allMovies = await Movie_1.Movie.find({})
-            .select("title genre product")
-            .limit(20);
         const totalPages = Math.max(1, Math.ceil(totalMovies / limit));
         const movies = await Movie_1.Movie.find(query)
             .sort(sort)
@@ -1293,10 +1290,83 @@ app.post("/api/admin/series/:seriesId/episodes", auth_middleware_1.default, admi
 });
 //showSeries 
 app.get("/api/series", async (req, res) => {
+    const escapeRegex = (text) => {
+        return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    };
     try {
-        const series = await Series_1.Series.find().sort({ year: -1 });
+        // ---------- Filter ----------
+        const query = {};
+        // Genre
+        if (req.query.genre) {
+            const genre = String(req.query.genre);
+            query.genre = genreMap[genre] || genre;
+        }
+        // Rating
+        if (req.query.rating) {
+            query.rating = {
+                $gte: Number(req.query.rating),
+            };
+        }
+        // Search
+        if (req.query.search) {
+            const search = escapeRegex(String(req.query.search));
+            query.$or = [
+                {
+                    title: {
+                        $regex: search,
+                        $options: "i",
+                    },
+                },
+                {
+                    description: {
+                        $regex: search,
+                        $options: "i",
+                    },
+                },
+                {
+                    aliases: {
+                        $regex: search,
+                        $options: "i",
+                    },
+                },
+            ];
+        }
+        // Top Week
+        if (req.query.topWeek === "true") {
+            query.topWeek = true;
+        }
+        // ---------- Sort ----------
+        let sort = {};
+        switch (req.query.sort) {
+            case "newest":
+                sort.year = -1;
+                break;
+            case "oldest":
+                sort.year = 1;
+                break;
+            case "highRating":
+                sort.rating = -1;
+                break;
+            case "lowRating":
+                sort.rating = 1;
+                break;
+            default:
+                sort.year = -1;
+        }
+        // ---------- Pagination ----------
+        const page = Math.max(Number(req.query.page) || 1, 1);
+        const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 50);
+        const totalSeries = await Series_1.Series.countDocuments(query);
+        const totalPages = Math.max(1, Math.ceil(totalSeries / limit));
+        const series = await Series_1.Series.find(query)
+            .sort(sort)
+            .skip((page - 1) * limit)
+            .limit(limit);
         res.json({
             series,
+            currentPage: page,
+            totalPages,
+            totalSeries,
         });
     }
     catch (err) {
@@ -1482,6 +1552,42 @@ app.get("/api/series/:id", auth_middleware_1.default, async (req, res) => {
         console.error("GET SERIES ERROR:", err);
         res.status(500).json({
             message: "خطا در دریافت سریال",
+        });
+    }
+});
+//delete series
+app.delete("/api/admin/series/:id", auth_middleware_1.default, admin_1.adminMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const seriesId = String(id);
+        if (!mongoose_1.default.Types.ObjectId.isValid(seriesId)) {
+            return res.status(400).json({
+                success: false,
+                message: "شناسه سریال نامعتبر است",
+            });
+        }
+        const series = await Series_1.Series.findById(seriesId);
+        if (!series) {
+            return res.status(404).json({
+                success: false,
+                message: "سریال پیدا نشد",
+            });
+        }
+        await Episode_1.Episode.deleteMany({
+            seriesId: seriesId,
+        });
+        await Series_1.Series.findByIdAndDelete(seriesId);
+        res.status(200).json({
+            success: true,
+            message: "سریال و قسمت‌های آن با موفقیت حذف شدند",
+        });
+    }
+    catch (err) {
+        console.error("ADMIN DELETE SERIES ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: err.message ||
+                "خطا در حذف سریال",
         });
     }
 });

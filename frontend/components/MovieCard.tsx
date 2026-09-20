@@ -65,7 +65,7 @@ export function MovieCard({
             {/* Poster */}
 
             <img
-                src={`https://alanbin.com${movie.poster}`}
+                src={posterUrl}
                 alt={movie.title}
                 className="
         absolute

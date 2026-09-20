@@ -22,6 +22,6 @@ const movieSchema = new mongoose_1.default.Schema({
     genre: [String],
     year: Number,
     product: String,
-    duration: Number
+    duration: Number,
 });
 exports.Movie = mongoose_1.default.model('Movie', movieSchema);

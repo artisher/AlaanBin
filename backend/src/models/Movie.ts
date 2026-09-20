@@ -3,10 +3,10 @@ import mongoose from 'mongoose';
 const movieSchema = new mongoose.Schema({
 
   title: { type: String, required: true },
-aliases: {
-  type: [String],
-  default: []
-},
+  aliases: {
+    type: [String],
+    default: []
+  },
   description: String,
 
   poster: String,
@@ -26,7 +26,9 @@ aliases: {
 
   product: String,
 
-  duration: Number
+  duration: Number,
+
+  
 
 });
 

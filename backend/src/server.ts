@@ -2034,9 +2034,7 @@ app.get('/api/movies', async (req, res) => {
         const totalMovies = await Movie.countDocuments(query);
 
 
-        const allMovies = await Movie.find({})
-            .select("title genre product")
-            .limit(20);
+
 
 
         const totalPages = Math.max(1, Math.ceil(totalMovies / limit));
@@ -2169,12 +2167,109 @@ app.post(
 );
 //showSeries 
 app.get("/api/series", async (req, res) => {
+    const escapeRegex = (text: string) => {
+        return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    };
+
     try {
-        const series = await Series.find().sort({ year: -1 });
+        // ---------- Filter ----------
+        const query: any = {};
+
+        // Genre
+        if (req.query.genre) {
+            const genre = String(req.query.genre);
+
+            query.genre = genreMap[genre] || genre;
+        }
+
+        // Rating
+        if (req.query.rating) {
+            query.rating = {
+                $gte: Number(req.query.rating),
+            };
+        }
+
+        // Search
+        if (req.query.search) {
+            const search = escapeRegex(String(req.query.search));
+
+            query.$or = [
+                {
+                    title: {
+                        $regex: search,
+                        $options: "i",
+                    },
+                },
+                {
+                    description: {
+                        $regex: search,
+                        $options: "i",
+                    },
+                },
+                {
+                    aliases: {
+                        $regex: search,
+                        $options: "i",
+                    },
+                },
+            ];
+        }
+
+        // Top Week
+        if (req.query.topWeek === "true") {
+            query.topWeek = true;
+        }
+
+        // ---------- Sort ----------
+        let sort: any = {};
+
+        switch (req.query.sort) {
+            case "newest":
+                sort.year = -1;
+                break;
+
+            case "oldest":
+                sort.year = 1;
+                break;
+
+            case "highRating":
+                sort.rating = -1;
+                break;
+
+            case "lowRating":
+                sort.rating = 1;
+                break;
+
+            default:
+                sort.year = -1;
+        }
+
+        // ---------- Pagination ----------
+        const page = Math.max(Number(req.query.page) || 1, 1);
+        const limit = Math.min(
+            Math.max(Number(req.query.limit) || 20, 1),
+            50
+        );
+
+        const totalSeries = await Series.countDocuments(query);
+
+        const totalPages = Math.max(
+            1,
+            Math.ceil(totalSeries / limit)
+        );
+
+        const series = await Series.find(query)
+            .sort(sort)
+            .skip((page - 1) * limit)
+            .limit(limit);
 
         res.json({
             series,
+            currentPage: page,
+            totalPages,
+            totalSeries,
         });
+
     } catch (err) {
         console.error("GET SERIES ERROR:", err);
 
