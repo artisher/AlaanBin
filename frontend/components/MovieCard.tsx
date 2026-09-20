@@ -202,63 +202,91 @@ export function MovieCard({
                 </div>
 
                 {/* ================= Genres ================= */}
-                <p
-                    className="
-                        mt-1
-                        text-xs
-                        text-gray-500
-                    "
-                >
-                    {movie.year}
-                </p>
+
+                {/* ================= Genres + Release Year ================= */}
+
                 <div
                     className="
-                        absolute
-                        bottom-4
-                        left-4
+        absolute
+        bottom-4
+        left-4
+        right-4
 
-                        flex
-                        flex-wrap
-                        gap-2
+        flex
+        items-center
+        justify-between
+        gap-2
 
-                        opacity-0
-                        translate-y-3
+        opacity-0
+        translate-y-3
 
-                        group-hover:opacity-100
-                        group-hover:translate-y-0
+        group-hover:opacity-100
+        group-hover:translate-y-0
 
-                        transition-all
-                        duration-500
-                    "
+        transition-all
+        duration-500
+    "
                 >
 
-                    {movie.genre
-                        .slice(0, 2)
-                        .map((genre, index) => (
-                            <span
-                                key={index}
-                                className="
-                                    rounded-full
+                    {/* Genres */}
 
-                                    border
-                                    border-[#14c78b]/30
+                    <div className="flex flex-wrap gap-2">
 
-                                    bg-[#14c78b]/10
+                        {movie.genre
+                            .slice(0, 2)
+                            .map((genre, index) => (
+                                <span
+                                    key={index}
+                                    className="
+                        rounded-full
 
-                                    px-2.5
-                                    py-1
+                        border
+                        border-[#14c78b]/30
 
-                                    text-[10px]
-                                    font-medium
+                        bg-[#14c78b]/10
 
-                                    text-[#14c78b]
+                        px-2.5
+                        py-1
 
-                                    whitespace-nowrap
-                                "
-                            >
-                                {genre}
-                            </span>
-                        ))}
+                        text-[10px]
+                        font-medium
+
+                        text-[#14c78b]
+
+                        whitespace-nowrap
+                    "
+                                >
+                                    {genre}
+                                </span>
+                            ))}
+
+                    </div>
+
+                    {/* Release Year */}
+
+                    <span
+                        className="
+            rounded-full
+
+            border
+            border-white/15
+
+            bg-black/50
+            backdrop-blur-md
+
+            px-2.5
+            py-1
+
+            text-[10px]
+            font-medium
+
+            text-gray-300
+
+            whitespace-nowrap
+        "
+                    >
+                        {movie.year}
+                    </span>
 
                 </div>
 
