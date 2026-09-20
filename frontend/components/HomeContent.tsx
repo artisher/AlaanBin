@@ -11,6 +11,7 @@ import { ContentRow } from "./ContentRow";
 import { MovieCard } from "./MovieCard";
 import { SeriesCard } from "./SeriesCard";
 import { MovieModal } from "./MovieMedal";
+import { HeroSlider } from "./HeroSlider";
 
 type ContentItem = Movie | Series;
 
@@ -97,7 +98,7 @@ export const HomeContent = () => {
                     romanceRes.json(),
                     actionRes.json(),
                 ]);
-             
+
                 if (newMoviesRes.ok) {
                     setNewMovies(newMoviesData.movies ?? []);
                 }
@@ -218,7 +219,11 @@ export const HomeContent = () => {
         );
     }
 
-    return (
+    return (<>
+        <HeroSlider
+            movies={topWeekMovies.slice(0, 5)}
+            onMovieClick={handleMovieClick}
+        />
         <div className="space-y-14">
 
             {/* جدیدترین فیلم‌ها */}
@@ -268,7 +273,7 @@ export const HomeContent = () => {
                     title="درام"
                     href="/movies?genre=Drama"
                 >
-                   {renderMovieRow(dramaMovies)}
+                    {renderMovieRow(dramaMovies)}
                 </ContentRow>
             )}
 
@@ -278,7 +283,7 @@ export const HomeContent = () => {
                     title="عاشقانه"
                     href="/movies?genre=Romance"
                 >
-                  {renderMovieRow(romanceMovies)}
+                    {renderMovieRow(romanceMovies)}
                 </ContentRow>
             )}
 
@@ -333,5 +338,5 @@ export const HomeContent = () => {
                 />
             )}
         </div>
-    );
+    </>);
 };
