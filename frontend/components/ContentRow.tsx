@@ -1,8 +1,14 @@
 "use client";
 
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { ReactNode } from "react";
+
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation } from "swiper/modules";
+
+import "swiper/css";
+import "swiper/css/navigation";
 
 interface ContentRowProps {
     title: string;
@@ -17,6 +23,7 @@ export const ContentRow = ({
 }: ContentRowProps) => {
     return (
         <section className="w-full">
+            {/* Header */}
             <div className="mb-5 flex items-center justify-between">
                 <h2 className="text-xl font-bold text-white md:text-2xl">
                     {title}
@@ -35,20 +42,96 @@ export const ContentRow = ({
                 </Link>
             </div>
 
-            <div
-                className="
-                    flex gap-5
-                    overflow-x-auto
-                    overflow-y-hidden
-                    pb-4
-                    snap-x
-                    snap-mandatory
-                    [scrollbar-width:none]
-                    [-ms-overflow-style:none]
-                    [&::-webkit-scrollbar]:hidden
-                "
-            >
-                {children}
+            {/* Slider */}
+            <div className="relative">
+                <Swiper
+                    modules={[Navigation]}
+                    navigation={{
+                        nextEl: ".content-next",
+                        prevEl: ".content-prev",
+                    }}
+                    spaceBetween={16}
+                    slidesPerView={2}
+                    breakpoints={{
+                        640: {
+                            slidesPerView: 3,
+                            spaceBetween: 16,
+                        },
+                        768: {
+                            slidesPerView: 4,
+                            spaceBetween: 18,
+                        },
+                        1024: {
+                            slidesPerView: 5,
+                            spaceBetween: 20,
+                        },
+                        1280: {
+                            slidesPerView: 6,
+                            spaceBetween: 20,
+                        },
+                    }}
+                    className="content-row-swiper"
+                >
+                    {children}
+                </Swiper>
+
+                {/* Previous */}
+                <button
+                    className="
+                        content-prev
+                        absolute
+                        right-2
+                        top-1/2
+                        z-20
+                        flex
+                        h-11
+                        w-11
+                        -translate-y-1/2
+                        items-center
+                        justify-center
+                        rounded-full
+                        border
+                        border-white/10
+                        bg-black/70
+                        text-white
+                        backdrop-blur-md
+                        transition
+                        hover:bg-[#14c78b]
+                        hover:text-black
+                    "
+                    aria-label="قبلی"
+                >
+                    <ChevronRight size={22} />
+                </button>
+
+                {/* Next */}
+                <button
+                    className="
+                        content-next
+                        absolute
+                        left-2
+                        top-1/2
+                        z-20
+                        flex
+                        h-11
+                        w-11
+                        -translate-y-1/2
+                        items-center
+                        justify-center
+                        rounded-full
+                        border
+                        border-white/10
+                        bg-black/70
+                        text-white
+                        backdrop-blur-md
+                        transition
+                        hover:bg-[#14c78b]
+                        hover:text-black
+                    "
+                    aria-label="بعدی"
+                >
+                    <ChevronLeft size={22} />
+                </button>
             </div>
         </section>
     );

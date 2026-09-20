@@ -6,7 +6,7 @@ import Link from "next/link";
 
 import type { Movie } from "@/types/movies";
 import type { Series } from "@/types/Series";
-
+import { SwiperSlide } from "swiper/react";
 import { ContentRow } from "./ContentRow";
 import { MovieCard } from "./MovieCard";
 import { SeriesCard } from "./SeriesCard";
@@ -144,33 +144,25 @@ export const HomeContent = () => {
     };
     const renderMovieRow = (movies: Movie[]) => {
         return movies.map((movie) => (
-            <div
-                key={movie._id}
-                className="shrink-0 snap-start"
-            >
+            <SwiperSlide key={movie._id}>
                 <MovieCard
                     movie={movie}
                     onClick={() => handleMovieClick(movie)}
                 />
-            </div>
+            </SwiperSlide>
         ));
     };
 
-    const renderSeriesRow = (
-        series: Series[]
-    ) => {
+    const renderSeriesRow = (series: Series[]) => {
         return series.map((item) => (
-            <div
-                key={item._id}
-                className="shrink-0 snap-start"
-            >
+            <SwiperSlide key={item._id}>
                 <SeriesCard
                     series={item}
                     onClick={() =>
                         router.push(`/series/${item._id}`)
                     }
                 />
-            </div>
+            </SwiperSlide>
         ));
     };
 
@@ -184,10 +176,7 @@ export const HomeContent = () => {
             const isMovie = "videoUrl" in item;
 
             return (
-                <div
-                    key={item._id}
-                    className="shrink-0 snap-start"
-                >
+                <SwiperSlide key={item._id}>
                     {isMovie ? (
                         <MovieCard
                             movie={item as Movie}
@@ -203,7 +192,7 @@ export const HomeContent = () => {
                             }
                         />
                     )}
-                </div>
+                </SwiperSlide>
             );
         });
     };
