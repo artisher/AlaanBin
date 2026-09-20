@@ -97,7 +97,7 @@ export const HomeContent = () => {
                     romanceRes.json(),
                     actionRes.json(),
                 ]);
-
+             
                 if (newMoviesRes.ok) {
                     setNewMovies(newMoviesData.movies ?? []);
                 }
@@ -258,7 +258,7 @@ export const HomeContent = () => {
                     title="کمدی"
                     href="/movies?genre=Comedy"
                 >
-                    {renderMovieRow(newMovies)}
+                    {renderMovieRow(comedyMovies)}
                 </ContentRow>
             )}
 
@@ -268,7 +268,7 @@ export const HomeContent = () => {
                     title="درام"
                     href="/movies?genre=Drama"
                 >
-                    {renderMovieRow(newMovies)}
+                   {renderMovieRow(dramaMovies)}
                 </ContentRow>
             )}
 
@@ -278,7 +278,7 @@ export const HomeContent = () => {
                     title="عاشقانه"
                     href="/movies?genre=Romance"
                 >
-                    {renderMovieRow(newMovies)}
+                  {renderMovieRow(romanceMovies)}
                 </ContentRow>
             )}
 
@@ -288,7 +288,7 @@ export const HomeContent = () => {
                     title="اکشن"
                     href="/movies?genre=Action"
                 >
-                    {renderMovieRow(newMovies)}
+                    {renderMovieRow(actionMovies)}
                 </ContentRow>
             )}
 
