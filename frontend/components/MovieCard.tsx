@@ -20,159 +20,90 @@ export function MovieCard({
         : `https://alanbin.com${movie.poster}`;
 
     return (
-        <div
-            onClick={onClick}
-            className="
-                group
-                relative
+        <div className="group w-[155px] sm:w-[170px] md:w-[185px] lg:w-[205px] xl:w-[215px]">
 
-                w-[155px]
-                h-[250px]
+            {/* ================= Poster Card ================= */}
 
-                sm:w-[170px]
-                sm:h-[275px]
-
-                md:w-[185px]
-                md:h-[300px]
-
-                lg:w-[205px]
-                lg:h-[330px]
-
-                xl:w-[215px]
-                xl:h-[345px]
-
-                overflow-hidden
-                rounded-2xl
-                bg-[#191d24]
-                border
-                border-white/10
-                cursor-pointer
-
-                transition-all
-                duration-500
-
-                hover:-translate-y-2
-                hover:border-[#14c78b]
-                hover:shadow-[0_0_35px_rgba(20,199,139,.18)]
-            "
-        >
-
-            {/* Poster */}
-
-            <img
-                src={posterUrl}
-                alt={movie.title}
+            <div
+                onClick={onClick}
                 className="
-                    absolute
-                    inset-0
+                    relative
+
                     w-full
-                    h-full
-                    object-cover
+                    h-[250px]
 
-                    transition-transform
-                    duration-700
+                    sm:h-[275px]
+                    md:h-[300px]
+                    lg:h-[330px]
+                    xl:h-[345px]
 
-                    group-hover:scale-110
-                "
-            />
+                    overflow-hidden
+                    rounded-2xl
 
-            {/* Hover Dark Overlay */}
+                    bg-[#191d24]
+                    border
+                    border-white/10
 
-            <div
-                className="
-                    absolute
-                    inset-0
-
-                    bg-gradient-to-t
-                    from-black/95
-                    via-black/35
-                    to-transparent
-
-                    opacity-0
-                    group-hover:opacity-100
-
-                    transition-opacity
-                    duration-500
-                "
-            />
-
-            {/* Play Button */}
-
-            <div
-                className="
-                    absolute
-                    inset-0
-
-                    flex
-                    items-center
-                    justify-center
-
-                    opacity-0
-                    group-hover:opacity-100
+                    cursor-pointer
 
                     transition-all
                     duration-500
+
+                    hover:-translate-y-2
+                    hover:border-[#14c78b]
+                    hover:shadow-[0_0_35px_rgba(20,199,139,.18)]
                 "
             >
-                <div
+
+                {/* Poster */}
+
+                <img
+                    src={posterUrl}
+                    alt={movie.title}
                     className="
-                        w-16
-                        h-16
+                        absolute
+                        inset-0
 
-                        rounded-full
+                        w-full
+                        h-full
 
-                        bg-[#14c78b]
+                        object-cover
 
-                        flex
-                        items-center
-                        justify-center
+                        transition-transform
+                        duration-700
 
-                        shadow-[0_0_30px_rgba(20,199,139,.45)]
-
-                        scale-75
-                        group-hover:scale-100
-
-                        transition-all
-                        duration-500
+                        group-hover:scale-110
                     "
-                >
-                    <Play
-                        size={26}
-                        fill="white"
-                        className="text-white ml-1"
-                    />
-                </div>
-            </div>
+                />
 
-            {/* Hover Information */}
-
-            <div
-                className="
-                    absolute
-                    bottom-0
-                    left-0
-                    right-0
-
-                    p-4
-
-                    translate-y-5
-                    opacity-0
-
-                    group-hover:translate-y-0
-                    group-hover:opacity-100
-
-                    transition-all
-                    duration-500
-                "
-            >
-
-                {/* Rating */}
+                {/* Dark Overlay */}
 
                 <div
                     className="
                         absolute
-                        right-4
-                        bottom-[110px]
+                        inset-0
+
+                        bg-gradient-to-t
+                        from-black/95
+                        via-black/35
+                        to-transparent
+
+                        opacity-0
+                        group-hover:opacity-100
+
+                        transition-opacity
+                        duration-500
+                    "
+                />
+
+                {/* ================= Rating ================= */}
+
+                <div
+                    className="
+                        absolute
+
+                        top-3
+                        right-3
 
                         flex
                         items-center
@@ -188,8 +119,18 @@ export function MovieCard({
 
                         px-3
                         py-1
+
+                        opacity-0
+                        translate-y-2
+
+                        group-hover:opacity-100
+                        group-hover:translate-y-0
+
+                        transition-all
+                        duration-500
                     "
                 >
+
                     <span
                         className="
                             text-[#14c78b]
@@ -205,48 +146,84 @@ export function MovieCard({
                         fill="#14c78b"
                         className="text-[#14c78b]"
                     />
+
                 </div>
 
-                {/* Title */}
-
-                <h2
-                    className="
-                        text-white
-                        font-bold
-
-                        text-sm
-                        sm:text-base
-
-                        line-clamp-1
-                    "
-                >
-                    {movie.title}
-                </h2>
-
-                {/* Year */}
-
-                <p
-                    className="
-                        mt-1
-                        text-xs
-                        text-gray-400
-                    "
-                >
-                    {movie.year}
-                </p>
-
-                {/* Genres */}
+                {/* ================= Play Button ================= */}
 
                 <div
                     className="
-                        mt-3
+                        absolute
+                        inset-0
+
+                        flex
+                        items-center
+                        justify-center
+
+                        opacity-0
+                        group-hover:opacity-100
+
+                        transition-all
+                        duration-500
+                    "
+                >
+
+                    <div
+                        className="
+                            w-16
+                            h-16
+
+                            rounded-full
+
+                            bg-[#14c78b]
+
+                            flex
+                            items-center
+                            justify-center
+
+                            shadow-[0_0_30px_rgba(20,199,139,.45)]
+
+                            scale-75
+                            group-hover:scale-100
+
+                            transition-all
+                            duration-500
+                        "
+                    >
+
+                        <Play
+                            size={26}
+                            fill="white"
+                            className="text-white ml-1"
+                        />
+
+                    </div>
+
+                </div>
+
+                {/* ================= Genres ================= */}
+
+                <div
+                    className="
+                        absolute
+                        bottom-4
+                        left-4
 
                         flex
                         flex-wrap
-
                         gap-2
+
+                        opacity-0
+                        translate-y-3
+
+                        group-hover:opacity-100
+                        group-hover:translate-y-0
+
+                        transition-all
+                        duration-500
                     "
                 >
+
                     {movie.genre
                         .slice(0, 2)
                         .map((genre, index) => (
@@ -274,7 +251,30 @@ export function MovieCard({
                                 {genre}
                             </span>
                         ))}
+
                 </div>
+
+            </div>
+
+            {/* ================= Outside Card Info ================= */}
+
+            <div className="mt-3 px-1">
+
+                <h2
+                    className="
+                        text-white
+                        font-bold
+
+                        text-sm
+                        sm:text-base
+
+                        truncate
+                    "
+                >
+                    {movie.title}
+                </h2>
+
+            
 
             </div>
 
