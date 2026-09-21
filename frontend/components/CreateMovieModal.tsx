@@ -29,7 +29,7 @@ export const addedMovie = z.object({
     genre: z.array(z.string()).min(1, "حداقل یک ژانر انتخاب کنید"),
 
     aliases: z.array(z.string()),
-
+    heroImage: z.string().optional(),
     year: z.number(),
     rating: z.number().optional(),
     duration: z.number().min(1, "مدت فیلم الزامی است"),
@@ -70,6 +70,7 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
             rating: undefined,
             duration: 0,
             topWeek: false,
+            heroImage: "",
             poster: "",
             product: "ایرانی",
             videoUrl: "",
@@ -207,7 +208,7 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
             // -------------------------
             // 1. آپلود پوستر
             // -------------------------
-          
+
             let posterUrl = uploadedPoster?.posterUrl;
 
             if (!posterUrl) {
@@ -234,7 +235,7 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
             if (storageFilename) {
                 body = {
                     ...data,
-                   
+
                     poster: posterUrl,
                     storageFilename,
                 };
@@ -251,7 +252,7 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
 
                 body = {
                     ...data,
-                    
+
                     poster: posterUrl,
                     videoUrl: uploadResult.videoUrl,
                 };
@@ -456,7 +457,33 @@ export const CreateMovieModal: React.FC<CreateMovieModalProps> = ({
                             </p>
                         )}
                     </div>
+                    {/* تصویر Hero */}
+                    <div className="w-full sm:w-75">
+                        <label
+                            htmlFor="heroImage"
+                            className="block text-sm font-medium text-gray-300 mb-1"
+                        >
+                            تصویر Hero
+                        </label>
 
+                        <input
+                            type="text"
+                            id="heroImage"
+                            placeholder="مثلاً: https://alanbin.com/heroes/sorkhpoost.webp"
+                            {...register("heroImage")}
+                            className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
+                        />
+
+                        <p className="text-gray-500 text-xs mt-1">
+                            آدرس تصویر Hero را وارد کنید.
+                        </p>
+
+                        {errors.heroImage && (
+                            <p className="text-red-400 text-xs mt-1">
+                                {errors.heroImage.message}
+                            </p>
+                        )}
+                    </div>
 
                     {/* کشور */}
                     <div className='w-full sm:w-75'>

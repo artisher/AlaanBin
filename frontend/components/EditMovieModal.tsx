@@ -295,7 +295,29 @@ export const EditMovieModal: React.FC<EditMovieModalProps> = ({
                             className="w-full rounded-md border border-gray-600 bg-gray-700 text-white p-2"
                         />
                     </div>
+                    {/* تصویر Hero */}
+                    <div className="w-full sm:w-75">
+                        <label
+                            htmlFor="heroImage"
+                            className="block text-sm font-medium text-gray-300 mb-1"
+                        >
+                            تصویر Hero
+                        </label>
 
+                        <input
+                            type="text"
+                            id="heroImage"
+                            name="heroImage"
+                            value={editedMovie.heroImage || ""}
+                            onChange={handleChange}
+                            placeholder="https://alanbin.com/heroes/sorkhpoost.webp"
+                            className="w-full rounded-md border border-gray-600 bg-gray-700 text-white p-2"
+                        />
+
+                        <p className="text-gray-500 text-xs mt-1">
+                            آدرس تصویر بزرگ Hero فیلم
+                        </p>
+                    </div>
                     {/* Video URL */}
                     <div className="w-full sm:w-75">
                         <label

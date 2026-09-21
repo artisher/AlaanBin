@@ -4,7 +4,7 @@ export interface Movie {
     aliases: string[];
     description: string;
     poster: string;
-    
+    heroImage: string;
     videoUrl: string;
     rating: number;
     duration: number;

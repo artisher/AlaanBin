@@ -47,16 +47,9 @@ export const HeroSlider = ({
                         <div className="relative h-[650px] w-full md:h-[750px] lg:h-[850px]">
 
                             <img
-                                src={movie.poster}
+                                src={movie.heroImage || movie.poster}
                                 alt={movie.title}
-                                className="
-                                    absolute
-                                    inset-0
-                                    h-full
-                                    w-full
-                                    object-cover
-                                    object-center
-                                "
+                                className="absolute inset-0 h-full w-full object-cover"
                             />
 
                             {/* Button */}
