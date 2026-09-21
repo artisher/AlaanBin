@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -33,6 +32,7 @@ export const SearchBar = ({
     useEffect(() => {
         if (!isOpen || !search.trim()) {
             setMovies([]);
+            setLoading(false);
             return;
         }
 
@@ -49,7 +49,7 @@ export const SearchBar = ({
                 });
 
                 const res = await fetch(
-                    `${ API_URL } /api/movies ? ${ params.toString() } `,
+                    `${API_URL}/api/movies?${params.toString()}`,
                     {
                         credentials: "include",
                         signal: controller.signal,
@@ -63,14 +63,15 @@ export const SearchBar = ({
                 const data = await res.json();
 
                 setMovies(data.movies || []);
-
             } catch (error: any) {
                 if (error?.name !== "AbortError") {
                     console.error("Search error:", error);
                     setMovies([]);
                 }
             } finally {
-                setLoading(false);
+                if (!controller.signal.aborted) {
+                    setLoading(false);
+                }
             }
         }, 300);
 
@@ -96,10 +97,7 @@ export const SearchBar = ({
             }
         };
 
-        document.addEventListener(
-            "mousedown",
-            handleClickOutside
-        );
+        document.addEventListener("mousedown", handleClickOutside);
 
         return () => {
             document.removeEventListener(
@@ -126,7 +124,7 @@ export const SearchBar = ({
     const movieHandler = (id: string) => {
         closeSearch();
 
-        router.push(`/ movies / ${ id } `);
+        router.push(`/movies/${id}`);
     };
 
     // --------------------------------
@@ -141,7 +139,7 @@ export const SearchBar = ({
         closeSearch();
 
         router.push(
-            `/ movies ? search = ${ encodeURIComponent(query) } `
+            `/movies?search=${encodeURIComponent(query)}`
         );
     };
 
@@ -154,7 +152,6 @@ export const SearchBar = ({
             ref={searchRef}
             className="relative"
         >
-
             {/* Search box */}
 
             <div
@@ -172,7 +169,6 @@ export const SearchBar = ({
                     focus-within:border-[#14c78b]/50
                 "
             >
-
                 <Search
                     size={19}
                     className="text-gray-400 shrink-0"
@@ -181,9 +177,7 @@ export const SearchBar = ({
                 <input
                     autoFocus
                     value={search}
-                    onChange={(e) =>
-                        setSearch(e.target.value)
-                    }
+                    onChange={(e) => setSearch(e.target.value)}
                     placeholder="جستجوی فیلم..."
                     className="
                         w-full
@@ -222,7 +216,6 @@ export const SearchBar = ({
                 >
                     <X size={18} />
                 </button>
-
             </div>
 
             {/* Results */}
@@ -243,9 +236,7 @@ export const SearchBar = ({
                         z-[9999]
                     "
                 >
-
                     {loading ? (
-
                         <div
                             className="
                                 px-5
@@ -257,9 +248,7 @@ export const SearchBar = ({
                         >
                             در حال جستجو...
                         </div>
-
                     ) : movies.length === 0 ? (
-
                         <div
                             className="
                                 px-5
@@ -271,21 +260,16 @@ export const SearchBar = ({
                         >
                             فیلمی پیدا نشد
                         </div>
-
                     ) : (
-
                         <div>
-
                             {/* Movies */}
 
                             <div className="p-2">
-
                                 {movies.map((movie) => {
-
                                     const posterUrl =
                                         movie.poster?.startsWith("http")
                                             ? movie.poster
-                                            : `${ API_URL }${ movie.poster } `;
+                                            : `https://alanbin.com${movie.poster}`;
 
                                     return (
                                         <button
@@ -306,7 +290,6 @@ export const SearchBar = ({
                                                 cursor-pointer
                                             "
                                         >
-
                                             {/* Poster */}
 
                                             <img
@@ -324,7 +307,6 @@ export const SearchBar = ({
                                             {/* Info */}
 
                                             <div className="min-w-0 flex-1">
-
                                                 <p
                                                     className="
                                                         text-sm
@@ -346,7 +328,6 @@ export const SearchBar = ({
                                                         text-gray-500
                                                     "
                                                 >
-
                                                     {movie.year && (
                                                         <span>
                                                             {movie.year}
@@ -355,9 +336,7 @@ export const SearchBar = ({
 
                                                     {movie.rating != null && (
                                                         <>
-                                                            <span>
-                                                                •
-                                                            </span>
+                                                            <span>•</span>
 
                                                             <span
                                                                 className="
@@ -375,15 +354,11 @@ export const SearchBar = ({
                                                             </span>
                                                         </>
                                                     )}
-
                                                 </div>
-
                                             </div>
-
                                         </button>
                                     );
                                 })}
-
                             </div>
 
                             {/* View all */}
@@ -405,15 +380,10 @@ export const SearchBar = ({
                             >
                                 مشاهده همه نتایج
                             </button>
-
                         </div>
-
                     )}
-
                 </div>
             )}
-
         </div>
     );
 };
-
