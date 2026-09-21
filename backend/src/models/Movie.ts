@@ -15,7 +15,7 @@ const movieSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-
+  heroImage: String,
   rating: { type: Number, min: 0, max: 10 },
 
   topWeek: { type: Boolean, default: false },
@@ -28,7 +28,7 @@ const movieSchema = new mongoose.Schema({
 
   duration: Number,
 
-  
+
 
 });
 
