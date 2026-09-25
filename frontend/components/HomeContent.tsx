@@ -220,24 +220,16 @@ export const HomeContent = () => {
     }
 
     return (<>
-        <section className="relative pb-[340px]">
+        <section className="relative">
             {/* Hero */}
             <HeroSlider
                 movies={topWeekMovies.slice(0, 5)}
                 onMovieClick={handleMovieClick}
             />
 
-            {/* برتر هفته روی پایین Hero */}
+            {/* برتر هفته */}
             {topWeekMovies.length > 0 && (
-                <div
-                    className="
-                        absolute
-                        left-0
-                        right-0
-                        bottom-[-40px]
-                        z-20
-                    "
-                >
+                <div className="relative z-20 -mt-[170px]">
                     <div className="mx-auto max-w-[1650px] px-5">
                         <div className="mb-4 flex items-center justify-between">
                             <h2 className="text-2xl font-bold text-white">
@@ -247,23 +239,17 @@ export const HomeContent = () => {
                             <Link
                                 href="/movies?topWeek=true"
                                 className="
-                                    text-sm
-                                    text-gray-400
-                                    transition
-                                    hover:text-[#14c78b]
-                                "
+                            text-sm
+                            text-gray-400
+                            transition
+                            hover:text-[#14c78b]
+                        "
                             >
                                 مشاهده همه
                             </Link>
                         </div>
 
-                        <div
-                            className="
-                                flex
-                                gap-5
-                                overflow-hidden
-                            "
-                        >
+                        <div className="flex gap-5 overflow-hidden">
                             {topWeekMovies.map((movie) => (
                                 <div
                                     key={movie._id}
@@ -283,7 +269,7 @@ export const HomeContent = () => {
             )}
         </section>
 
-        <div className="space-y-14">
+        <div className="space-y-14 pt-10">
 
             {/* جدیدترین فیلم‌ها */}
             {newMovies.length > 0 && (
