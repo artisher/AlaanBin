@@ -1707,15 +1707,76 @@ app.get(
                     entry.name
                 );
 
-                const files = await fs.promises.readdir(
-                    seriesPath
-                );
+                const files = await fs.promises.readdir(seriesPath);
 
-                const videos = files.filter((file) =>
+                const videoFiles = files.filter((file) =>
                     [".mp4", ".mkv"].includes(
                         path.extname(file).toLowerCase()
                     )
                 );
+
+                /*
+                 * گروه‌بندی MP4 و MKV بر اساس basename
+                 *
+                 * مثال:
+                 *
+                 * Yaghi.S01E01.mkv
+                 * Yaghi.S01E01.mp4
+                 *
+                 * ↓
+                 *
+                 * Yaghi.S01E01
+                 */
+                const groupedVideos = new Map<
+                    string,
+                    {
+                        mp4?: string;
+                        mkv?: string;
+                    }
+                >();
+
+                for (const filename of videoFiles) {
+                    const ext = path
+                        .extname(filename)
+                        .toLowerCase();
+
+                    const baseName = path.basename(
+                        filename,
+                        path.extname(filename)
+                    );
+
+                    const key = baseName.toLowerCase();
+
+                    const existing = groupedVideos.get(key);
+
+                    if (!existing) {
+                        groupedVideos.set(key, {
+                            [ext === ".mp4" ? "mp4" : "mkv"]:
+                                filename,
+                        });
+                    } else {
+                        if (ext === ".mp4") {
+                            existing.mp4 = filename;
+                        }
+
+                        if (ext === ".mkv") {
+                            existing.mkv = filename;
+                        }
+                    }
+                }
+
+                /*
+                 * اگر MP4 وجود داشته باشد:
+                 * فقط MP4 را نمایش بده.
+                 *
+                 * اگر MP4 وجود نداشته باشد:
+                 * MKV را نمایش بده.
+                 */
+                const videos = Array.from(
+                    groupedVideos.values()
+                ).map((video) => {
+                    return video.mp4 || video.mkv!;
+                });
 
                 series.push({
                     name: entry.name,
@@ -1743,7 +1804,6 @@ app.get(
         }
     }
 );
-
 
 
 
