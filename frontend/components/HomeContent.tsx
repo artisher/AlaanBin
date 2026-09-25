@@ -220,7 +220,7 @@ export const HomeContent = () => {
     }
 
     return (<>
-        <section className="relative pb-[170px]">
+        <section className="relative pb-[340px]">
             {/* Hero */}
             <HeroSlider
                 movies={topWeekMovies.slice(0, 5)}
@@ -234,7 +234,7 @@ export const HomeContent = () => {
                         absolute
                         left-0
                         right-0
-                        bottom-[-110px]
+                        bottom-[-40px]
                         z-20
                     "
                 >
@@ -305,8 +305,8 @@ export const HomeContent = () => {
                 </ContentRow>
             )}
 
-           
-            
+
+
             {/* کمدی */}
             {comedyMovies.length > 0 && (
                 <ContentRow
