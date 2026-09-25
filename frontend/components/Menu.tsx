@@ -116,7 +116,24 @@ export const Menu = () => {
                     </Link>
 
                     {/* Search */}
-
+                    <Link
+                        href="/live"
+                        className="
+                            flex
+                            items-center
+                            gap-2
+                            px-4
+                            py-2
+                            rounded-xl
+                            text-gray-300
+                            hover:text-[#14c78b]
+                            hover:bg-[#14c78b]/10
+                            transition
+                        "
+                    >
+                        <Film size={18} />
+                        پخش زنده
+                    </Link>
                     <button
                         onClick={() => setSearchOpen(true)}
                         className="
