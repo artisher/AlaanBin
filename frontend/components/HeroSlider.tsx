@@ -76,7 +76,7 @@ export const HeroSlider = ({
                             <div
                                 className="
         absolute
-        bottom-20
+        bottom-46
         right-8
         z-10
         flex
