@@ -220,10 +220,69 @@ export const HomeContent = () => {
     }
 
     return (<>
-        <HeroSlider
-            movies={topWeekMovies.slice(0, 5)}
-            onMovieClick={handleMovieClick}
-        />
+        <section className="relative pb-[170px]">
+            {/* Hero */}
+            <HeroSlider
+                movies={topWeekMovies.slice(0, 5)}
+                onMovieClick={handleMovieClick}
+            />
+
+            {/* برتر هفته روی پایین Hero */}
+            {topWeekMovies.length > 0 && (
+                <div
+                    className="
+                        absolute
+                        left-0
+                        right-0
+                        bottom-[-110px]
+                        z-20
+                    "
+                >
+                    <div className="mx-auto max-w-[1650px] px-5">
+                        <div className="mb-4 flex items-center justify-between">
+                            <h2 className="text-2xl font-bold text-white">
+                                برتر هفته
+                            </h2>
+
+                            <Link
+                                href="/movies?topWeek=true"
+                                className="
+                                    text-sm
+                                    text-gray-400
+                                    transition
+                                    hover:text-[#14c78b]
+                                "
+                            >
+                                مشاهده همه
+                            </Link>
+                        </div>
+
+                        <div
+                            className="
+                                flex
+                                gap-5
+                                overflow-hidden
+                            "
+                        >
+                            {topWeekMovies.map((movie) => (
+                                <div
+                                    key={movie._id}
+                                    className="shrink-0"
+                                >
+                                    <MovieCard
+                                        movie={movie}
+                                        onClick={() =>
+                                            handleMovieClick(movie)
+                                        }
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </section>
+
         <div className="space-y-14">
 
             {/* جدیدترین فیلم‌ها */}
@@ -246,17 +305,8 @@ export const HomeContent = () => {
                 </ContentRow>
             )}
 
-            {/* برتر هفته */}
-            {(topWeekMovies.length > 0 ||
-                topWeekSeries.length > 0) && (
-                    <ContentRow
-                        title="برتر هفته"
-                        href="/movies?topWeek=true"
-                    >
-                        {renderMixedTopWeek()}
-                    </ContentRow>
-                )}
-
+           
+            
             {/* کمدی */}
             {comedyMovies.length > 0 && (
                 <ContentRow
