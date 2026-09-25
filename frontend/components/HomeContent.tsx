@@ -229,7 +229,7 @@ export const HomeContent = () => {
 
             {/* برتر هفته */}
             {topWeekMovies.length > 0 && (
-                <div className="relative z-20 -mt-[170px]">
+                <div className="relative z-20 -mt-[155px]">
                     <div className="mx-auto max-w-[1650px] px-5">
                         <div className="mb-4 flex items-center justify-between">
                             <h2 className="text-2xl font-bold text-white">
