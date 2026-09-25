@@ -1960,6 +1960,7 @@ app.get('/api/movies', async (req, res) => {
     };
     try {
         // ---------- Filter ----------
+        // ---------- Filter ----------
         const query: any = {};
 
         if (req.query.genre) {
@@ -1971,11 +1972,11 @@ app.get('/api/movies', async (req, res) => {
             const product = String(req.query.product);
             query.product = productMap[product] || product;
         }
-        if (req.query.rating) {
-            query.rating = {
-                $gte: Number(req.query.rating)
-            };
+
+        if (req.query.topWeek) {
+            query.topWeek = req.query.topWeek === "true";
         }
+
         if (req.query.rating) {
             query.rating = {
                 $gte: Number(req.query.rating)
