@@ -97,10 +97,10 @@ export const HeroSlider = ({
             tracking-tight
             text-white
             drop-shadow-[0_4px_18px_rgba(0,0,0,0.8)]
-            sm:text-5xl
-            md:text-6xl
-            lg:text-7xl
-        "
+             sm:text-5xl
+             md:text-6xl
+             lg:text-7xl
+         "
                                 >
                                     {movie.title}
                                 </h1>
@@ -108,15 +108,15 @@ export const HeroSlider = ({
                                 {/* Movie Metadata */}
                                 <div
                                     className="
-            flex
-            items-center
-            gap-4
-            text-base
-            font-medium
-            text-gray-200
-            drop-shadow-[0_3px_10px_rgba(0,0,0,0.8)]
-            md:text-lg
-        "
+             flex
+             items-center
+             gap-4
+             text-base
+             font-medium
+             text-gray-200
+             drop-shadow-[0_3px_10px_rgba(0,0,0,0.8)]
+             md:text-lg
+         "
                                 >
                                     {/* Year */}
                                     <span>
@@ -173,6 +173,7 @@ export const HeroSlider = ({
             hover:-translate-y-1
             hover:bg-[#18d995]
             hover:shadow-[0_12px_35px_rgba(20,199,139,0.4)]
+            cursor-pointer
             md:px-8
             md:py-4
             md:text-base

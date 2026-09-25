@@ -34,6 +34,7 @@ export default function SeriesPage() {
 
                 setSeries(data.series);
                 setEpisodes(data.episodes || []);
+                console.log(data);
 
 
             } catch (err: any) {
@@ -111,7 +112,7 @@ export default function SeriesPage() {
                 {/* Episodes */}
                 <section className="mt-8">
                     <h2 className="mb-4 text-xl font-bold">
-                        قسمت‌ها
+                        تمامی قسمت ها
                     </h2>
 
                     <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
