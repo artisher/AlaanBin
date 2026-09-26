@@ -86,7 +86,7 @@ export const EditSeriesModal = ({
             const posterUrl =
                 series.poster.startsWith("http")
                     ? series.poster
-                    : `${ process.env.NEXT_PUBLIC_API_URL }${ series.poster } `;
+                    : `${process.env.NEXT_PUBLIC_API_URL}${series.poster}`;
 
             setPosterPreview(posterUrl);
         } else {
@@ -230,7 +230,7 @@ export const EditSeriesModal = ({
 
                 const uploadRes =
                     await fetch(
-                        `${ process.env.NEXT_PUBLIC_API_URL } /api/admin / storage / upload - poster`,
+                        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/storage/upload-poster`,
                         {
                             method: "POST",
                             credentials: "include",
@@ -257,7 +257,7 @@ export const EditSeriesModal = ({
             // =========================
 
             const res = await fetch(
-                `${ process.env.NEXT_PUBLIC_API_URL } /api/admin / series / ${ series._id } `,
+                `${process.env.NEXT_PUBLIC_API_URL}/api/admin/series/${series._id}`,
                 {
                     method: "PUT",
                     credentials: "include",
