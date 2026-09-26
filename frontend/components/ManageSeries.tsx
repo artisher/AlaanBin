@@ -5,6 +5,7 @@ import type { Series } from "@/types/Series";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { CreateSeriesModal } from "./CreateSeriesModal";
+import { EditSeriesModal } from "./EditSeriesModal";
 
 interface StorageSeries {
     name: string;
@@ -24,7 +25,8 @@ export const ManageSeries = ({
     );
 
     const [addSeries, setAddSeries] = useState(false);
-
+    const [editingSeries, setEditingSeries] =
+        useState<Series | null>(null);
     const [storageSeries, setStorageSeries] = useState<
         StorageSeries[]
     >([]);
@@ -141,7 +143,17 @@ export const ManageSeries = ({
         setSeries((prev) => [newSeries, ...prev]);
         setAddSeries(false);
     };
+    const handleUpdateSeries = (updatedSeries: Series) => {
+        setSeries((prev) =>
+            prev.map((item) =>
+                item._id === updatedSeries._id
+                    ? updatedSeries
+                    : item
+            )
+        );
 
+        setEditingSeries(null);
+    };
     const handleDelete = async (id: string) => {
         if (
             !confirm(
@@ -323,8 +335,8 @@ export const ManageSeries = ({
                                                                     {isImporting
                                                                         ? "در حال افزودن..."
                                                                         : isImported
-                                                                          ? "✓ اضافه شده"
-                                                                          : "＋ افزودن قسمت"}
+                                                                            ? "✓ اضافه شده"
+                                                                            : "＋ افزودن قسمت"}
                                                                 </button>
                                                             ) : (
                                                                 <span className="text-xs text-gray-500">
@@ -382,14 +394,25 @@ export const ManageSeries = ({
                                     مدیریت قسمت‌ها
                                 </button>
 
-                                <button
-                                    onClick={() =>
-                                        handleDelete(item._id)
-                                    }
-                                    className="text-sm font-semibold text-red-400 transition hover:text-red-300"
-                                >
-                                    حذف
-                                </button>
+                                <div className="flex items-center gap-4">
+                                    <button
+                                        onClick={() =>
+                                            setEditingSeries(item)
+                                        }
+                                        className="text-sm font-semibold text-blue-400 transition hover:text-blue-300"
+                                    >
+                                        ویرایش
+                                    </button>
+
+                                    <button
+                                        onClick={() =>
+                                            handleDelete(item._id)
+                                        }
+                                        className="text-sm font-semibold text-red-400 transition hover:text-red-300"
+                                    >
+                                        حذف
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -400,6 +423,12 @@ export const ManageSeries = ({
                 isOpen={addSeries}
                 onClose={handleCloseModal}
                 onSave={handleSaveSeries}
+            />
+            <EditSeriesModal
+                isOpen={!!editingSeries}
+                series={editingSeries}
+                onClose={() => setEditingSeries(null)}
+                onSave={handleUpdateSeries}
             />
         </div>
     );

@@ -2567,7 +2567,98 @@ app.post(
         }
     }
 );
+// edit series
+app.put(
+    "/api/admin/series/:id",
+    checkSubscription,
+    adminMiddleware,
+    async (req, res) => {
+        try {
+            const seriesId = String(req.params.id);
 
+            if (!mongoose.Types.ObjectId.isValid(seriesId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "شناسه سریال نامعتبر است",
+                });
+            }
+
+            const series = await Series.findById(seriesId);
+
+            if (!series) {
+                return res.status(404).json({
+                    success: false,
+                    message: "سریال پیدا نشد",
+                });
+            }
+
+            const {
+                title,
+                aliases,
+                description,
+                poster,
+                rating,
+                topWeek,
+                genre,
+                year,
+                product,
+            } = req.body;
+
+            if (title !== undefined) {
+                series.title = title;
+            }
+
+            if (aliases !== undefined) {
+                series.aliases = aliases;
+            }
+
+            if (description !== undefined) {
+                series.description = description;
+            }
+
+            if (poster !== undefined) {
+                series.poster = poster;
+            }
+
+            if (rating !== undefined) {
+                series.rating = rating;
+            }
+
+            if (topWeek !== undefined) {
+                series.topWeek = topWeek;
+            }
+
+            if (genre !== undefined) {
+                series.genre = genre;
+            }
+
+            if (year !== undefined) {
+                series.year = year;
+            }
+
+            if (product !== undefined) {
+                series.product = product;
+            }
+
+            const updatedSeries = await series.save();
+
+            res.status(200).json({
+                success: true,
+                message: "سریال با موفقیت ویرایش شد",
+                series: updatedSeries,
+            });
+        } catch (err: any) {
+            console.error("ADMIN UPDATE SERIES ERROR:", err);
+
+            res.status(500).json({
+                success: false,
+                message:
+                    err.message ||
+                    "خطا در ویرایش سریال",
+            });
+        }
+    }
+);
 app.get(
     "/api/series/:id",
     checkSubscription,
