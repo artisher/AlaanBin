@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import {
+    Search,
+    SlidersHorizontal,
+    X,
+    ChevronLeft,
+    ChevronRight,
+    Film,
+} from "lucide-react";
 
 import type { Movie } from "@/types/movies";
 import { MovieCard } from "@/components/MovieCard";
@@ -100,13 +107,11 @@ export default function MoviesPage() {
 
                 setMovies(data.movies || []);
                 setTotalPages(data.totalPages || 1);
-
             } catch (error) {
                 console.error("Error fetching movies:", error);
 
                 setMovies([]);
                 setTotalPages(1);
-
             } finally {
                 setLoading(false);
             }
@@ -150,438 +155,676 @@ export default function MoviesPage() {
         sort !== "newest";
 
     return (
-        <main className="min-h-screen bg-[#0B0F14] text-white">
+        <main
+            dir="rtl"
+            className="
+                relative
+                min-h-screen
+                overflow-hidden
+                bg-[#0B0F14]
+                text-white
+            "
+        >
+            {/* ================= Background Glow ================= */}
+
+            <div
+                className="
+                    pointer-events-none
+                    absolute
+                    -top-40
+                    right-1/4
+                    h-[420px]
+                    w-[420px]
+                    rounded-full
+                    bg-[#14c78b]/[0.035]
+                    blur-[120px]
+                "
+            />
+
+            <div
+                className="
+                    pointer-events-none
+                    absolute
+                    top-[500px]
+                    -left-40
+                    h-[350px]
+                    w-[350px]
+                    rounded-full
+                    bg-[#14c78b]/[0.025]
+                    blur-[110px]
+                "
+            />
 
             {/* ================= Header ================= */}
 
-            <section className="
-                max-w-[1650px]
-                mx-auto
-                px-5
-                pt-10
-                pb-6
-            ">
-
-                <div className="
-                    flex
-                    flex-col
-                    md:flex-row
-                    md:items-end
-                    md:justify-between
-                    gap-5
-                ">
-
+            <section
+                className="
+                    relative
+                    mx-auto
+                    max-w-[1650px]
+                    px-5
+                    pb-8
+                    pt-10
+                    md:pb-10
+                    md:pt-14
+                "
+            >
+                <div className="flex items-end justify-between gap-6">
                     <div>
+                        {/* Small label */}
 
-                        <h1 className="
-                            text-3xl
-                            md:text-4xl
-                            font-bold
-                        ">
+                        <div
+                            className="
+                                mb-4
+                                flex
+                                items-center
+                                gap-2
+                                text-xs
+                                font-bold
+                                tracking-widest
+                                text-[#14c78b]
+                            "
+                        >
+                            <span
+                                className="
+                                    h-1.5
+                                    w-1.5
+                                    rounded-full
+                                    bg-[#14c78b]
+                                    shadow-[0_0_10px_rgba(20,199,139,0.8)]
+                                "
+                            />
+
+                            ALANBIN
+                        </div>
+
+                        <h1
+                            className="
+                                text-4xl
+                                font-black
+                                tracking-tight
+                                text-white
+                                sm:text-5xl
+                                md:text-6xl
+                            "
+                        >
                             فیلم‌ها
                         </h1>
 
-                        <p className="
-                            mt-2
-                            text-sm
-                            md:text-base
-                            text-gray-400
-                        ">
-                            فیلم مورد علاقه‌ات رو پیدا کن
+                        <p
+                            className="
+                                mt-3
+                                max-w-xl
+                                text-sm
+                                leading-7
+                                text-gray-500
+                                md:text-base
+                            "
+                        >
+                            فیلم مورد علاقه‌ات رو پیدا کن و
+                            آماده تماشا شو.
                         </p>
-
                     </div>
 
+                    {/* Decorative icon */}
+
+                    <div
+                        className="
+                            hidden
+                            h-16
+                            w-16
+                            items-center
+                            justify-center
+                            rounded-2xl
+                            border
+                            border-white/[0.06]
+                            bg-white/[0.025]
+                            text-white/20
+                            md:flex
+                        "
+                    >
+                        <Film size={28} />
+                    </div>
                 </div>
 
-            </section>
+                {/* Bottom accent */}
 
+                <div
+                    className="
+                        mt-8
+                        h-px
+                        w-full
+                        bg-gradient-to-l
+                        from-[#14c78b]/40
+                        via-white/[0.06]
+                        to-transparent
+                    "
+                />
+            </section>
 
             {/* ================= Filters ================= */}
 
-            <section className="
-                max-w-[1650px]
-                mx-auto
-                px-5
-                pb-8
-            ">
-
-                {/* Search + Mobile Filter Button */}
-
-                <div className="
-                    flex
-                    flex-col
-                    md:flex-row
-                    gap-3
-                ">
-
-                    {/* Search */}
-
-                    <div className="
-                        flex
-                        items-center
-                        gap-2
-                        flex-1
-                        h-11
-                        px-4
-                        rounded-xl
-                        bg-[#111820]
+            <section
+                className="
+                    relative
+                    mx-auto
+                    max-w-[1650px]
+                    px-5
+                    pb-10
+                "
+            >
+                <div
+                    className="
+                        rounded-2xl
                         border
-                        border-white/10
-                        focus-within:border-[#14c78b]/50
-                    ">
+                        border-white/[0.07]
+                        bg-[#111820]/80
+                        p-3
+                        shadow-[0_20px_60px_rgba(0,0,0,0.2)]
+                        backdrop-blur-xl
+                        md:p-4
+                    "
+                >
+                    {/* Search + Mobile Filter */}
 
-                        <Search
-                            size={18}
-                            className="text-gray-500 shrink-0"
-                        />
-
-                        <input
-                            value={search}
-                            onChange={(e) =>
-                                setSearch(e.target.value)
-                            }
-                            placeholder="جستجوی فیلم..."
-                            className="
-                                w-full
-                                bg-transparent
-                                outline-none
-                                text-sm
-                                text-white
-                                placeholder:text-gray-500
-                            "
-                        />
-
-                        {search && (
-                            <button
-                                onClick={() => setSearch("")}
-                                className="
-                                    text-gray-500
-                                    hover:text-white
-                                    cursor-pointer
-                                "
-                            >
-                                <X size={17} />
-                            </button>
-                        )}
-
-                    </div>
-
-
-                    {/* Mobile filter button */}
-
-                    <button
-                        onClick={() =>
-                            setFiltersOpen((prev) => !prev)
-                        }
+                    <div
                         className="
-                            md:hidden
-                            h-11
-                            px-4
                             flex
-                            items-center
-                            justify-center
-                            gap-2
-                            rounded-xl
-                            bg-[#111820]
-                            border
-                            border-white/10
-                            text-gray-300
-                            hover:text-[#14c78b]
-                            transition
-                            cursor-pointer
+                            flex-col
+                            gap-3
+                            md:flex-row
                         "
                     >
-                        <SlidersHorizontal size={18} />
-                        فیلترها
-                    </button>
+                        {/* Search */}
 
-                </div>
-
-
-                {/* Filters */}
-
-                <div className={`
-                    mt-4
-                    flex
-                    flex-wrap
-                    gap-3
-
-                    ${filtersOpen ? "flex" : "hidden md:flex"}
-                `}>
-
-                    {/* Genre */}
-
-                    <select
-                        value={genre}
-                        onChange={(e) =>
-                            setGenre(e.target.value)
-                        }
-                        className="
-                            h-10
-                            px-3
-                            rounded-xl
-                            bg-[#111820]
-                            border
-                            border-white/10
-                            text-sm
-                            text-gray-300
-                            outline-none
-                            focus:border-[#14c78b]/50
-                            cursor-pointer
-                        "
-                    >
-                        {GENRES.map((item) => (
-                            <option
-                                key={item}
-                                value={item}
-                                className="bg-[#111820]"
-                            >
-                                {item === "همه"
-                                    ? "همه ژانرها"
-                                    : item}
-                            </option>
-                        ))}
-                    </select>
-
-
-                    {/* Product */}
-
-                    <select
-                        value={product}
-                        onChange={(e) =>
-                            setProduct(e.target.value)
-                        }
-                        className="
-                            h-10
-                            px-3
-                            rounded-xl
-                            bg-[#111820]
-                            border
-                            border-white/10
-                            text-sm
-                            text-gray-300
-                            outline-none
-                            focus:border-[#14c78b]/50
-                            cursor-pointer
-                        "
-                    >
-                        {PRODUCTS.map((item) => (
-                            <option
-                                key={item.value}
-                                value={item.value}
-                                className="bg-[#111820]"
-                            >
-                                {item.label}
-                            </option>
-                        ))}
-                    </select>
-
-
-                    {/* Rating */}
-
-                    <select
-                        value={rating}
-                        onChange={(e) =>
-                            setRating(e.target.value)
-                        }
-                        className="
-                            h-10
-                            px-3
-                            rounded-xl
-                            bg-[#111820]
-                            border
-                            border-white/10
-                            text-sm
-                            text-gray-300
-                            outline-none
-                            focus:border-[#14c78b]/50
-                            cursor-pointer
-                        "
-                    >
-                        {RATINGS.map((item) => (
-                            <option
-                                key={item.value}
-                                value={item.value}
-                                className="bg-[#111820]"
-                            >
-                                {item.label}
-                            </option>
-                        ))}
-                    </select>
-
-
-                    {/* Sort */}
-
-                    <select
-                        value={sort}
-                        onChange={(e) =>
-                            setSort(e.target.value)
-                        }
-                        className="
-                            h-10
-                            px-3
-                            rounded-xl
-                            bg-[#111820]
-                            border
-                            border-white/10
-                            text-sm
-                            text-gray-300
-                            outline-none
-                            focus:border-[#14c78b]/50
-                            cursor-pointer
-                        "
-                    >
-                        {SORT_OPTIONS.map((item) => (
-                            <option
-                                key={item.value}
-                                value={item.value}
-                                className="bg-[#111820]"
-                            >
-                                {item.label}
-                            </option>
-                        ))}
-                    </select>
-
-
-                    {/* Clear */}
-
-                    {hasFilters && (
-                        <button
-                            onClick={clearFilters}
+                        <div
                             className="
-                                h-10
-                                px-4
+                                group
+                                flex
+                                h-12
+                                flex-1
+                                items-center
+                                gap-3
                                 rounded-xl
                                 border
-                                border-white/10
-                                text-sm
-                                text-gray-400
-                                hover:text-red-400
-                                hover:border-red-400/30
-                                transition
-                                cursor-pointer
+                                border-white/[0.07]
+                                bg-[#0B0F14]/70
+                                px-4
+                                transition-all
+                                duration-300
+                                focus-within:border-[#14c78b]/40
+                                focus-within:shadow-[0_0_25px_rgba(20,199,139,0.06)]
                             "
                         >
-                            پاک کردن فیلترها
+                            <Search
+                                size={19}
+                                className="
+                                    shrink-0
+                                    text-gray-500
+                                    transition
+                                    group-focus-within:text-[#14c78b]
+                                "
+                            />
+
+                            <input
+                                value={search}
+                                onChange={(e) =>
+                                    setSearch(e.target.value)
+                                }
+                                placeholder="جستجوی فیلم..."
+                                className="
+                                    w-full
+                                    bg-transparent
+                                    text-sm
+                                    text-white
+                                    outline-none
+                                    placeholder:text-gray-600
+                                "
+                            />
+
+                            {search && (
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setSearch("")
+                                    }
+                                    className="
+                                        flex
+                                        h-7
+                                        w-7
+                                        shrink-0
+                                        items-center
+                                        justify-center
+                                        rounded-lg
+                                        text-gray-500
+                                        transition
+                                        hover:bg-white/5
+                                        hover:text-white
+                                    "
+                                >
+                                    <X size={16} />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Mobile filter button */}
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setFiltersOpen((prev) => !prev)
+                            }
+                            className="
+                                flex
+                                h-12
+                                items-center
+                                justify-center
+                                gap-2
+                                rounded-xl
+                                border
+                                border-white/[0.07]
+                                bg-[#0B0F14]/70
+                                px-5
+                                text-sm
+                                font-medium
+                                text-gray-300
+                                transition-all
+                                hover:border-[#14c78b]/30
+                                hover:text-[#14c78b]
+                                md:hidden
+                            "
+                        >
+                            <SlidersHorizontal size={18} />
+
+                            فیلترها
+
+                            <span
+                                className="
+                                    h-1.5
+                                    w-1.5
+                                    rounded-full
+                                    bg-[#14c78b]
+                                "
+                            />
                         </button>
-                    )}
+                    </div>
 
+                    {/* Filters */}
+
+                    <div
+                        className={`
+                            mt-3
+                            flex-wrap
+                            gap-2.5
+                            border-t
+                            border-white/[0.05]
+                            pt-3
+                            ${filtersOpen
+                                ? "flex"
+                                : "hidden md:flex"
+                            }
+                        `}
+                    >
+                        {/* Genre */}
+
+                        <select
+                            value={genre}
+                            onChange={(e) =>
+                                setGenre(e.target.value)
+                            }
+                            className="
+                                h-10
+                                min-w-[125px]
+                                cursor-pointer
+                                rounded-xl
+                                border
+                                border-white/[0.07]
+                                bg-[#0B0F14]
+                                px-3
+                                text-sm
+                                text-gray-300
+                                outline-none
+                                transition
+                                hover:border-white/15
+                                focus:border-[#14c78b]/40
+                            "
+                        >
+                            {GENRES.map((item) => (
+                                <option
+                                    key={item}
+                                    value={item}
+                                    className="bg-[#111820]"
+                                >
+                                    {item === "همه"
+                                        ? "همه ژانرها"
+                                        : item}
+                                </option>
+                            ))}
+                        </select>
+
+                        {/* Product */}
+
+                        <select
+                            value={product}
+                            onChange={(e) =>
+                                setProduct(e.target.value)
+                            }
+                            className="
+                                h-10
+                                min-w-[110px]
+                                cursor-pointer
+                                rounded-xl
+                                border
+                                border-white/[0.07]
+                                bg-[#0B0F14]
+                                px-3
+                                text-sm
+                                text-gray-300
+                                outline-none
+                                transition
+                                hover:border-white/15
+                                focus:border-[#14c78b]/40
+                            "
+                        >
+                            {PRODUCTS.map((item) => (
+                                <option
+                                    key={item.value}
+                                    value={item.value}
+                                    className="bg-[#111820]"
+                                >
+                                    {item.label}
+                                </option>
+                            ))}
+                        </select>
+
+                        {/* Rating */}
+
+                        <select
+                            value={rating}
+                            onChange={(e) =>
+                                setRating(e.target.value)
+                            }
+                            className="
+                                h-10
+                                min-w-[125px]
+                                cursor-pointer
+                                rounded-xl
+                                border
+                                border-white/[0.07]
+                                bg-[#0B0F14]
+                                px-3
+                                text-sm
+                                text-gray-300
+                                outline-none
+                                transition
+                                hover:border-white/15
+                                focus:border-[#14c78b]/40
+                            "
+                        >
+                            {RATINGS.map((item) => (
+                                <option
+                                    key={item.value}
+                                    value={item.value}
+                                    className="bg-[#111820]"
+                                >
+                                    {item.label}
+                                </option>
+                            ))}
+                        </select>
+
+                        {/* Sort */}
+
+                        <select
+                            value={sort}
+                            onChange={(e) =>
+                                setSort(e.target.value)
+                            }
+                            className="
+                                h-10
+                                min-w-[130px]
+                                cursor-pointer
+                                rounded-xl
+                                border
+                                border-white/[0.07]
+                                bg-[#0B0F14]
+                                px-3
+                                text-sm
+                                text-gray-300
+                                outline-none
+                                transition
+                                hover:border-white/15
+                                focus:border-[#14c78b]/40
+                            "
+                        >
+                            {SORT_OPTIONS.map((item) => (
+                                <option
+                                    key={item.value}
+                                    value={item.value}
+                                    className="bg-[#111820]"
+                                >
+                                    {item.label}
+                                </option>
+                            ))}
+                        </select>
+
+                        {/* Clear */}
+
+                        {hasFilters && (
+                            <button
+                                type="button"
+                                onClick={clearFilters}
+                                className="
+                                    flex
+                                    h-10
+                                    items-center
+                                    gap-2
+                                    rounded-xl
+                                    border
+                                    border-red-400/10
+                                    px-4
+                                    text-sm
+                                    text-gray-500
+                                    transition-all
+                                    hover:border-red-400/25
+                                    hover:bg-red-400/[0.04]
+                                    hover:text-red-400
+                                "
+                            >
+                                <X size={15} />
+
+                                پاک کردن
+                            </button>
+                        )}
+                    </div>
                 </div>
-
             </section>
-
 
             {/* ================= Movies ================= */}
 
-            <section className="
-                max-w-[1650px]
-                mx-auto
-                px-5
-                pb-16
-            ">
-
+            <section
+                className="
+                    relative
+                    mx-auto
+                    max-w-[1650px]
+                    px-5
+                    pb-20
+                "
+            >
                 {loading ? (
-
-                    <div className="
-                        flex
-                        flex-wrap
-                        justify-center
-                        xl:justify-start
-                        gap-x-5
-                        gap-y-10
-                    ">
-
-                        {Array.from({ length: 12 }).map(
+                    <div
+                        className="
+                            grid
+                            grid-cols-2
+                            justify-items-center
+                            gap-x-4
+                            gap-y-10
+                            sm:grid-cols-3
+                            md:grid-cols-4
+                            lg:grid-cols-5
+                            xl:grid-cols-6
+                            2xl:grid-cols-7
+                        "
+                    >
+                        {Array.from({ length: 14 }).map(
                             (_, index) => (
                                 <div
                                     key={index}
                                     className="
-                                        w-[155px]
-                                        sm:w-[170px]
-                                        md:w-[185px]
-                                        lg:w-[205px]
-                                        xl:w-[215px]
-
-                                        h-[250px]
-                                        sm:h-[275px]
-                                        md:h-[300px]
-                                        lg:h-[330px]
-                                        xl:h-[345px]
-
-                                        rounded-2xl
-                                        bg-[#111820]
-                                        animate-pulse
+                                        w-full
+                                        max-w-[215px]
                                     "
-                                />
+                                >
+                                    <div
+                                        className="
+                                            aspect-[2/3]
+                                            w-full
+                                            animate-pulse
+                                            rounded-2xl
+                                            bg-gradient-to-br
+                                            from-[#151d26]
+                                            via-[#111820]
+                                            to-[#0d1319]
+                                        "
+                                    />
+
+                                    <div
+                                        className="
+                                            mt-3
+                                            h-4
+                                            w-2/3
+                                            animate-pulse
+                                            rounded-full
+                                            bg-[#111820]
+                                        "
+                                    />
+
+                                    <div
+                                        className="
+                                            mt-2
+                                            h-3
+                                            w-1/3
+                                            animate-pulse
+                                            rounded-full
+                                            bg-[#111820]
+                                        "
+                                    />
+                                </div>
                             )
                         )}
-
                     </div>
-
                 ) : movies.length === 0 ? (
+                    <div
+                        className="
+                            flex
+                            min-h-[420px]
+                            flex-col
+                            items-center
+                            justify-center
+                            rounded-3xl
+                            border
+                            border-white/[0.05]
+                            bg-[#111820]/30
+                            text-center
+                        "
+                    >
+                        <div
+                            className="
+                                mb-5
+                                flex
+                                h-20
+                                w-20
+                                items-center
+                                justify-center
+                                rounded-2xl
+                                border
+                                border-white/[0.06]
+                                bg-white/[0.025]
+                                text-gray-600
+                            "
+                        >
+                            <Film size={34} />
+                        </div>
 
-                    <div className="
-                        min-h-[300px]
-                        flex
-                        flex-col
-                        items-center
-                        justify-center
-                        text-center
-                    ">
-
-                        <p className="text-gray-300">
+                        <p className="text-lg font-bold text-gray-300">
                             فیلمی پیدا نشد
                         </p>
 
-                        <p className="
-                            mt-2
-                            text-sm
-                            text-gray-500
-                        ">
+                        <p className="mt-2 text-sm text-gray-600">
                             فیلترها یا عبارت جستجو را تغییر بده.
                         </p>
 
+                        {hasFilters && (
+                            <button
+                                type="button"
+                                onClick={clearFilters}
+                                className="
+                                    mt-6
+                                    rounded-xl
+                                    bg-[#14c78b]
+                                    px-5
+                                    py-2.5
+                                    text-sm
+                                    font-bold
+                                    text-[#06110d]
+                                    transition
+                                    hover:bg-[#18d995]
+                                "
+                            >
+                                حذف فیلترها
+                            </button>
+                        )}
                     </div>
-
                 ) : (
-
-                    <div className="
-                        flex
-                        flex-wrap
-                        justify-center
-                        xl:justify-start
-                        gap-x-5
-                        gap-y-10
-                    ">
-
+                    <div
+                        className="
+                            grid
+                            grid-cols-2
+                            justify-items-center
+                            gap-x-4
+                            gap-y-10
+                            sm:grid-cols-3
+                            md:grid-cols-4
+                            lg:grid-cols-5
+                            xl:grid-cols-6
+                            2xl:grid-cols-7
+                            md:gap-x-5
+                            md:gap-y-12
+                        "
+                    >
                         {movies.map((movie) => (
-                            <MovieCard
+                            <div
                                 key={movie._id}
-                                movie={movie}
-                                onClick={() =>
-                                    router.push(
-                                        `/movies/${movie._id}`
-                                    )
-                                }
-                            />
+                                className="
+                                    w-full
+                                    max-w-[215px]
+                                "
+                            >
+                                <MovieCard
+                                    movie={movie}
+                                    onClick={() =>
+                                        router.push(
+                                            `/movies/${movie._id}`
+                                        )
+                                    }
+                                />
+                            </div>
                         ))}
-
                     </div>
-
                 )}
-
 
                 {/* ================= Pagination ================= */}
 
                 {!loading && totalPages > 1 && (
-                    <div className="
-                        flex
-                        items-center
-                        justify-center
-                        gap-3
-                        mt-14
-                    ">
+                    <div
+                        className="
+                            mt-16
+                            flex
+                            items-center
+                            justify-center
+                            gap-2
+                        "
+                    >
+                        {/* Previous */}
 
                         <button
                             disabled={page === 1}
@@ -589,33 +832,57 @@ export default function MoviesPage() {
                                 setPage((prev) => prev - 1)
                             }
                             className="
-                                px-4
-                                py-2
+                                flex
+                                h-11
+                                w-11
+                                items-center
+                                justify-center
                                 rounded-xl
-                                bg-[#111820]
                                 border
-                                border-white/10
-                                text-sm
-                                text-gray-300
-                                hover:border-[#14c78b]/40
+                                border-white/[0.07]
+                                bg-[#111820]
+                                text-gray-400
+                                transition-all
+                                hover:border-[#14c78b]/30
+                                hover:bg-[#14c78b]/[0.05]
                                 hover:text-[#14c78b]
-                                disabled:opacity-30
                                 disabled:cursor-not-allowed
-                                transition
-                                cursor-pointer
+                                disabled:opacity-25
                             "
+                            aria-label="صفحه قبلی"
                         >
-                            قبلی
+                            <ChevronRight size={19} />
                         </button>
 
-                        <span className="
-                            min-w-[70px]
-                            text-center
-                            text-sm
-                            text-gray-400
-                        ">
-                            {page} / {totalPages}
-                        </span>
+                        {/* Current page */}
+
+                        <div
+                            className="
+                                flex
+                                h-11
+                                min-w-[100px]
+                                items-center
+                                justify-center
+                                rounded-xl
+                                border
+                                border-[#14c78b]/20
+                                bg-[#14c78b]/[0.05]
+                                px-4
+                                text-sm
+                                font-bold
+                                text-[#14c78b]
+                            "
+                        >
+                            {page}
+                            <span className="mx-2 text-gray-600">
+                                /
+                            </span>
+                            <span className="text-gray-400">
+                                {totalPages}
+                            </span>
+                        </div>
+
+                        {/* Next */}
 
                         <button
                             disabled={page === totalPages}
@@ -623,30 +890,30 @@ export default function MoviesPage() {
                                 setPage((prev) => prev + 1)
                             }
                             className="
-                                px-4
-                                py-2
+                                flex
+                                h-11
+                                w-11
+                                items-center
+                                justify-center
                                 rounded-xl
-                                bg-[#111820]
                                 border
-                                border-white/10
-                                text-sm
-                                text-gray-300
-                                hover:border-[#14c78b]/40
+                                border-white/[0.07]
+                                bg-[#111820]
+                                text-gray-400
+                                transition-all
+                                hover:border-[#14c78b]/30
+                                hover:bg-[#14c78b]/[0.05]
                                 hover:text-[#14c78b]
-                                disabled:opacity-30
                                 disabled:cursor-not-allowed
-                                transition
-                                cursor-pointer
+                                disabled:opacity-25
                             "
+                            aria-label="صفحه بعدی"
                         >
-                            بعدی
+                            <ChevronLeft size={19} />
                         </button>
-
                     </div>
                 )}
-
             </section>
-
         </main>
     );
 }

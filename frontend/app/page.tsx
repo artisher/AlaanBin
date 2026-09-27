@@ -12,9 +12,7 @@ export default function Home() {
     <div className="overflow-x-hidden">
 
       <LandingHero />
-      <Suspense fallback={<TopMovieSkeleton />}>
-        <TopMovies />
-      </Suspense>
+    
       <WhyAlanbin />
       <Step />
       <Cta />
