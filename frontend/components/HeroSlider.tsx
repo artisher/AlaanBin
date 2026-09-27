@@ -43,7 +43,7 @@ export const HeroSlider = ({
                 loop={movies.length > 1}
                 className="hero-swiper"
             >
-                {movies.slice(0, 5).map((movie) => (
+                {movies.slice(0, 8).map((movie) => (
                     <SwiperSlide key={movie._id}>
                         <div className="relative h-[650px] w-full md:h-[750px] lg:h-[850px]">
 

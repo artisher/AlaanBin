@@ -14,7 +14,7 @@ export async function middleware(req: NextRequest) {
     //     url.pathname = '/'
     //     return NextResponse.redirect(url);
     // }
-     // if (url.pathname.startsWith('/movies') && !hasActiveSubscription) {
+    // if (url.pathname.startsWith('/movies') && !hasActiveSubscription) {
     //     url.pathname = '/subscription';
     //     return NextResponse.redirect(url);
     // }
@@ -53,12 +53,12 @@ export async function middleware(req: NextRequest) {
     }
 
 
-   
+
     return NextResponse.next();
 }
 
 export const config = {
-    matcher: ['/', '/login', '/register', '/subscription', '/home', '/account', '/movies/:path*', '/admin'],
+    matcher: ['/', '/login', '/register', '/subscription', '/home', '/account', '/movies/:path*', '/series/:path*', '/admin'],
 
 };
 
