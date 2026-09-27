@@ -269,7 +269,7 @@ export const HomeContent = () => {
             )}
         </section>
 
-        <div className="space-y-14 pt-10">
+        <div className="space-y-12 px-4 pt-8 sm:space-y-14 sm:px-6 md:px-8 lg:px-10">
 
             {/* جدیدترین فیلم‌ها */}
             {newMovies.length > 0 && (
