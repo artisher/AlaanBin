@@ -33,7 +33,8 @@ export const HamburgerMenu = ({
         await logout();
 
         setIsOpen(false);
-        router.push("/");
+        router.push("/login");
+        router.refresh();
     };
 
     const loginHandler = () => {
