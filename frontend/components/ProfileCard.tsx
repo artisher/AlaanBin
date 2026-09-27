@@ -147,7 +147,9 @@ export const ProfileCard = ({
 
             await logout();
 
-            router.push("/");
+            router.push("/login");
+            router.refresh();
+
         } catch (error) {
             console.error("LOGOUT ERROR:", error);
         } finally {

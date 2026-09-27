@@ -87,7 +87,7 @@ export default function SeriesPage() {
                 }
 
                 const res = await fetch(
-                    `${API_URL} /api/series ? ${params.toString()} `,
+                    `${API_URL}/api/series?${params.toString()}`,
                     {
                         credentials: "include",
                     }
