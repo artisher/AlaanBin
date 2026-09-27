@@ -19,7 +19,7 @@ export const LandingHero = () => {
         const fetchTopWeekMovies = async () => {
             try {
                 const res = await fetch(
-                    `${API_URL}/api/movies?topWeek=true&limit=10`
+                    `${API_URL}/api/movies?page=1&limit=8&topWeek=true&sort=highRating`
                 );
 
                 if (!res.ok) {
@@ -58,7 +58,7 @@ export const LandingHero = () => {
             {/* ================= Hero ================= */}
 
             <HeroSlider
-                movies={topWeekMovies.slice(0, 5)}
+                movies={topWeekMovies.slice(0, 8)}
                 onMovieClick={handleMovieClick}
             />
 

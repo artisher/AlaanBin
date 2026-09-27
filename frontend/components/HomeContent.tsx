@@ -223,7 +223,7 @@ export const HomeContent = () => {
         <section className="relative">
             {/* Hero */}
             <HeroSlider
-                movies={topWeekMovies.slice(0, 5)}
+                movies={topWeekMovies.slice(0, 8)}
                 onMovieClick={handleMovieClick}
             />
 
