@@ -37,7 +37,8 @@ export const LoginComponent = () => {
 
         await refreshUser();
 
-        router.push("/");
+        router.refresh();
+        router.replace("/home");
 
     };
 

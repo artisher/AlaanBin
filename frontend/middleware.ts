@@ -39,7 +39,12 @@ export async function middleware(req: NextRequest) {
         url.pathname = '/login';
         return NextResponse.redirect(url);
     }
+    if (url.pathname.startsWith('/series') && !sessionCookie) {
+        url.pathname = '/login';
+        return NextResponse.redirect(url);
+    }
 
+    
     if (url.pathname === '/account' && !sessionCookie) {
 
         url.pathname = '/login'
