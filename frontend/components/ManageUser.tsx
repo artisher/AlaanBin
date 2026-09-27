@@ -73,69 +73,92 @@ export const ManageUser = ({ userList }: ManageUserProps) => {
     return (
         <div>
             <div className="space-y-4 p-6">
-                <div className='flex justify-between'>
-                    <h2 className="text-2xl font-bold text-white mb-3">مدیریت کاربران</h2>
+                <div className="flex justify-between items-center gap-3">
+                    <h2 className="text-xl md:text-2xl font-bold text-white mb-3">
+                        مدیریت کاربران
+                    </h2>
+
                     <button
-                        onClick={() => { setAddUser(true) }
-                        }
-                        className="bg-primary text-dark px-4 py-2 rounded font-bold cursor-pointer hover:bg-green-400 transition"
+                        onClick={() => setAddUser(true)}
+                        className="bg-primary text-dark px-3 py-2 md:px-4 rounded font-bold cursor-pointer hover:bg-green-400 transition whitespace-nowrap text-sm md:text-base"
                     >
                         افزودن کاربر +
                     </button>
                 </div>
+
                 <div className="bg-gray-800 rounded-lg shadow overflow-hidden">
-                    <table className="w-full text-right">
-                        <thead className="bg-gray-700 text-gray-300">
-                            <tr>
-                                <th className="p-4">نام</th>
-                                <th className="p-4">ایمیل</th>
-                                <th className="p-4">نقش</th>
-                                <th className="p-4">عملیات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {users.map((user) => (
-                                <tr key={user._id} className="border-b border-gray-700 hover:bg-gray-750 transition duration-150 ease-in-out">
-                                    <td className="p-4 text-white">{user.fullName}</td>
-                                    <td className="p-4 text-gray-300">{user.email}</td>
-                                    <td className="p-4">
-                                        {/* استایل‌های مناسب‌تر برای نقش */}
-                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${user.role === 'ادمین'
-                                            ? 'bg-primary-light text-primary-dark'
-                                            : 'bg-gray-600 text-gray-200'
-                                            }`}
-                                        >
-                                            {user.role}
-                                        </span>
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex gap-3 items-center">
-                                            <button
-                                                onClick={() => handleEdit(user._id)}
-                                                className="text-blue-400 cursor-pointer hover:text-blue-300 text-sm font-semibold transition duration-150 ease-in-out"
-                                            >
-                                                ویرایش
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(user._id)}
-                                                className="text-red-400 cursor-pointer hover:text-red-300 text-sm font-semibold transition duration-150 ease-in-out"
-                                            >
-                                                حذف
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                            {users.length === 0 && (
+                    <div className="overflow-x-auto">
+                        <table className="w-full min-w-[650px] text-right">
+                            <thead className="bg-gray-700 text-gray-300">
                                 <tr>
-                                    <td colSpan={4} className="p-4 text-center text-gray-500">
-                                        هیچ کاربری یافت نشد.
-                                    </td>
+                                    <th className="p-3 md:p-4 whitespace-nowrap">نام</th>
+                                    <th className="p-3 md:p-4 whitespace-nowrap">ایمیل</th>
+                                    <th className="p-3 md:p-4 whitespace-nowrap">نقش</th>
+                                    <th className="p-3 md:p-4 whitespace-nowrap">عملیات</th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+
+                            <tbody>
+                                {users.map((user) => (
+                                    <tr
+                                        key={user._id}
+                                        className="border-b border-gray-700 hover:bg-gray-750 transition duration-150 ease-in-out"
+                                    >
+                                        <td className="p-3 md:p-4 text-white whitespace-nowrap">
+                                            {user.fullName}
+                                        </td>
+
+                                        <td className="p-3 md:p-4 text-gray-300 whitespace-nowrap">
+                                            {user.email}
+                                        </td>
+
+                                        <td className="p-3 md:p-4">
+                                            <span
+                                                className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${user.role === "ادمین"
+                                                    ? "bg-primary-light text-primary-dark"
+                                                    : "bg-gray-600 text-gray-200"
+                                                    }`}
+                                            >
+                                                {user.role}
+                                            </span>
+                                        </td>
+
+                                        <td className="p-3 md:p-4">
+                                            <div className="flex gap-3 items-center whitespace-nowrap">
+                                                <button
+                                                    onClick={() => handleEdit(user._id)}
+                                                    className="text-blue-400 cursor-pointer hover:text-blue-300 text-sm font-semibold transition"
+                                                >
+                                                    ویرایش
+                                                </button>
+
+                                                <button
+                                                    onClick={() => handleDelete(user._id)}
+                                                    className="text-red-400 cursor-pointer hover:text-red-300 text-sm font-semibold transition"
+                                                >
+                                                    حذف
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+
+                                {users.length === 0 && (
+                                    <tr>
+                                        <td
+                                            colSpan={4}
+                                            className="p-4 text-center text-gray-500"
+                                        >
+                                            هیچ کاربری یافت نشد.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+
+
             </div>
 
             {/* مودال ویرایش اینجا اضافه میشه */}
