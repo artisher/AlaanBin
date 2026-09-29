@@ -31,7 +31,7 @@ export const LandingHero = () => {
         const fetchTopWeekMovies = async () => {
             try {
                 const res = await fetch(
-                    `${ API_URL } /api/movies ? page = 1 & limit=8 & topWeek=true & sort=highRating`
+                    `${API_URL}/api/movies?page=1&limit=8&topWeek=true&sort=highRating`
                 );
 
                 if (!res.ok) {
