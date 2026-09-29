@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
@@ -6,8 +7,10 @@ import Link from "next/link";
 import { HeroSlider } from "@/components/HeroSlider";
 import { MovieCard } from "@/components/MovieCard";
 
+
 import type { Movie } from "@/types/movies";
 import { TopMovieSkeleton } from "./TopMovieSkeleton";
+import { MovieModal } from "./MovieMedal";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -15,15 +18,26 @@ export const LandingHero = () => {
     const [topWeekMovies, setTopWeekMovies] = useState<Movie[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // =========================
+    // Movie Modal
+    // =========================
+
+    const [selectedMovie, setSelectedMovie] =
+        useState<Movie | null>(null);
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
     useEffect(() => {
         const fetchTopWeekMovies = async () => {
             try {
                 const res = await fetch(
-                    `${API_URL}/api/movies?page=1&limit=8&topWeek=true&sort=highRating`
+                    `${ API_URL } /api/movies ? page = 1 & limit=8 & topWeek=true & sort=highRating`
                 );
 
                 if (!res.ok) {
-                    throw new Error("Failed to fetch top week movies");
+                    throw new Error(
+                        "Failed to fetch top week movies"
+                    );
                 }
 
                 const data = await res.json();
@@ -46,10 +60,22 @@ export const LandingHero = () => {
         return null;
     }
 
+    // =========================
+    // Open Movie Modal
+    // =========================
+
     const handleMovieClick = (movie: Movie) => {
-        // کاربر هنوز لاگین نکرده
-        // فعلاً می‌تونیم بعداً رفتار کلیک رو مشخص کنیم
-        console.log("Movie clicked:", movie);
+        setSelectedMovie(movie);
+        setIsModalOpen(true);
+    };
+
+    // =========================
+    // Close Movie Modal
+    // =========================
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedMovie(null);
     };
 
     return (
@@ -62,54 +88,60 @@ export const LandingHero = () => {
                 onMovieClick={handleMovieClick}
             />
 
-
             {/* ================= برتر هفته ================= */}
-            <Suspense fallback={<TopMovieSkeleton />}>
 
+            <Suspense fallback={<TopMovieSkeleton />}>
 
                 <div className="relative z-20 -mt-[155px]">
 
-                    <div className="
-                    mx-auto
-                    max-w-[1650px]
-                    px-5
-                ">
+                    <div
+                        className="
+                            mx-auto
+                            max-w-[1650px]
+                            px-5
+                        "
+                    >
 
-                        <div className="
-                        mb-4
-                        flex
-                        items-center
-                        justify-between
-                    ">
+                        <div
+                            className="
+                                mb-4
+                                flex
+                                items-center
+                                justify-between
+                            "
+                        >
 
-                            <h2 className="
-                            text-2xl
-                            font-bold
-                            text-white
-                        ">
+                            <h2
+                                className="
+                                    text-2xl
+                                    font-bold
+                                    text-white
+                                "
+                            >
                                 برتر هفته
                             </h2>
 
                             <Link
                                 href="/movies?topWeek=true"
                                 className="
-                                text-sm
-                                text-gray-400
-                                transition
-                                hover:text-[#14c78b]
-                            "
+                                    text-sm
+                                    text-gray-400
+                                    transition
+                                    hover:text-[#14c78b]
+                                "
                             >
                                 مشاهده همه
                             </Link>
 
                         </div>
 
-
-                        <div className="
-                        flex
-                        gap-5
-                        overflow-hidden
-                    ">
+                        <div
+                            className="
+                                flex
+                                gap-5
+                                overflow-hidden
+                            "
+                        >
 
                             {topWeekMovies.map((movie) => (
                                 <div
@@ -130,7 +162,17 @@ export const LandingHero = () => {
                     </div>
 
                 </div>
+
             </Suspense>
+
+            {/* ================= Movie Modal ================= */}
+
+            <MovieModal
+                movie={selectedMovie}
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+            />
+
         </section>
     );
 };

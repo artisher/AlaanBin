@@ -336,7 +336,7 @@ export const MovieModal = ({
                                 امتیاز
                             </p>
 
-                            <h3 className="mt-1 text-lg font-bold sm:text-xl">
+                            <h3 className="mt-1 text-white text-lg font-bold sm:text-xl">
                                 {movie.rating}/10
                             </h3>
 
@@ -370,7 +370,7 @@ export const MovieModal = ({
                                 سال ساخت
                             </p>
 
-                            <h3 className="mt-1 text-lg font-bold sm:text-xl">
+                            <h3 className="mt-1 text-lg text-white font-bold sm:text-xl">
                                 {movie.year}
                             </h3>
 
@@ -400,7 +400,7 @@ export const MovieModal = ({
                             "
                             />
 
-                            <p className="text-xs text-gray-400 sm:text-sm">
+                            <p className="text-xs text-white text-gray-400 sm:text-sm">
                                 مدت زمان
                             </p>
 
@@ -451,6 +451,7 @@ export const MovieModal = ({
                                 mt-1
                                 truncate
                                 text-base
+                                text-white
                                 font-bold
                                 sm:text-xl
                             "

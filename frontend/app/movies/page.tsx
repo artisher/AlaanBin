@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
     Search,
     SlidersHorizontal,
@@ -17,15 +18,15 @@ import { MovieCard } from "@/components/MovieCard";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const GENRES = [
-    "همه",
-    "اکشن",
-    "کمدی",
-    "درام",
-    "عاشقانه",
-    "ترسناک",
-    "اجتماعی",
-    "ماجراجویی",
-    "تاریخی",
+    { label: "همه", value: "" },
+    { label: "اکشن", value: "Action" },
+    { label: "کمدی", value: "Comedy" },
+    { label: "درام", value: "Drama" },
+    { label: "عاشقانه", value: "Romance" },
+    { label: "ترسناک", value: "Horror" },
+    { label: "اجتماعی", value: "Social" },
+    { label: "ماجراجویی", value: "Adventure" },
+    { label: "تاریخی", value: "Historical" },
 ];
 
 const PRODUCTS = [
@@ -50,6 +51,7 @@ const SORT_OPTIONS = [
 
 export default function MoviesPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     const [movies, setMovies] = useState<Movie[]>([]);
     const [loading, setLoading] = useState(true);
@@ -57,13 +59,85 @@ export default function MoviesPage() {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
-    const [search, setSearch] = useState("");
-    const [genre, setGenre] = useState("همه");
-    const [product, setProduct] = useState("");
-    const [rating, setRating] = useState("");
-    const [sort, setSort] = useState("newest");
+    const [search, setSearch] = useState(
+        searchParams.get("search") || ""
+    );
+
+    const [genre, setGenre] = useState(
+        searchParams.get("genre") || ""
+    );
+
+    const [product, setProduct] = useState(
+        searchParams.get("product") || ""
+    );
+
+    const [rating, setRating] = useState(
+        searchParams.get("rating") || ""
+    );
+
+    const [sort, setSort] = useState(
+        searchParams.get("sort") || "newest"
+    );
 
     const [filtersOpen, setFiltersOpen] = useState(false);
+
+    // =========================
+    // Sync state with URL
+    // =========================
+
+    useEffect(() => {
+        setSearch(searchParams.get("search") || "");
+        setGenre(searchParams.get("genre") || "");
+        setProduct(searchParams.get("product") || "");
+        setRating(searchParams.get("rating") || "");
+        setSort(searchParams.get("sort") || "newest");
+        setPage(1);
+    }, [searchParams]);
+
+    // =========================
+    // Update URL
+    // =========================
+
+    const updateUrl = (
+        nextSearch: string,
+        nextGenre: string,
+        nextProduct: string,
+        nextRating: string,
+        nextSort: string
+    ) => {
+        const params = new URLSearchParams();
+
+        if (nextSearch.trim()) {
+            params.set("search", nextSearch.trim());
+        }
+
+        if (nextGenre) {
+            params.set("genre", nextGenre);
+        }
+
+        if (nextProduct) {
+            params.set("product", nextProduct);
+        }
+
+        if (nextRating) {
+            params.set("rating", nextRating);
+        }
+
+        if (nextSort !== "newest") {
+            params.set("sort", nextSort);
+        }
+
+        const query = params.toString();
+
+        router.replace(
+            query ? `/ movies ? ${ query } ` : "/movies",
+            { scroll: false }
+        );
+    };
+
+    // =========================
+    // Fetch Movies
+    // =========================
 
     useEffect(() => {
         const fetchMovies = async () => {
@@ -80,7 +154,7 @@ export default function MoviesPage() {
                     params.set("search", search.trim());
                 }
 
-                if (genre !== "همه") {
+                if (genre) {
                     params.set("genre", genre);
                 }
 
@@ -93,7 +167,7 @@ export default function MoviesPage() {
                 }
 
                 const res = await fetch(
-                    `${API_URL}/api/movies?${params.toString()}`,
+                    `${ API_URL } /api/movies ? ${ params.toString() } `,
                     {
                         credentials: "include",
                     }
@@ -127,29 +201,101 @@ export default function MoviesPage() {
         sort,
     ]);
 
-    // وقتی فیلتر تغییر کرد، برگرد صفحه اول
-    useEffect(() => {
+    // =========================
+    // Filter Handlers
+    // =========================
+
+    const handleSearchChange = (
+        value: string
+    ) => {
+        setSearch(value);
         setPage(1);
-    }, [
-        search,
-        genre,
-        product,
-        rating,
-        sort,
-    ]);
+
+        updateUrl(
+            value,
+            genre,
+            product,
+            rating,
+            sort
+        );
+    };
+
+    const handleGenreChange = (
+        value: string
+    ) => {
+        setGenre(value);
+        setPage(1);
+
+        updateUrl(
+            search,
+            value,
+            product,
+            rating,
+            sort
+        );
+    };
+
+    const handleProductChange = (
+        value: string
+    ) => {
+        setProduct(value);
+        setPage(1);
+
+        updateUrl(
+            search,
+            genre,
+            value,
+            rating,
+            sort
+        );
+    };
+
+    const handleRatingChange = (
+        value: string
+    ) => {
+        setRating(value);
+        setPage(1);
+
+        updateUrl(
+            search,
+            genre,
+            product,
+            value,
+            sort
+        );
+    };
+
+    const handleSortChange = (
+        value: string
+    ) => {
+        setSort(value);
+        setPage(1);
+
+        updateUrl(
+            search,
+            genre,
+            product,
+            rating,
+            value
+        );
+    };
 
     const clearFilters = () => {
         setSearch("");
-        setGenre("همه");
+        setGenre("");
         setProduct("");
         setRating("");
         setSort("newest");
         setPage(1);
+
+        router.replace("/movies", {
+            scroll: false,
+        });
     };
 
     const hasFilters =
         search.trim() ||
-        genre !== "همه" ||
+        genre ||
         product ||
         rating ||
         sort !== "newest";
@@ -211,8 +357,6 @@ export default function MoviesPage() {
             >
                 <div className="flex items-end justify-between gap-6">
                     <div>
-                        {/* Small label */}
-
                         <div
                             className="
                                 mb-4
@@ -266,8 +410,6 @@ export default function MoviesPage() {
                         </p>
                     </div>
 
-                    {/* Decorative icon */}
-
                     <div
                         className="
                             hidden
@@ -286,8 +428,6 @@ export default function MoviesPage() {
                         <Film size={28} />
                     </div>
                 </div>
-
-                {/* Bottom accent */}
 
                 <div
                     className="
@@ -325,8 +465,6 @@ export default function MoviesPage() {
                         md:p-4
                     "
                 >
-                    {/* Search + Mobile Filter */}
-
                     <div
                         className="
                             flex
@@ -369,7 +507,9 @@ export default function MoviesPage() {
                             <input
                                 value={search}
                                 onChange={(e) =>
-                                    setSearch(e.target.value)
+                                    handleSearchChange(
+                                        e.target.value
+                                    )
                                 }
                                 placeholder="جستجوی فیلم..."
                                 className="
@@ -386,7 +526,7 @@ export default function MoviesPage() {
                                 <button
                                     type="button"
                                     onClick={() =>
-                                        setSearch("")
+                                        handleSearchChange("")
                                     }
                                     className="
                                         flex
@@ -412,7 +552,9 @@ export default function MoviesPage() {
                         <button
                             type="button"
                             onClick={() =>
-                                setFiltersOpen((prev) => !prev)
+                                setFiltersOpen(
+                                    (prev) => !prev
+                                )
                             }
                             className="
                                 flex
@@ -453,24 +595,27 @@ export default function MoviesPage() {
 
                     <div
                         className={`
-                            mt-3
-                            flex-wrap
-                            gap-2.5
-                            border-t
-                            border-white/[0.05]
-                            pt-3
-                            ${filtersOpen
-                                ? "flex"
-                                : "hidden md:flex"
-                            }
-                        `}
+mt - 3
+flex - wrap
+gap - 2.5
+border - t
+border - white / [0.05]
+pt - 3
+                            ${
+    filtersOpen
+        ? "flex"
+        : "hidden md:flex"
+}
+`}
                     >
                         {/* Genre */}
 
                         <select
                             value={genre}
                             onChange={(e) =>
-                                setGenre(e.target.value)
+                                handleGenreChange(
+                                    e.target.value
+                                )
                             }
                             className="
                                 h-10
@@ -491,13 +636,13 @@ export default function MoviesPage() {
                         >
                             {GENRES.map((item) => (
                                 <option
-                                    key={item}
-                                    value={item}
+                                    key={item.value}
+                                    value={item.value}
                                     className="bg-[#111820]"
                                 >
-                                    {item === "همه"
+                                    {item.label === "همه"
                                         ? "همه ژانرها"
-                                        : item}
+                                        : item.label}
                                 </option>
                             ))}
                         </select>
@@ -507,7 +652,9 @@ export default function MoviesPage() {
                         <select
                             value={product}
                             onChange={(e) =>
-                                setProduct(e.target.value)
+                                handleProductChange(
+                                    e.target.value
+                                )
                             }
                             className="
                                 h-10
@@ -542,7 +689,9 @@ export default function MoviesPage() {
                         <select
                             value={rating}
                             onChange={(e) =>
-                                setRating(e.target.value)
+                                handleRatingChange(
+                                    e.target.value
+                                )
                             }
                             className="
                                 h-10
@@ -577,7 +726,9 @@ export default function MoviesPage() {
                         <select
                             value={sort}
                             onChange={(e) =>
-                                setSort(e.target.value)
+                                handleSortChange(
+                                    e.target.value
+                                )
                             }
                             className="
                                 h-10
@@ -631,7 +782,6 @@ export default function MoviesPage() {
                                 "
                             >
                                 <X size={15} />
-
                                 پاک کردن
                             </button>
                         )}
@@ -803,7 +953,7 @@ export default function MoviesPage() {
                                     movie={movie}
                                     onClick={() =>
                                         router.push(
-                                            `/movies/${movie._id}`
+                                            `/ movies / ${ movie._id } `
                                         )
                                     }
                                 />
@@ -824,12 +974,12 @@ export default function MoviesPage() {
                             gap-2
                         "
                     >
-                        {/* Previous */}
-
                         <button
                             disabled={page === 1}
                             onClick={() =>
-                                setPage((prev) => prev - 1)
+                                setPage(
+                                    (prev) => prev - 1
+                                )
                             }
                             className="
                                 flex
@@ -854,8 +1004,6 @@ export default function MoviesPage() {
                             <ChevronRight size={19} />
                         </button>
 
-                        {/* Current page */}
-
                         <div
                             className="
                                 flex
@@ -874,20 +1022,22 @@ export default function MoviesPage() {
                             "
                         >
                             {page}
+
                             <span className="mx-2 text-gray-600">
                                 /
                             </span>
+
                             <span className="text-gray-400">
                                 {totalPages}
                             </span>
                         </div>
 
-                        {/* Next */}
-
                         <button
                             disabled={page === totalPages}
                             onClick={() =>
-                                setPage((prev) => prev + 1)
+                                setPage(
+                                    (prev) => prev + 1
+                                )
                             }
                             className="
                                 flex
@@ -917,3 +1067,4 @@ export default function MoviesPage() {
         </main>
     );
 }
+
