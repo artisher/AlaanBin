@@ -297,23 +297,18 @@ app.get(
 );
 
 
-// ===============================
-// LIVE VARZESH STREAM
-// ===============================
 
 // ===============================
 // LIVE VARZESH STREAM
 // ===============================
 
-const VARZESH_NCDN_URL =
-    "https://ncdn.telewebion.net/varzesh/live/108050p/index.m3u8";
+const VARZESH_RELAY_URL =
+    process.env.VARZESH_RELAY_URL ||
+    "http://10.77.0.1:8787";
 
 type VarzeshSession = {
-    origin: string;
     createdAt: number;
     refreshRequested: boolean;
-    failoverCount: number;
-    failedOrigins: Set<string>;
     refreshPromise?: Promise<void>;
 };
 
@@ -326,182 +321,11 @@ const VARZESH_SESSION_TTL =
     10 * 60 * 1000;
 
 
-// Resolve current Telewebion origin
-async function resolveVarzeshOrigin() {
+// ===============================
+// CREATE SESSION
+// ===============================
 
-    const response = await fetch(
-        VARZESH_NCDN_URL,
-        {
-            redirect: "manual",
-        }
-    );
-
-    if (
-        response.status < 300 ||
-        response.status >= 400
-    ) {
-        throw new Error(
-            `NCDN redirect failed: ${response.status} `
-        );
-    }
-
-    const location =
-        response.headers.get("location");
-
-    if (!location) {
-        throw new Error(
-            "NCDN did not return Location header"
-        );
-    }
-
-    const url =
-        new URL(location);
-
-    const origin =
-        url.origin;
-
-    if (
-        !origin.endsWith(".telewebion.net")
-    ) {
-        throw new Error(
-            "Invalid Telewebion origin"
-        );
-    }
-
-    console.log(
-        "📡 Varzesh origin:",
-        origin
-    );
-
-    return origin;
-}
-
-async function isVarzeshOriginHealthy(
-    origin: string
-) {
-    try {
-        const playlistUrl =
-            `${origin} /ek/varzesh / live / 108050p / index.m3u8`;
-
-        const response =
-            await fetch(
-                playlistUrl,
-                {
-                    cache: "no-store",
-                    headers: {
-                        Origin: "https://telewebion.net",
-                        Referer: "https://telewebion.net/",
-                    },
-                }
-            );
-
-        if (!response.ok) {
-            console.log(
-                "❌ Origin playlist unhealthy:",
-                origin,
-                response.status
-            );
-
-            return false;
-        }
-
-        const playlist =
-            await response.text();
-
-        const lines =
-            playlist
-                .split("\n")
-                .map(line => line.trim());
-
-        let latestSegment: string | null =
-            null;
-
-        for (
-            let i = 0;
-            i < lines.length - 1;
-            i++
-        ) {
-            if (
-                lines[i].startsWith("#EXTINF:")
-            ) {
-                const segment =
-                    lines[i + 1];
-
-                if (
-                    segment &&
-                    !segment.startsWith("#") &&
-                    segment.endsWith(".ts")
-                ) {
-                    latestSegment =
-                        segment;
-                }
-            }
-        }
-
-        if (!latestSegment) {
-            console.log(
-                "❌ No segment found:",
-                origin
-            );
-
-            return false;
-        }
-
-        const segmentUrl =
-            `${origin} /ek/varzesh / live / 108050p / ${latestSegment} `;
-
-        console.log(
-            "🩺 Checking live segment:",
-            origin,
-            latestSegment.slice(0, 30)
-        );
-
-        const segmentResponse =
-            await fetch(
-                segmentUrl,
-                {
-                    cache: "no-store",
-                    headers: {
-                        Origin: "https://telewebion.net",
-                        Referer: "https://telewebion.net/",
-                    },
-                    signal: AbortSignal.timeout(
-                        5000
-                    ),
-                }
-            );
-
-        if (!segmentResponse.ok) {
-            console.log(
-                "❌ Origin segment unhealthy:",
-                origin,
-                segmentResponse.status
-            );
-
-            return false;
-        }
-
-        console.log(
-            "✅ Origin is healthy:",
-            origin
-        );
-
-        return true;
-
-    } catch (error) {
-
-        console.log(
-            "❌ Origin health-check failed:",
-            origin,
-            error
-        );
-
-        return false;
-    }
-}
-
-// Create a playlist session
-function createVarzeshSession(origin: string) {
+function createVarzeshSession() {
 
     const sessionId =
         crypto.randomUUID();
@@ -509,19 +333,17 @@ function createVarzeshSession(origin: string) {
     varzeshSessions.set(
         sessionId,
         {
-            origin,
             createdAt: Date.now(),
             refreshRequested: false,
-            failoverCount: 0,
-            failedOrigins: new Set<string>(),
         }
     );
 
     return sessionId;
 }
 
+
 // ===============================
-// Get session
+// GET SESSION
 // ===============================
 
 function getVarzeshSession(
@@ -529,9 +351,7 @@ function getVarzeshSession(
 ) {
 
     const session =
-        varzeshSessions.get(
-            sessionId
-        );
+        varzeshSessions.get(sessionId);
 
     if (!session) {
         return null;
@@ -550,7 +370,6 @@ function getVarzeshSession(
         return null;
     }
 
-    // Refresh session lifetime
     session.createdAt =
         Date.now();
 
@@ -558,155 +377,16 @@ function getVarzeshSession(
 }
 
 
-
-async function refreshVarzeshSession(
-    sessionId: string
-) {
-    const session =
-        getVarzeshSession(sessionId);
-
-    if (!session) {
-        throw new Error(
-            "Varzesh session not found"
-        );
-    }
-
-    if (session.refreshPromise) {
-        await session.refreshPromise;
-        return session;
-    }
-
-    session.refreshPromise =
-        (async () => {
-
-            const oldOrigin =
-                session.origin;
-
-            console.log(
-                "🔄 Searching for healthy Varzesh origin..."
-            );
-
-            /*
-             * We only exclude the origin that
-             * just failed.
-             *
-             * Older origins may become healthy again.
-             */
-            const excludedOrigin =
-                oldOrigin;
-
-            let healthyOrigin:
-                string | null = null;
-
-            /*
-             * Ask NCDN for several candidate origins.
-             */
-            for (
-                let attempt = 0;
-                attempt < 8;
-                attempt++
-            ) {
-
-                try {
-
-                    const candidate =
-                        await resolveVarzeshOrigin();
-
-                    if (
-                        candidate ===
-                        excludedOrigin
-                    ) {
-                        console.log(
-                            "⚠️ Skipping failed origin:",
-                            candidate
-                        );
-
-                        continue;
-                    }
-
-                    console.log(
-                        "🩺 Testing candidate origin:",
-                        candidate
-                    );
-
-                    const healthy =
-                        await isVarzeshOriginHealthy(
-                            candidate
-                        );
-
-                    if (!healthy) {
-
-                        console.log(
-                            "❌ Candidate rejected:",
-                            candidate
-                        );
-
-                        continue;
-                    }
-
-                    healthyOrigin =
-                        candidate;
-
-                    break;
-
-                } catch (error) {
-
-                    console.error(
-                        "❌ Origin candidate check failed:",
-                        error
-                    );
-                }
-            }
-
-            if (!healthyOrigin) {
-
-                throw new Error(
-                    "No new healthy Varzesh origin found"
-                );
-            }
-
-            session.origin =
-                healthyOrigin;
-
-            session.refreshRequested =
-                false;
-
-            session.failoverCount += 1;
-
-            console.log(
-                "✅ Healthy Varzesh origin selected:",
-                oldOrigin,
-                "→",
-                healthyOrigin
-            );
-
-        })();
-
-    try {
-
-        await session.refreshPromise;
-
-    } finally {
-
-        session.refreshPromise =
-            undefined;
-    }
-
-    return session;
-}
-
-
-
-
-
+// ===============================
+// BUILD PLAYLIST
+// ===============================
 
 async function buildVarzeshPlaylist(
-    origin: string,
     sessionId: string
 ) {
 
     const playlistUrl =
-        `${origin} /ek/varzesh / live / 108050p / index.m3u8`;
+        `${VARZESH_RELAY_URL}/varzesh/index.m3u8`;
 
     const response =
         await fetch(
@@ -719,7 +399,7 @@ async function buildVarzeshPlaylist(
     if (!response.ok) {
 
         throw new Error(
-            `Origin playlist failed: ${response.status} `
+            `Iran relay playlist failed: ${response.status}`
         );
     }
 
@@ -761,21 +441,22 @@ async function buildVarzeshPlaylist(
             ) {
 
                 segments.push(
-                    `${line} \n${segment} `
+                    `${line}\n${segment}`
                 );
             }
         }
     }
 
-    // فقط آخرین سگمنت‌ها
     const lastSegments =
         segments.slice(-10);
 
     if (!lastSegments.length) {
+
         throw new Error(
             "No live segments found"
         );
     }
+
     const firstSegment =
         lastSegments[0];
 
@@ -793,10 +474,18 @@ async function buildVarzeshPlaylist(
 
     let output = [
         ...header,
-        `#EXT - X - MEDIA - SEQUENCE:${mediaSequence} `,
+        `#EXT-X-MEDIA-SEQUENCE:${mediaSequence}`,
         ...lastSegments,
     ].join("\n");
 
+
+    /*
+     * Relay ایران URL خودش را برمی‌گرداند.
+     *
+     * ما آن را به endpoint خود AlanBin
+     * تبدیل می‌کنیم تا مرورگر مستقیماً
+     * به VPS ایران وصل نشود.
+     */
 
     output =
         output
@@ -813,10 +502,33 @@ async function buildVarzeshPlaylist(
                     return line;
                 }
 
-                return `/ api / live / varzesh / segment / ${sessionId}/${encodeURIComponent(trimmed)}`;
+                /*
+                 * انتظار داریم چیزی شبیه:
+                 *
+                 * /varzesh/segment/xxxx.ts
+                 */
+
+                if (
+                    !trimmed.startsWith(
+                        "/varzesh/segment/"
+                    )
+                ) {
+                    return line;
+                }
+
+                const segment =
+                    trimmed.replace(
+                        "/varzesh/segment/",
+                        ""
+                    );
+
+                return (
+                    `/api/live/varzesh/segment/` +
+                    `${sessionId}/` +
+                    `${encodeURIComponent(segment)}`
+                );
             })
             .join("\n");
-
 
     return output;
 }
@@ -832,10 +544,6 @@ app.get(
 
         try {
 
-            /*
-             * اگر session از قبل داریم،
-             * همان session را استفاده کن.
-             */
             let sessionId =
                 String(
                     req.query.session || ""
@@ -843,24 +551,20 @@ app.get(
 
             let session =
                 sessionId
-                    ? getVarzeshSession(sessionId)
+                    ? getVarzeshSession(
+                        sessionId
+                    )
                     : null;
 
 
             /*
-             * اولین درخواست:
-             * origin جدید بگیر
-             * session بساز
+             * اولین درخواست
              */
+
             if (!session) {
 
-                const origin =
-                    await resolveVarzeshOrigin();
-
                 sessionId =
-                    createVarzeshSession(
-                        origin
-                    );
+                    createVarzeshSession();
 
                 session =
                     getVarzeshSession(
@@ -868,34 +572,41 @@ app.get(
                     );
 
                 if (!session) {
+
                     throw new Error(
-                        "Failed to create session"
+                        "Failed to create Varzesh session"
                     );
                 }
             }
-            if (session.refreshRequested) {
 
-                console.log(
-                    "🔄 Refreshing Varzesh origin..."
-                );
-
-                session =
-                    await refreshVarzeshSession(
-                        sessionId
-                    );
-            }
 
             /*
-             * هر بار playlist را
-             * دوباره از همان origin بگیر
+             * اگر frontend بعد از 451
+             * refresh خواسته، session را
+             * نگه می‌داریم.
+             *
+             * Relay ایران خودش origin جدید
+             * را در درخواست بعدی playlist
+             * انتخاب می‌کند.
              */
-            const playlist =
-                await buildVarzeshPlaylist(
-                    session.origin,
-                    sessionId
+
+            if (
+                session.refreshRequested
+            ) {
+
+                console.log(
+                    "🔄 Varzesh relay refresh requested"
                 );
 
+                session.refreshRequested =
+                    false;
+            }
 
+
+            const playlist =
+                await buildVarzeshPlaylist(
+                    sessionId
+                );
 
 
             res.setHeader(
@@ -926,6 +637,7 @@ app.get(
             res.send(
                 playlist
             );
+
         } catch (err) {
 
             console.error(
@@ -978,6 +690,11 @@ app.get(
             }
 
 
+            /*
+             * Express مقدار route parameter
+             * را decode می‌کند.
+             */
+
             if (
                 segment.includes("/") ||
                 segment.includes("\\") ||
@@ -994,21 +711,21 @@ app.get(
             }
 
 
-            const segmentUrl =
-                `${session.origin}/ek/varzesh/live/108050p/${segment}`;
+            const relaySegmentUrl =
+                `${VARZESH_RELAY_URL}` +
+                `/varzesh/segment/` +
+                `${encodeURIComponent(segment)}`;
 
 
             console.log(
-                "🎬 Varzesh segment:",
-                segment.slice(0, 30),
-                "→",
-                session.origin
+                "🎬 Varzesh relay segment:",
+                segment.slice(0, 30)
             );
 
 
             const response =
                 await fetch(
-                    segmentUrl,
+                    relaySegmentUrl,
                     {
                         cache: "no-store",
                     }
@@ -1018,34 +735,45 @@ app.get(
             if (!response.ok) {
 
                 console.log(
-                    "⚠️ Segment failed:",
+                    "⚠️ Iran relay segment failed:",
                     response.status,
                     "session:",
-                    sessionId,
-                    "origin:",
-                    session.origin
+                    sessionId
                 );
 
-                if (response.status === 451) {
 
-                    session.failedOrigins.add(
-                        session.origin
-                    );
+                /*
+                 * اگر Relay ایران 451 داد،
+                 * playlist بعدی باعث می‌شود
+                 * Relay دوباره origin را resolve کند.
+                 */
+
+                if (
+                    response.status === 451
+                ) {
 
                     session.refreshRequested =
                         true;
 
                     console.log(
-                        "🔄 Varzesh failover requested",
-                        "failed origin:",
-                        session.origin
+                        "🔄 Varzesh relay failover requested"
                     );
                 }
+
 
                 return res
                     .status(response.status)
                     .end();
             }
+
+
+            if (!response.body) {
+
+                return res
+                    .status(502)
+                    .end();
+            }
+
 
             res.setHeader(
                 "Content-Type",
@@ -1078,14 +806,6 @@ app.get(
             }
 
 
-            if (!response.body) {
-
-                return res
-                    .status(502)
-                    .end();
-            }
-
-
             Readable
                 .fromWeb(
                     response.body as any
@@ -1100,6 +820,7 @@ app.get(
             );
 
             if (!res.headersSent) {
+
                 res
                     .status(502)
                     .end();
@@ -1107,12 +828,6 @@ app.get(
         }
     }
 );
-
-
-
-
-
-
 
 const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) {
