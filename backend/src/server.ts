@@ -457,19 +457,21 @@ async function buildVarzeshPlaylist(
         );
     }
 
-    const firstSegment =
-        lastSegments[0];
-
-    const firstSequence =
+    const sourceMediaSequence =
         Number(
-            firstSegment.match(
-                /#EXTINF:[^,]+,(\d+)/
-            )?.[1]
+            lines
+                .find(line =>
+                    line.startsWith("#EXT-X-MEDIA-SEQUENCE:")
+                )
+                ?.split(":")[1]
         );
 
+    const droppedSegments =
+        segments.length - lastSegments.length;
+
     const mediaSequence =
-        Number.isFinite(firstSequence)
-            ? firstSequence
+        Number.isFinite(sourceMediaSequence)
+            ? sourceMediaSequence + droppedSegments
             : 0;
 
     let output = [
