@@ -831,6 +831,554 @@ app.get(
     }
 );
 
+// ===============================
+// LIVE TV1 STREAM
+// ===============================
+
+const TV1_RELAY_URL =
+    process.env.TV1_RELAY_URL ||
+    "http://10.77.0.1:8788";
+
+type Tv1Session = {
+    createdAt: number;
+    refreshRequested: boolean;
+    refreshPromise?: Promise<void>;
+};
+
+const tv1Sessions = new Map<
+    string,
+    Tv1Session
+>();
+
+const TV1_SESSION_TTL =
+    10 * 60 * 1000;
+
+
+// ===============================
+// CREATE SESSION
+// ===============================
+
+function createTv1Session() {
+
+    const sessionId =
+        crypto.randomUUID();
+
+    tv1Sessions.set(
+        sessionId,
+        {
+            createdAt: Date.now(),
+            refreshRequested: false,
+        }
+    );
+
+    return sessionId;
+}
+
+
+// ===============================
+// GET SESSION
+// ===============================
+
+function getTv1Session(
+    sessionId: string
+) {
+
+    const session =
+        tv1Sessions.get(sessionId);
+
+    if (!session) {
+        return null;
+    }
+
+    if (
+        Date.now() -
+        session.createdAt >
+        TV1_SESSION_TTL
+    ) {
+
+        tv1Sessions.delete(
+            sessionId
+        );
+
+        return null;
+    }
+
+    session.createdAt =
+        Date.now();
+
+    return session;
+}
+
+
+// ===============================
+// BUILD PLAYLIST
+// ===============================
+
+async function buildTv1Playlist(
+    sessionId: string
+) {
+
+    const playlistUrl =
+        `${TV1_RELAY_URL}/tv1/index.m3u8`;
+
+    const response =
+        await fetch(
+            playlistUrl,
+            {
+                cache: "no-store",
+            }
+        );
+
+    if (!response.ok) {
+
+        throw new Error(
+            `Iran relay playlist failed: ${response.status}`
+        );
+    }
+
+    const playlist =
+        await response.text();
+
+    const lines =
+        playlist.split("\n");
+
+    const header =
+        lines.filter(
+            line =>
+                line.startsWith("#EXTM3U") ||
+                line.startsWith("#EXT-X-VERSION") ||
+                line.startsWith("#EXT-X-TARGETDURATION")
+        );
+
+    const segments: string[] = [];
+
+    for (
+        let i = 0;
+        i < lines.length;
+        i++
+    ) {
+
+        const line =
+            lines[i].trim();
+
+        if (
+            line.startsWith("#EXTINF:")
+        ) {
+
+            const segment =
+                lines[i + 1]?.trim();
+
+            if (
+                segment &&
+                !segment.startsWith("#")
+            ) {
+
+                segments.push(
+                    `${line}\n${segment}`
+                );
+            }
+        }
+    }
+
+    const lastSegments =
+        segments.slice(-10);
+
+    if (!lastSegments.length) {
+
+        throw new Error(
+            "No live segments found"
+        );
+    }
+
+    const sourceMediaSequence =
+        Number(
+            lines
+                .find(line =>
+                    line.startsWith("#EXT-X-MEDIA-SEQUENCE:")
+                )
+                ?.split(":")[1]
+        );
+
+    const droppedSegments =
+        segments.length - lastSegments.length;
+
+    const mediaSequence =
+        Number.isFinite(sourceMediaSequence)
+            ? sourceMediaSequence + droppedSegments
+            : 0;
+
+    let output = [
+        ...header,
+        `#EXT-X-MEDIA-SEQUENCE:${mediaSequence}`,
+        ...lastSegments,
+    ].join("\n");
+
+
+    /*
+     * Relay ایران URL خودش را برمی‌گرداند.
+     *
+     * آن را به endpoint خود AlanBin
+     * تبدیل می‌کنیم تا مرورگر مستقیماً
+     * به VPS ایران وصل نشود.
+     */
+
+    output =
+        output
+            .split("\n")
+            .map(line => {
+
+                const trimmed =
+                    line.trim();
+
+                if (
+                    !trimmed ||
+                    trimmed.startsWith("#")
+                ) {
+                    return line;
+                }
+
+                /*
+                 * انتظار داریم چیزی شبیه:
+                 *
+                 * /tv1/segment/xxxx.ts
+                 */
+
+                if (
+                    !trimmed.startsWith(
+                        "/tv1/segment/"
+                    )
+                ) {
+                    return line;
+                }
+
+                const segment =
+                    trimmed.replace(
+                        "/tv1/segment/",
+                        ""
+                    );
+
+                return (
+                    `/api/live/tv1/segment/` +
+                    `${sessionId}/` +
+                    `${encodeURIComponent(segment)}`
+                );
+            })
+            .join("\n");
+
+    return output;
+}
+
+
+// ===============================
+// PLAYLIST
+// ===============================
+
+app.get(
+    "/api/live/tv1/index.m3u8",
+    async (req, res) => {
+
+        try {
+
+            let sessionId =
+                String(
+                    req.query.session || ""
+                );
+
+            let session =
+                sessionId
+                    ? getTv1Session(
+                        sessionId
+                    )
+                    : null;
+
+
+            /*
+             * اولین درخواست
+             */
+
+            if (!session) {
+
+                sessionId =
+                    createTv1Session();
+
+                session =
+                    getTv1Session(
+                        sessionId
+                    );
+
+                if (!session) {
+
+                    throw new Error(
+                        "Failed to create TV1 session"
+                    );
+                }
+            }
+
+
+            /*
+             * اگر frontend بعد از 451
+             * refresh خواسته، session را
+             * نگه می‌داریم.
+             *
+             * Relay ایران در درخواست بعدی
+             * origin جدید را انتخاب می‌کند.
+             */
+
+            if (
+                session.refreshRequested
+            ) {
+
+                console.log(
+                    "🔄 TV1 relay refresh requested"
+                );
+
+                session.refreshRequested =
+                    false;
+            }
+
+
+            const playlist =
+                await buildTv1Playlist(
+                    sessionId
+                );
+
+
+            res.setHeader(
+                "Content-Type",
+                "application/vnd.apple.mpegurl"
+            );
+
+            res.setHeader(
+                "Cache-Control",
+                "no-store, no-cache, must-revalidate"
+            );
+
+            res.setHeader(
+                "Access-Control-Allow-Origin",
+                "https://www.alanbin.com"
+            );
+
+            res.setHeader(
+                "X-TV1-Session",
+                sessionId
+            );
+
+            res.setHeader(
+                "Access-Control-Expose-Headers",
+                "X-TV1-Session"
+            );
+
+            res.send(
+                playlist
+            );
+
+        } catch (err) {
+
+            console.error(
+                "❌ TV1 PLAYLIST ERROR:",
+                err
+            );
+
+            res.status(502).json({
+                message:
+                    "خطا در دریافت پخش زنده شبکه ۱"
+            });
+        }
+    }
+);
+
+
+// ===============================
+// SEGMENTS
+// ===============================
+
+app.get(
+    "/api/live/tv1/segment/:sessionId/:segment",
+    async (req, res) => {
+
+        try {
+
+            const sessionId =
+                String(
+                    req.params.sessionId
+                );
+
+            const segment =
+                String(
+                    req.params.segment
+                );
+
+            const session =
+                getTv1Session(
+                    sessionId
+                );
+
+            if (!session) {
+
+                return res
+                    .status(410)
+                    .json({
+                        message:
+                            "Live session expired"
+                    });
+            }
+
+
+            /*
+             * Express مقدار route parameter
+             * را decode می‌کند.
+             */
+
+            if (
+                segment.includes("/") ||
+                segment.includes("\\") ||
+                segment.includes("..") ||
+                !segment.endsWith(".ts")
+            ) {
+
+                return res
+                    .status(400)
+                    .json({
+                        message:
+                            "Segment نامعتبر است"
+                    });
+            }
+
+
+            const relaySegmentUrl =
+                `${TV1_RELAY_URL}` +
+                `/tv1/segment/` +
+                `${encodeURIComponent(segment)}`;
+
+
+            console.log(
+                "🎬 TV1 relay segment:",
+                segment.slice(0, 30)
+            );
+
+
+            const response =
+                await fetch(
+                    relaySegmentUrl,
+                    {
+                        cache: "no-store",
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                console.log(
+                    "⚠️ Iran relay TV1 segment failed:",
+                    response.status,
+                    "session:",
+                    sessionId
+                );
+
+
+                /*
+                 * اگر Relay ایران 451 داد،
+                 * playlist بعدی باعث می‌شود
+                 * Relay دوباره origin را resolve کند.
+                 */
+
+                if (
+                    response.status === 451
+                ) {
+
+                    session.refreshRequested =
+                        true;
+
+                    console.log(
+                        "🔄 TV1 relay failover requested"
+                    );
+                }
+
+
+                return res
+                    .status(response.status)
+                    .end();
+            }
+
+
+            if (!response.body) {
+
+                return res
+                    .status(502)
+                    .end();
+            }
+
+
+            res.setHeader(
+                "Content-Type",
+                "video/mp2t"
+            );
+
+            res.setHeader(
+                "Cache-Control",
+                "no-store"
+            );
+
+            res.setHeader(
+                "Access-Control-Allow-Origin",
+                "https://www.alanbin.com"
+            );
+
+
+            if (
+                response.headers.has(
+                    "content-length"
+                )
+            ) {
+
+                res.setHeader(
+                    "Content-Length",
+                    response.headers.get(
+                        "content-length"
+                    )!
+                );
+            }
+
+
+            Readable
+                .fromWeb(
+                    response.body as any
+                )
+                .pipe(res);
+
+        } catch (err) {
+
+            console.error(
+                "❌ TV1 SEGMENT ERROR:",
+                err
+            );
+
+            if (!res.headersSent) {
+
+                res
+                    .status(502)
+                    .end();
+            }
+        }
+    }
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) {
     throw new Error("MONGODB_URI is missing");
