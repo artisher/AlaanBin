@@ -5,10 +5,12 @@ import Hls from "hls.js";
 
 type LivePlayerProps = {
     streamUrl: string;
+    requiresSession?: boolean;
 };
 
 export default function LivePlayer({
     streamUrl,
+    requiresSession = false,
 }: LivePlayerProps) {
 
     const videoRef =
@@ -68,184 +70,182 @@ export default function LivePlayer({
             player.attachMedia(video);
 
 
-            player.on(
-                Hls.Events.ERROR,
-                async (_, data) => {
+            /*
+             * فقط شبکه ورزش recovery مربوط به session
+             * و خطای 451 را فعال می‌کند.
+             *
+             * TV1 / TV3 اصلاً وارد این منطق نمی‌شوند.
+             */
+            if (requiresSession) {
 
-                    console.error(
-                        "HLS FULL ERROR:",
-                        JSON.stringify(
-                            data,
-                            null,
-                            2
-                        )
-                    );
-
-
-                    const is451 =
-                        data.response?.code === 451;
-
-                    const isFragmentError =
-                        data.details ===
-                        Hls.ErrorDetails.FRAG_LOAD_ERROR;
-
-
-                    if (
-                        !data.fatal ||
-                        !is451 ||
-                        !isFragmentError ||
-                        recovering
-                    ) {
-                        return;
-                    }
-
-
-                    if (
-                        recoveryCount >=
-                        MAX_RECOVERIES
-                    ) {
+                player.on(
+                    Hls.Events.ERROR,
+                    async (_, data) => {
 
                         console.error(
-                            "❌ Maximum Varzesh recoveries reached."
+                            "HLS FULL ERROR:",
+                            JSON.stringify(
+                                data,
+                                null,
+                                2
+                            )
                         );
 
-                        return;
-                    }
+
+                        const is451 =
+                            data.response?.code === 451;
+
+                        const isFragmentError =
+                            data.details ===
+                            Hls.ErrorDetails.FRAG_LOAD_ERROR;
 
 
-                    recovering = true;
+                        if (
+                            !data.fatal ||
+                            !is451 ||
+                            !isFragmentError ||
+                            recovering
+                        ) {
+                            return;
+                        }
 
-                    recoveryCount += 1;
+
+                        if (
+                            recoveryCount >=
+                            MAX_RECOVERIES
+                        ) {
+
+                            console.error(
+                                "❌ Maximum Varzesh recoveries reached."
+                            );
+
+                            return;
+                        }
 
 
-                    console.log(
-                        `🔄 451 detected → full HLS recovery #${recoveryCount}`
-                    );
+                        recovering = true;
 
-
-                    try {
-
-                        /*
-                         * اول از Backend می‌خواهیم
-                         * playlist جدید را دریافت کند.
-                         *
-                         * چون session.refreshRequested
-                         * قبلاً توسط segment route فعال شده،
-                         * این درخواست باعث failover می‌شود.
-                         */
-                        const refreshUrl =
-                            `${streamUrl}?session=${encodeURIComponent(
-                                sessionId ?? ""
-                            )}&refresh=${Date.now()}`;
+                        recoveryCount += 1;
 
 
                         console.log(
-                            "🔄 Requesting fresh playlist..."
+                            `🔄 451 detected → full HLS recovery #${recoveryCount}`
                         );
 
 
-                        const response =
-                            await fetch(
-                                refreshUrl,
-                                {
-                                    cache: "no-store",
-                                }
-                            );
+                        try {
 
+                            /*
+                             * از Backend playlist جدید می‌گیریم.
+                             */
+                            const refreshUrl =
+                                `${streamUrl}?session=${encodeURIComponent(
+                                    sessionId ?? ""
+                                )}&refresh=${Date.now()}`;
 
-                        if (!response.ok) {
-
-                            throw new Error(
-                                `Refresh playlist failed: ${response.status}`
-                            );
-                        }
-
-
-                        const newSessionId =
-                            response.headers.get(
-                                "X-Varzesh-Session"
-                            );
-
-
-                        if (newSessionId) {
-
-                            sessionId =
-                                newSessionId;
-                        }
-
-
-                        if (cancelled) return;
-
-
-                        /*
-                         * HLS قبلی را کاملاً نابود می‌کنیم.
-                         */
-                        if (hls) {
 
                             console.log(
-                                "🧹 Destroying failed HLS instance..."
+                                "🔄 Requesting fresh playlist..."
                             );
 
-                            hls.destroy();
 
-                            hls = null;
+                            const response =
+                                await fetch(
+                                    refreshUrl,
+                                    {
+                                        cache: "no-store",
+                                    }
+                                );
+
+
+                            if (!response.ok) {
+
+                                throw new Error(
+                                    `Refresh playlist failed: ${response.status}`
+                                );
+                            }
+
+
+                            const newSessionId =
+                                response.headers.get(
+                                    "X-Varzesh-Session"
+                                );
+
+
+                            if (newSessionId) {
+
+                                sessionId =
+                                    newSessionId;
+                            }
+
+
+                            if (cancelled) return;
+
+
+                            /*
+                             * HLS قبلی را کاملاً نابود می‌کنیم.
+                             */
+                            if (hls) {
+
+                                console.log(
+                                    "🧹 Destroying failed HLS instance..."
+                                );
+
+                                hls.destroy();
+
+                                hls = null;
+                            }
+
+
+                            /*
+                             * کمی صبر می‌کنیم.
+                             */
+                            await new Promise(
+                                resolve =>
+                                    setTimeout(
+                                        resolve,
+                                        200
+                                    )
+                            );
+
+
+                            if (cancelled) return;
+
+
+                            /*
+                             * HLS جدید با session جدید.
+                             */
+                            const newPlaylistUrl =
+                                `${streamUrl}?session=${encodeURIComponent(
+                                    sessionId ?? ""
+                                )}&t=${Date.now()}`;
+
+
+                            console.log(
+                                "▶️ Starting fresh HLS player..."
+                            );
+
+
+                            recovering = false;
+
+
+                            await createPlayer(
+                                newPlaylistUrl
+                            );
+
+
+                        } catch (error) {
+
+                            console.error(
+                                "❌ Varzesh recovery failed:",
+                                error
+                            );
+
+                            recovering = false;
                         }
-
-
-                        /*
-                         * کمی صبر می‌کنیم تا player قبلی
-                         * کاملاً از MediaElement جدا شود.
-                         */
-                        await new Promise(
-                            resolve =>
-                                setTimeout(
-                                    resolve,
-                                    200
-                                )
-                        );
-
-
-                        if (cancelled) return;
-
-
-                        /*
-                         * یک HLS کاملاً جدید می‌سازیم.
-                         *
-                         * خود playlist response را هم
-                         * مستقیم استفاده نمی‌کنیم؛
-                         * فقط URL همان session را می‌دهیم
-                         * تا HLS.js از اول playlist را بخواند.
-                         */
-                        const newPlaylistUrl =
-                            `${streamUrl}?session=${encodeURIComponent(
-                                sessionId ?? ""
-                            )}&t=${Date.now()}`;
-
-
-                        console.log(
-                            "▶️ Starting fresh HLS player..."
-                        );
-
-
-                        recovering = false;
-
-
-                        await createPlayer(
-                            newPlaylistUrl
-                        );
-
-
-                    } catch (error) {
-
-                        console.error(
-                            "❌ Varzesh recovery failed:",
-                            error
-                        );
-
-                        recovering = false;
                     }
-                }
-            );
+                );
+            }
 
 
             player.loadSource(
@@ -259,8 +259,50 @@ export default function LivePlayer({
             try {
 
                 /*
-                 * اولین درخواست:
-                 * Backend session می‌سازد.
+                 * ============================
+                 * شبکه‌هایی که session ندارند
+                 * ============================
+                 *
+                 * TV1 / TV3 مستقیماً با HLS
+                 * playlist خودشان را پخش می‌کنند.
+                 */
+                if (!requiresSession) {
+
+                    if (cancelled) return;
+
+
+                    if (Hls.isSupported()) {
+
+                        await createPlayer(
+                            streamUrl
+                        );
+
+                    } else if (
+                        video.canPlayType(
+                            "application/vnd.apple.mpegurl"
+                        )
+                    ) {
+
+                        video.src =
+                            streamUrl;
+
+                    } else {
+
+                        console.error(
+                            "HLS is not supported in this browser"
+                        );
+                    }
+
+                    return;
+                }
+
+
+                /*
+                 * ============================
+                 * شبکه ورزش
+                 * ============================
+                 *
+                 * این قسمت همان منطق قبلی ورزش است.
                  */
                 const response =
                     await fetch(
@@ -334,7 +376,9 @@ export default function LivePlayer({
             } catch (error) {
 
                 console.error(
-                    "❌ VARZESH PLAYER ERROR:",
+                    requiresSession
+                        ? "❌ VARZESH PLAYER ERROR:"
+                        : "❌ LIVE PLAYER ERROR:",
                     error
                 );
             }
@@ -357,7 +401,7 @@ export default function LivePlayer({
 
         };
 
-    }, [streamUrl]);
+    }, [streamUrl, requiresSession]);
 
 
     return (
