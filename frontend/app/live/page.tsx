@@ -3,6 +3,11 @@ import Link from "next/link";
 
 const CHANNELS = [
     {
+        id: "tv1",
+        title: "شبکه ۱",
+        description: "پخش زنده شبکه یک سیما",
+    },
+    {
         id: "tv3",
         title: "شبکه ۳",
         description: "پخش زنده شبکه سه سیما",
@@ -46,7 +51,7 @@ export default function LivePage() {
                     {CHANNELS.map((channel) => (
                         <Link
                             key={channel.id}
-                            href={`/live/${ channel.id }`}
+                            href={`/live/${channel.id}`}
                             className="
                                 group
                                 relative

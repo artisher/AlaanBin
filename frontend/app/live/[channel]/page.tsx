@@ -4,6 +4,10 @@ import LivePlayer from "@/components/LivePlayer";
 import Link from "next/link";
 
 const CHANNELS = {
+    tv1: {
+        title: "شبکه ۱",
+        streamUrl: "https://alanbin.com/api/live/tv1/index.m3u8",
+    },
     tv3: {
         title: "شبکه ۳",
         streamUrl: "https://alanbin.com/live/tv3/index.m3u8",

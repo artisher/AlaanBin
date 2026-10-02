@@ -409,6 +409,7 @@ export const MovieModal = ({
                                 mt-1
                                 break-words
                                 text-base
+                                text-white
                                 font-bold
                                 sm:text-xl
                             "
