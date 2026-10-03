@@ -1364,7 +1364,311 @@ app.get(
 );
 
 
+// ===============================
+// LIVE TV3 STREAM
+// ===============================
 
+const TV3_RELAY_URL =
+    process.env.TV3_RELAY_URL ||
+    "http://10.77.0.1:8789";
+
+
+// ===============================
+// BUILD PLAYLIST
+// ===============================
+
+async function buildTv3Playlist() {
+
+    const playlistUrl =
+        `${TV3_RELAY_URL}/tv3/index.m3u8`;
+
+    const response =
+        await fetch(
+            playlistUrl,
+            {
+                cache: "no-store",
+            }
+        );
+
+    if (!response.ok) {
+
+        throw new Error(
+            `Iran relay TV3 playlist failed: ${response.status}`
+        );
+    }
+
+    const playlist =
+        await response.text();
+
+    const lines =
+        playlist.split("\n");
+
+    const segments: string[] = [];
+
+    for (
+        let i = 0;
+        i < lines.length;
+        i++
+    ) {
+
+        const line =
+            lines[i].trim();
+
+        if (
+            line.startsWith("#EXTINF:")
+        ) {
+
+            const segment =
+                lines[i + 1]?.trim();
+
+            if (
+                segment &&
+                !segment.startsWith("#")
+            ) {
+
+                segments.push(
+                    `${line}\n${segment}`
+                );
+            }
+        }
+    }
+
+    const lastSegments =
+        segments.slice(-10);
+
+    if (!lastSegments.length) {
+
+        throw new Error(
+            "No TV3 live segments found"
+        );
+    }
+
+    const sourceMediaSequence =
+        Number(
+            lines
+                .find(line =>
+                    line.startsWith("#EXT-X-MEDIA-SEQUENCE:")
+                )
+                ?.split(":")[1]
+        );
+
+    const droppedSegments =
+        segments.length -
+        lastSegments.length;
+
+    const mediaSequence =
+        Number.isFinite(sourceMediaSequence)
+            ? sourceMediaSequence + droppedSegments
+            : 0;
+
+    const header =
+        lines.filter(
+            line =>
+                line.startsWith("#EXTM3U") ||
+                line.startsWith("#EXT-X-VERSION") ||
+                line.startsWith("#EXT-X-TARGETDURATION")
+        );
+
+    let output = [
+        ...header,
+        `#EXT-X-MEDIA-SEQUENCE:${mediaSequence}`,
+        ...lastSegments,
+    ].join("\n");
+
+
+    // تبدیل مسیر سگمنت Relay ایران
+    // به مسیر عمومی AlanBin
+
+    output =
+        output
+            .split("\n")
+            .map(line => {
+
+                const trimmed =
+                    line.trim();
+
+                if (
+                    !trimmed ||
+                    trimmed.startsWith("#")
+                ) {
+                    return line;
+                }
+
+                if (
+                    !trimmed.startsWith(
+                        "/tv3/segment/"
+                    )
+                ) {
+                    return line;
+                }
+
+                const segment =
+                    trimmed.replace(
+                        "/tv3/segment/",
+                        ""
+                    );
+
+                return (
+                    `/api/live/tv3/segment/` +
+                    `${encodeURIComponent(segment)}`
+                );
+            })
+            .join("\n");
+
+    return output;
+}
+
+
+// ===============================
+// PLAYLIST
+// ===============================
+
+app.get(
+    "/api/live/tv3/index.m3u8",
+    async (req, res) => {
+
+        try {
+
+            const playlist =
+                await buildTv3Playlist();
+
+            res.setHeader(
+                "Content-Type",
+                "application/vnd.apple.mpegurl"
+            );
+
+            res.setHeader(
+                "Cache-Control",
+                "no-store, no-cache, must-revalidate"
+            );
+
+            res.setHeader(
+                "Access-Control-Allow-Origin",
+                "https://www.alanbin.com"
+            );
+
+            res.send(
+                playlist
+            );
+
+        } catch (err) {
+
+            console.error(
+                "❌ TV3 PLAYLIST ERROR:",
+                err
+            );
+
+            res.status(502).json({
+                message:
+                    "خطا در دریافت پخش زنده شبکه ۳"
+            });
+        }
+    }
+);
+
+
+// ===============================
+// SEGMENTS
+// ===============================
+
+app.get(
+    "/api/live/tv3/segment/:segment",
+    async (req, res) => {
+
+        try {
+
+            const segment =
+                String(
+                    req.params.segment
+                );
+
+            if (
+                segment.includes("/") ||
+                segment.includes("\\") ||
+                segment.includes("..") ||
+                !segment.endsWith(".ts")
+            ) {
+
+                return res
+                    .status(400)
+                    .json({
+                        message:
+                            "Segment نامعتبر است"
+                    });
+            }
+
+            const relaySegmentUrl =
+                `${TV3_RELAY_URL}` +
+                `/tv3/segment/` +
+                `${encodeURIComponent(segment)}`;
+
+            console.log(
+                "🎬 TV3 relay segment:",
+                segment.slice(0, 30)
+            );
+
+            const response =
+                await fetch(
+                    relaySegmentUrl,
+                    {
+                        cache: "no-store",
+                    }
+                );
+
+            if (!response.ok) {
+
+                console.log(
+                    "⚠️ Iran relay TV3 segment failed:",
+                    response.status
+                );
+
+                return res
+                    .status(response.status)
+                    .end();
+            }
+
+            if (!response.body) {
+
+                return res
+                    .status(502)
+                    .end();
+            }
+
+            res.setHeader(
+                "Content-Type",
+                "video/mp2t"
+            );
+
+            res.setHeader(
+                "Cache-Control",
+                "no-store, no-cache, must-revalidate"
+            );
+
+            res.setHeader(
+                "Access-Control-Allow-Origin",
+                "https://www.alanbin.com"
+            );
+
+            Readable
+                .fromWeb(response.body as any)
+                .pipe(res);
+
+        } catch (err) {
+
+            console.error(
+                "❌ TV3 SEGMENT ERROR:",
+                err
+            );
+
+            if (!res.headersSent) {
+
+                res
+                    .status(502)
+                    .end();
+            }
+        }
+    }
+);
 
 
 
