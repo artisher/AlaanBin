@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useRef } from "react";
@@ -5,12 +6,12 @@ import Hls from "hls.js";
 
 type LivePlayerProps = {
     streamUrl: string;
-    requiresSession?: boolean;
+    sessionType?: "tv1" | "varzesh";
 };
 
 export default function LivePlayer({
     streamUrl,
-    requiresSession = false,
+    sessionType,
 }: LivePlayerProps) {
 
     const videoRef =
@@ -71,12 +72,13 @@ export default function LivePlayer({
 
 
             /*
-             * فقط شبکه ورزش recovery مربوط به session
-             * و خطای 451 را فعال می‌کند.
+             * فقط شبکه ورزش recovery مربوط به
+             * session و خطای 451 را فعال می‌کند.
              *
-             * TV1 / TV3 اصلاً وارد این منطق نمی‌شوند.
+             * TV1 فقط session دارد و وارد recovery
+             * مربوط به ورزش نمی‌شود.
              */
-            if (requiresSession) {
+            if (sessionType === "varzesh") {
 
                 player.on(
                     Hls.Events.ERROR,
@@ -135,9 +137,6 @@ export default function LivePlayer({
 
                         try {
 
-                            /*
-                             * از Backend playlist جدید می‌گیریم.
-                             */
                             const refreshUrl =
                                 `${streamUrl}?session=${encodeURIComponent(
                                     sessionId ?? ""
@@ -182,9 +181,6 @@ export default function LivePlayer({
                             if (cancelled) return;
 
 
-                            /*
-                             * HLS قبلی را کاملاً نابود می‌کنیم.
-                             */
                             if (hls) {
 
                                 console.log(
@@ -197,9 +193,6 @@ export default function LivePlayer({
                             }
 
 
-                            /*
-                             * کمی صبر می‌کنیم.
-                             */
                             await new Promise(
                                 resolve =>
                                     setTimeout(
@@ -212,9 +205,6 @@ export default function LivePlayer({
                             if (cancelled) return;
 
 
-                            /*
-                             * HLS جدید با session جدید.
-                             */
                             const newPlaylistUrl =
                                 `${streamUrl}?session=${encodeURIComponent(
                                     sessionId ?? ""
@@ -260,13 +250,13 @@ export default function LivePlayer({
 
                 /*
                  * ============================
-                 * شبکه‌هایی که session ندارند
+                 * شبکه‌های بدون session
                  * ============================
                  *
-                 * TV1 / TV3 مستقیماً با HLS
-                 * playlist خودشان را پخش می‌کنند.
+                 * هر کانالی که sessionType نداشته
+                 * باشد مستقیماً با HLS پخش می‌شود.
                  */
-                if (!requiresSession) {
+                if (!sessionType) {
 
                     if (cancelled) return;
 
@@ -299,85 +289,172 @@ export default function LivePlayer({
 
                 /*
                  * ============================
+                 * TV1
+                 * ============================
+                 *
+                 * TV1 session دارد، ولی recovery
+                 * مخصوص Varzesh ندارد.
+                 */
+                if (sessionType === "tv1") {
+
+                    const response =
+                        await fetch(
+                            streamUrl,
+                            {
+                                cache: "no-store",
+                            }
+                        );
+
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            `TV1 playlist request failed: ${response.status}`
+                        );
+                    }
+
+
+                    sessionId =
+                        response.headers.get(
+                            "X-TV1-Session"
+                        );
+
+
+                    if (!sessionId) {
+
+                        throw new Error(
+                            "TV1 session ID not received"
+                        );
+                    }
+
+
+                    console.log(
+                        "🎬 TV1 session:",
+                        sessionId
+                    );
+
+
+                    if (cancelled) return;
+
+
+                    const sessionStreamUrl =
+                        `${streamUrl}?session=${encodeURIComponent(
+                            sessionId
+                        )}&t=${Date.now()}`;
+
+
+                    if (Hls.isSupported()) {
+
+                        await createPlayer(
+                            sessionStreamUrl
+                        );
+
+                    } else if (
+                        video.canPlayType(
+                            "application/vnd.apple.mpegurl"
+                        )
+                    ) {
+
+                        video.src =
+                            sessionStreamUrl;
+
+                    } else {
+
+                        console.error(
+                            "HLS is not supported in this browser"
+                        );
+                    }
+
+                    return;
+                }
+
+
+                /*
+                 * ============================
                  * شبکه ورزش
                  * ============================
                  *
-                 * این قسمت همان منطق قبلی ورزش است.
+                 * منطق قبلی ورزش بدون تغییر.
                  */
-                const response =
-                    await fetch(
-                        streamUrl,
-                        {
-                            cache: "no-store",
-                        }
-                    );
+                if (sessionType === "varzesh") {
+
+                    const response =
+                        await fetch(
+                            streamUrl,
+                            {
+                                cache: "no-store",
+                            }
+                        );
 
 
-                if (!response.ok) {
+                    if (!response.ok) {
 
-                    throw new Error(
-                        `Playlist request failed: ${response.status}`
-                    );
-                }
-
-
-                sessionId =
-                    response.headers.get(
-                        "X-Varzesh-Session"
-                    );
+                        throw new Error(
+                            `Playlist request failed: ${response.status}`
+                        );
+                    }
 
 
-                if (!sessionId) {
-
-                    throw new Error(
-                        "Varzesh session ID not received"
-                    );
-                }
+                    sessionId =
+                        response.headers.get(
+                            "X-Varzesh-Session"
+                        );
 
 
-                console.log(
-                    "🎬 Varzesh session:",
-                    sessionId
-                );
+                    if (!sessionId) {
+
+                        throw new Error(
+                            "Varzesh session ID not received"
+                        );
+                    }
 
 
-                if (cancelled) return;
-
-
-                const sessionStreamUrl =
-                    `${streamUrl}?session=${encodeURIComponent(
+                    console.log(
+                        "🎬 Varzesh session:",
                         sessionId
-                    )}&t=${Date.now()}`;
-
-
-                if (Hls.isSupported()) {
-
-                    await createPlayer(
-                        sessionStreamUrl
                     );
 
-                } else if (
-                    video.canPlayType(
-                        "application/vnd.apple.mpegurl"
-                    )
-                ) {
 
-                    video.src =
-                        sessionStreamUrl;
+                    if (cancelled) return;
 
-                } else {
 
-                    console.error(
-                        "HLS is not supported in this browser"
-                    );
+                    const sessionStreamUrl =
+                        `${streamUrl}?session=${encodeURIComponent(
+                            sessionId
+                        )}&t=${Date.now()}`;
+
+
+                    if (Hls.isSupported()) {
+
+                        await createPlayer(
+                            sessionStreamUrl
+                        );
+
+                    } else if (
+                        video.canPlayType(
+                            "application/vnd.apple.mpegurl"
+                        )
+                    ) {
+
+                        video.src =
+                            sessionStreamUrl;
+
+                    } else {
+
+                        console.error(
+                            "HLS is not supported in this browser"
+                        );
+                    }
+
                 }
-
 
             } catch (error) {
 
                 console.error(
-                    requiresSession
+                    sessionType === "varzesh"
                         ? "❌ VARZESH PLAYER ERROR:"
+                        : sessionType === "tv1"
+                        ? "❌ TV1 PLAYER ERROR:"
                         : "❌ LIVE PLAYER ERROR:",
                     error
                 );
@@ -401,7 +478,7 @@ export default function LivePlayer({
 
         };
 
-    }, [streamUrl, requiresSession]);
+    }, [streamUrl, sessionType]);
 
 
     return (
@@ -413,3 +490,4 @@ export default function LivePlayer({
         />
     );
 }
+

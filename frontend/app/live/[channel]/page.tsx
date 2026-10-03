@@ -93,7 +93,13 @@ export default async function LiveChannelPage({
                 >
                     <LivePlayer
                         streamUrl={selectedChannel.streamUrl}
-                        requiresSession={channel === "varzesh"}
+                        sessionType={
+                            channel === "tv1"
+                                ? "tv1"
+                                : channel === "varzesh"
+                                    ? "varzesh"
+                                    : undefined
+                        }
                     />
                 </div>
 
