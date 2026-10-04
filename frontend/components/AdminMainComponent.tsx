@@ -31,6 +31,84 @@ type StatCardProps = {
     progress?: number;
 };
 
+type MonitoringServer = {
+    hostname: string;
+    uptime: number;
+
+    cpu: {
+        usage: number;
+        cores: number;
+    };
+
+    memory: {
+        total: number;
+        used: number;
+        free: number;
+        usage: number;
+        totalGB: number;
+        usedGB: number;
+        freeGB: number;
+    };
+
+    disk: {
+        root: {
+            total: number;
+            used: number;
+            available: number;
+            usage: number;
+            totalGB: number;
+            usedGB: number;
+            availableGB: number;
+        };
+
+        storage: {
+            total: number;
+            used: number;
+            available: number;
+            usage: number;
+            totalGB: number;
+            usedGB: number;
+            availableGB: number;
+        };
+    };
+
+    network: {
+        rxBytes: number;
+        txBytes: number;
+        rxGB: number;
+        txGB: number;
+        downloadMbps: number;
+        uploadMbps: number;
+    };
+
+    timestamp: string;
+};
+
+type MonitoringData = {
+    server: MonitoringServer;
+
+    users: {
+        total: number;
+        online: number;
+        subscribed: number;
+        expired: number;
+        newToday: number;
+    };
+
+    subscription: {
+        revenue: string;
+        active: number;
+        expiringSoon: number;
+    };
+
+    live: {
+        total: number;
+        online: number;
+        viewers: number;
+        bandwidth: string;
+    };
+};
+
 const StatCard = ({
     title,
     value,
@@ -42,7 +120,9 @@ const StatCard = ({
         <div className="bg-card border border-gray-800 rounded-2xl p-5">
             <div className="flex items-start justify-between">
                 <div>
-                    <p className="text-sm text-gray-400">{title}</p>
+                    <p className="text-sm text-gray-400">
+                        {title}
+                    </p>
 
                     <h3 className="text-2xl font-bold text-white mt-2">
                         {value}
@@ -66,7 +146,10 @@ const StatCard = ({
                         <div
                             className="h-full bg-primary rounded-full transition-all duration-500"
                             style={{
-                                width: `${Math.min(progress, 100)}%`,
+                                width: `${Math.min(
+                                    Math.max(progress, 0),
+                                    100
+                                )}%`,
                             }}
                         />
                     </div>
@@ -98,7 +181,9 @@ const ServerCard = ({
         <div className="bg-card border border-gray-800 rounded-2xl p-5">
             <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-sm text-gray-400">{title}</p>
+                    <p className="text-sm text-gray-400">
+                        {title}
+                    </p>
 
                     <h3 className="text-2xl font-bold text-white mt-2">
                         {value}
@@ -116,9 +201,12 @@ const ServerCard = ({
                 <div className="mt-5">
                     <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-primary rounded-full"
+                            className="h-full bg-primary rounded-full transition-all duration-500"
                             style={{
-                                width: `${Math.min(progress, 100)}%`,
+                                width: `${Math.min(
+                                    Math.max(progress, 0),
+                                    100
+                                )}%`,
                             }}
                         />
                     </div>
@@ -127,6 +215,112 @@ const ServerCard = ({
         </div>
     );
 };
+
+const formatUptime = (seconds: number) => {
+    if (!Number.isFinite(seconds)) {
+        return "-";
+    }
+
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor(
+        (seconds % 86400) / 3600
+    );
+    const minutes = Math.floor(
+        (seconds % 3600) / 60
+    );
+
+    if (days > 0) {
+        return `${days} روز ${hours} ساعت`;
+    }
+
+    if (hours > 0) {
+        return `${hours} ساعت ${minutes} دقیقه`;
+    }
+
+    return `${minutes} دقیقه`;
+};
+
+const createEmptyMonitoring = (
+    userCount: number
+): MonitoringData => ({
+    server: {
+        hostname: "-",
+        uptime: 0,
+
+        cpu: {
+            usage: 0,
+            cores: 0,
+        },
+
+        memory: {
+            total: 0,
+            used: 0,
+            free: 0,
+            usage: 0,
+            totalGB: 0,
+            usedGB: 0,
+            freeGB: 0,
+        },
+
+        disk: {
+            root: {
+                total: 0,
+                used: 0,
+                available: 0,
+                usage: 0,
+                totalGB: 0,
+                usedGB: 0,
+                availableGB: 0,
+            },
+
+            storage: {
+                total: 0,
+                used: 0,
+                available: 0,
+                usage: 0,
+                totalGB: 0,
+                usedGB: 0,
+                availableGB: 0,
+            },
+        },
+
+        network: {
+            rxBytes: 0,
+            txBytes: 0,
+            rxGB: 0,
+            txGB: 0,
+            downloadMbps: 0,
+            uploadMbps: 0,
+        },
+
+        timestamp: "",
+    },
+
+    // فعلاً Mock
+    // بعداً API واقعی کاربران را وصل می‌کنیم.
+    users: {
+        total: userCount,
+        online: 0,
+        subscribed: 0,
+        expired: 0,
+        newToday: 0,
+    },
+
+    // فعلاً Mock
+    subscription: {
+        revenue: "€0",
+        active: 0,
+        expiringSoon: 0,
+    },
+
+    // فعلاً Mock
+    live: {
+        total: 0,
+        online: 0,
+        viewers: 0,
+        bandwidth: "0 Mbps",
+    },
+});
 
 export const AdminMainComponent = ({
     moviesList = [],
@@ -144,50 +338,135 @@ export const AdminMainComponent = ({
     const [activeTab, setActiveTab] =
         useState<ActiveTab>("dashboard");
 
+    const [monitoring, setMonitoring] =
+        useState<MonitoringData | null>(null);
+
+    const [monitoringLoading, setMonitoringLoading] =
+        useState(false);
+
+    const [monitoringError, setMonitoringError] =
+        useState<string | null>(null);
+
     /*
-     * فعلاً Mock
-     * بعداً این اطلاعات از API مانیتورینگ می‌آید.
+     * ============================
+     * MONITORING API
+     * ============================
      */
 
-    const [monitoring, setMonitoring] = useState<any>(null);
-    const [monitoringLoading, setMonitoringLoading] = useState(true);
-    const [monitoringError, setMonitoringError] = useState<string | null>(null);
-    useEffect(() => {
-        if (activeTab !== "dashboard") return;
+    const fetchMonitoring = async () => {
+        try {
+            setMonitoringLoading(true);
+            setMonitoringError(null);
 
-        const fetchMonitoring = async () => {
-            try {
-                setMonitoringError(null);
+            const response = await fetch(
+                "/api/admin/monitoring/server",
+                {
+                    method: "GET",
 
-                const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}/api/admin/monitoring/server`,
-                    {
-                        credentials: "include",
-                        cache: "no-store",
-                    }
-                );
+                    // خیلی مهم:
+                    // Cookie لاگین همراه Request ارسال می‌شود.
+                    credentials: "include",
 
-                if (!response.ok) {
-                    throw new Error("خطا در دریافت اطلاعات سرور");
+                    cache: "no-store",
+                }
+            );
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    throw new Error(
+                        "احراز هویت انجام نشده یا Cookie لاگین وجود ندارد."
+                    );
                 }
 
-                const data = await response.json();
+                if (response.status === 403) {
+                    throw new Error(
+                        "شما دسترسی ادمین ندارید."
+                    );
+                }
 
-                setMonitoring(data.server);
-            } catch (error) {
-                console.error(error);
-                setMonitoringError("دریافت اطلاعات مانیتورینگ ناموفق بود");
-            } finally {
-                setMonitoringLoading(false);
+                throw new Error(
+                    `Monitoring API Error: ${response.status}`
+                );
             }
-        };
 
+            const data = await response.json();
+
+            if (!data?.success || !data?.server) {
+                throw new Error(
+                    "پاسخ نامعتبر از API مانیتورینگ"
+                );
+            }
+
+            setMonitoring((previous) => {
+                const empty =
+                    createEmptyMonitoring(
+                        userList.length
+                    );
+
+                return {
+                    ...empty,
+
+                    server: data.server,
+
+                    /*
+                     * فعلاً اطلاعاتی که API سرور ندارد
+                     * از state قبلی حفظ می‌شوند.
+                     */
+                    users:
+                        previous?.users ??
+                        empty.users,
+
+                    subscription:
+                        previous?.subscription ??
+                        empty.subscription,
+
+                    live:
+                        previous?.live ??
+                        empty.live,
+                };
+            });
+        } catch (error) {
+            console.error(
+                "MONITORING FETCH ERROR:",
+                error
+            );
+
+            setMonitoringError(
+                error instanceof Error
+                    ? error.message
+                    : "خطا در دریافت اطلاعات مانیتورینگ"
+            );
+        } finally {
+            setMonitoringLoading(false);
+        }
+    };
+
+    /*
+     * اولین Load + Refresh هر 5 ثانیه
+     */
+
+    useEffect(() => {
         fetchMonitoring();
 
-        const interval = setInterval(fetchMonitoring, 5000);
+        const interval = setInterval(() => {
+            fetchMonitoring();
+        }, 5000);
 
-        return () => clearInterval(interval);
-    }, [activeTab]);
+        return () => {
+            clearInterval(interval);
+        };
+    }, []);
+
+    /*
+     * اگر API هنوز جواب نداده باشد،
+     * از این مقدار استفاده می‌کنیم تا JSX
+     * هیچ وقت روی null کرش نکند.
+     */
+
+    const currentMonitoring =
+        monitoring ??
+        createEmptyMonitoring(userList.length);
+
     const tabs = [
         {
             id: "dashboard",
@@ -216,10 +495,23 @@ export const AdminMainComponent = ({
         },
     ] as const;
 
+    const server =
+        currentMonitoring.server;
+
+    const users =
+        currentMonitoring.users;
+
+    const subscription =
+        currentMonitoring.subscription;
+
+    const live =
+        currentMonitoring.live;
+
     return (
         <div className="min-h-screen bg-dark text-gray-200 flex flex-col md:flex-row">
 
             {/* Sidebar */}
+
             <aside className="w-full md:w-64 bg-card border-l border-gray-800 flex flex-col">
 
                 <div className="p-6 border-b border-gray-700">
@@ -237,17 +529,21 @@ export const AdminMainComponent = ({
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
+                            onClick={() =>
+                                setActiveTab(tab.id)
+                            }
                             className={`w-full flex items-center gap-3 text-right px-4 py-3 rounded-lg transition-all duration-200 ${activeTab === tab.id
-                                ? "bg-primary text-dark font-bold shadow-lg shadow-green-900/20"
-                                : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                                    ? "bg-primary text-dark font-bold shadow-lg shadow-green-900/20"
+                                    : "text-gray-400 hover:bg-gray-800 hover:text-white"
                                 }`}
                         >
                             <span className="text-lg">
                                 {tab.icon}
                             </span>
 
-                            <span>{tab.label}</span>
+                            <span>
+                                {tab.label}
+                            </span>
                         </button>
                     ))}
 
@@ -262,6 +558,7 @@ export const AdminMainComponent = ({
             </aside>
 
             {/* Main */}
+
             <main className="flex-1 p-6 md:p-8 overflow-y-auto">
 
                 <header className="mb-8 flex justify-between items-center">
@@ -283,6 +580,29 @@ export const AdminMainComponent = ({
 
                     <div className="flex items-center gap-3">
 
+                        {activeTab === "dashboard" && (
+                            <div className="flex items-center gap-2 text-xs">
+
+                                <span
+                                    className={`w-2 h-2 rounded-full ${monitoringError
+                                            ? "bg-red-500"
+                                            : monitoringLoading
+                                                ? "bg-yellow-400"
+                                                : "bg-green-500"
+                                        }`}
+                                />
+
+                                <span className="text-gray-500">
+                                    {monitoringError
+                                        ? "خطای مانیتورینگ"
+                                        : monitoringLoading
+                                            ? "در حال دریافت..."
+                                            : "Live"}
+                                </span>
+
+                            </div>
+                        )}
+
                         <span className="text-gray-400 text-sm">
                             خوش آمدید، ادمین
                         </span>
@@ -302,11 +622,41 @@ export const AdminMainComponent = ({
                     {activeTab === "dashboard" && (
                         <div className="space-y-8">
 
+                            {/* Error */}
+
+                            {monitoringError && (
+                                <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4">
+
+                                    <div className="flex items-center justify-between gap-4">
+
+                                        <div>
+                                            <p className="text-red-400 font-semibold">
+                                                خطا در دریافت مانیتورینگ
+                                            </p>
+
+                                            <p className="text-sm text-red-400/70 mt-1">
+                                                {monitoringError}
+                                            </p>
+                                        </div>
+
+                                        <button
+                                            onClick={fetchMonitoring}
+                                            className="px-4 py-2 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 transition"
+                                        >
+                                            تلاش مجدد
+                                        </button>
+
+                                    </div>
+
+                                </div>
+                            )}
+
                             {/* Users */}
 
                             <section>
 
                                 <div className="flex items-center justify-between mb-4">
+
                                     <div>
                                         <h3 className="text-lg font-bold text-white">
                                             کاربران و اشتراک‌ها
@@ -316,34 +666,35 @@ export const AdminMainComponent = ({
                                             وضعیت کاربران و درآمد
                                         </p>
                                     </div>
+
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
 
                                     <StatCard
                                         title="کل کاربران"
-                                        value={monitoring.users.total}
-                                        subtitle={`+${monitoring.users.newToday} کاربر امروز`}
+                                        value={users.total}
+                                        subtitle={`+${users.newToday} کاربر امروز`}
                                         icon="👥"
                                     />
 
                                     <StatCard
                                         title="کاربران آنلاین"
-                                        value={monitoring.users.online}
+                                        value={users.online}
                                         subtitle="در حال استفاده"
                                         icon="🟢"
                                     />
 
                                     <StatCard
                                         title="اشتراک فعال"
-                                        value={monitoring.users.subscribed}
-                                        subtitle={`${monitoring.subscription.expiringSoon} اشتراک نزدیک به انقضا`}
+                                        value={users.subscribed}
+                                        subtitle={`${subscription.expiringSoon} اشتراک نزدیک به انقضا`}
                                         icon="💳"
                                     />
 
                                     <StatCard
                                         title="درآمد"
-                                        value={monitoring.subscription.revenue}
+                                        value={subscription.revenue}
                                         subtitle="درآمد اشتراک‌ها"
                                         icon="💰"
                                     />
@@ -357,50 +708,66 @@ export const AdminMainComponent = ({
                             <section>
 
                                 <div className="mb-4">
-                                    <h3 className="text-lg font-bold text-white">
-                                        وضعیت سرور
-                                    </h3>
 
-                                    <p className="text-sm text-gray-500">
-                                        منابع اصلی سرور آلمان
-                                    </p>
+                                    <div className="flex items-center justify-between">
+
+                                        <div>
+                                            <h3 className="text-lg font-bold text-white">
+                                                وضعیت سرور
+                                            </h3>
+
+                                            <p className="text-sm text-gray-500">
+                                                {server.hostname !== "-"
+                                                    ? server.hostname
+                                                    : "سرور آلمان"}
+                                            </p>
+                                        </div>
+
+                                        <div className="text-xs text-gray-500">
+                                            {server.cpu.cores > 0
+                                                ? `${server.cpu.cores} Cores`
+                                                : ""}
+                                        </div>
+
+                                    </div>
+
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
 
                                     <ServerCard
                                         title="CPU"
-                                        value={`${monitoring.server.cpu}%`}
+                                        value={`${server.cpu.usage}%`}
                                         subtitle="استفاده فعلی"
                                         progress={
-                                            monitoring.server.cpu
+                                            server.cpu.usage
                                         }
                                     />
 
                                     <ServerCard
                                         title="RAM"
-                                        value={`${monitoring.server.ram}%`}
-                                        subtitle="استفاده فعلی"
+                                        value={`${server.memory.usage}%`}
+                                        subtitle={`${server.memory.usedGB} / ${server.memory.totalGB} GB`}
                                         progress={
-                                            monitoring.server.ram
+                                            server.memory.usage
                                         }
                                     />
 
                                     <ServerCard
                                         title="Disk"
-                                        value={`${monitoring.server.disk}%`}
-                                        subtitle="دیسک سیستم"
+                                        value={`${server.disk.root.usage}%`}
+                                        subtitle={`${server.disk.root.usedGB} / ${server.disk.root.totalGB} GB`}
                                         progress={
-                                            monitoring.server.disk
+                                            server.disk.root.usage
                                         }
                                     />
 
                                     <ServerCard
                                         title="Storage"
-                                        value={`${monitoring.server.storage}%`}
-                                        subtitle="StorageBox"
+                                        value={`${server.disk.storage.usage}%`}
+                                        subtitle={`${server.disk.storage.usedGB} / ${server.disk.storage.totalGB} GB`}
                                         progress={
-                                            monitoring.server.storage
+                                            server.disk.storage.usage
                                         }
                                     />
 
@@ -413,6 +780,7 @@ export const AdminMainComponent = ({
                             <section>
 
                                 <div className="mb-4">
+
                                     <h3 className="text-lg font-bold text-white">
                                         شبکه و ترافیک
                                     </h3>
@@ -420,43 +788,36 @@ export const AdminMainComponent = ({
                                     <p className="text-sm text-gray-500">
                                         مصرف لحظه‌ای و ترافیک سرور
                                     </p>
+
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
 
                                     <StatCard
                                         title="Download"
-                                        value={
-                                            monitoring.server.download
-                                        }
+                                        value={`${server.network.downloadMbps} Mbps`}
                                         subtitle="سرعت دریافت"
                                         icon="⬇️"
                                     />
 
                                     <StatCard
                                         title="Upload"
-                                        value={
-                                            monitoring.server.upload
-                                        }
+                                        value={`${server.network.uploadMbps} Mbps`}
                                         subtitle="سرعت ارسال"
                                         icon="⬆️"
                                     />
 
                                     <StatCard
-                                        title="ترافیک امروز"
-                                        value={
-                                            monitoring.server.trafficToday
-                                        }
-                                        subtitle="Total Traffic"
+                                        title="دریافت کل"
+                                        value={`${server.network.rxGB} GB`}
+                                        subtitle="از زمان اجرای Backend"
                                         icon="📊"
                                     />
 
                                     <StatCard
-                                        title="ترافیک ماه"
-                                        value={
-                                            monitoring.server.trafficMonth
-                                        }
-                                        subtitle="Total Traffic"
+                                        title="ارسال کل"
+                                        value={`${server.network.txGB} GB`}
+                                        subtitle="از زمان اجرای Backend"
                                         icon="🌐"
                                     />
 
@@ -469,47 +830,117 @@ export const AdminMainComponent = ({
                             <section>
 
                                 <div className="mb-4">
+
                                     <h3 className="text-lg font-bold text-white">
                                         Live Streaming
                                     </h3>
+
+                                    <p className="text-sm text-gray-500">
+                                        وضعیت پخش زنده
+                                    </p>
+
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
 
                                     <StatCard
                                         title="کل Streamها"
-                                        value={
-                                            monitoring.live.total
-                                        }
+                                        value={live.total}
                                         icon="📡"
                                     />
 
                                     <StatCard
                                         title="Stream فعال"
-                                        value={
-                                            monitoring.live.online
-                                        }
+                                        value={live.online}
                                         subtitle="در حال پخش"
                                         icon="🟢"
                                     />
 
                                     <StatCard
                                         title="Viewer"
-                                        value={
-                                            monitoring.live.viewers
-                                        }
+                                        value={live.viewers}
                                         subtitle="کاربر در حال تماشا"
                                         icon="👁️"
                                     />
 
                                     <StatCard
                                         title="Bandwidth"
-                                        value={
-                                            monitoring.live.bandwidth
-                                        }
+                                        value={live.bandwidth}
                                         subtitle="مصرف Live"
                                         icon="🚀"
                                     />
+
+                                </div>
+
+                            </section>
+
+                            {/* Server Information */}
+
+                            <section className="bg-card border border-gray-800 rounded-2xl p-6">
+
+                                <div className="flex items-center justify-between">
+
+                                    <div>
+                                        <h3 className="text-lg font-bold text-white">
+                                            اطلاعات سرور
+                                        </h3>
+
+                                        <p className="text-sm text-gray-500 mt-1">
+                                            وضعیت کلی سرور
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        onClick={fetchMonitoring}
+                                        disabled={monitoringLoading}
+                                        className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition disabled:opacity-50"
+                                    >
+                                        {monitoringLoading
+                                            ? "در حال بروزرسانی..."
+                                            : "بروزرسانی"}
+                                    </button>
+
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+
+                                    <div>
+                                        <p className="text-sm text-gray-400">
+                                            Hostname
+                                        </p>
+
+                                        <p className="text-lg font-bold text-white mt-2">
+                                            {server.hostname}
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-sm text-gray-400">
+                                            Uptime
+                                        </p>
+
+                                        <p className="text-lg font-bold text-primary mt-2">
+                                            {formatUptime(
+                                                server.uptime
+                                            )}
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-sm text-gray-400">
+                                            آخرین بروزرسانی
+                                        </p>
+
+                                        <p className="text-lg font-bold text-white mt-2">
+                                            {server.timestamp
+                                                ? new Date(
+                                                    server.timestamp
+                                                ).toLocaleTimeString(
+                                                    "fa-IR"
+                                                )
+                                                : "-"}
+                                        </p>
+                                    </div>
 
                                 </div>
 
@@ -541,10 +972,7 @@ export const AdminMainComponent = ({
                                         </p>
 
                                         <p className="text-2xl font-bold text-primary mt-2">
-                                            {
-                                                monitoring.subscription
-                                                    .active
-                                            }
+                                            {subscription.active}
                                         </p>
                                     </div>
 
@@ -554,10 +982,7 @@ export const AdminMainComponent = ({
                                         </p>
 
                                         <p className="text-2xl font-bold text-yellow-400 mt-2">
-                                            {
-                                                monitoring.subscription
-                                                    .expiringSoon
-                                            }
+                                            {subscription.expiringSoon}
                                         </p>
                                     </div>
 
@@ -567,9 +992,7 @@ export const AdminMainComponent = ({
                                         </p>
 
                                         <p className="text-2xl font-bold text-red-400 mt-2">
-                                            {
-                                                monitoring.users.expired
-                                            }
+                                            {users.expired}
                                         </p>
                                     </div>
 
