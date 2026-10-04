@@ -1,6 +1,6 @@
 'use client';
 import type { Movie } from "@/types/movies";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { CreateMovieModal } from "./CreateMovieModal";
 import { EditMovieModal } from "./EditMovieModal";
@@ -85,6 +85,7 @@ export const MangeFilms = ({
     };
 
 
+
     const handleEdit = (id: string) => {
 
         const movieToEdit = movies.find(m => m._id === id);
@@ -118,7 +119,9 @@ export const MangeFilms = ({
                 });
         }
     };
-
+    useEffect(() => {
+        handleScanStorage()
+    }, [])
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center mb-4">

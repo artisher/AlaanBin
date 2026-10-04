@@ -2,7 +2,7 @@
 "use client";
 
 import type { Series } from "@/types/Series";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { CreateSeriesModal } from "./CreateSeriesModal";
 import { EditSeriesModal } from "./EditSeriesModal";
@@ -218,7 +218,9 @@ export const ManageSeries = ({
             );
         });
     };
-
+    useEffect(() => {
+        handleScanStorage()
+    }, [])
     return (
         <div className="space-y-6">
             {/* Header */}
