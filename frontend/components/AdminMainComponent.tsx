@@ -495,9 +495,7 @@ export const AdminMainComponent = ({
 
     const currentMonitoring =
         monitoring ?? createEmptyMonitoring(userList.length);
-    console.log("MONITORING:", monitoring);
-    console.log("currentMonitoring:", currentMonitoring);
-    console.log("currentMonitoring.users:", currentMonitoring?.users);
+  
 
 
     const server =
