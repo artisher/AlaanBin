@@ -1,8 +1,8 @@
 import { Router } from "express";
 
-
 import {
     serverMonitoringController,
+    userMonitoringController,
 } from "./monitoring.controller";
 
 import {
@@ -18,6 +18,13 @@ router.get(
     checkSubscription,
     adminMiddleware,
     serverMonitoringController
+);
+
+router.get(
+    "/users",
+    checkSubscription,
+    adminMiddleware,
+    userMonitoringController
 );
 
 export default router;
