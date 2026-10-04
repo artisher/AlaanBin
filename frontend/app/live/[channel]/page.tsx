@@ -16,6 +16,10 @@ const CHANNELS = {
         title: "شبکه ورزش",
         streamUrl: "https://alanbin.com/api/live/varzesh/index.m3u8",
     },
+    irinn: {
+        title: "شبکه خبر",
+        streamUrl: "https://alanbin.com/live/irinn/index.m3u8",
+    },
 } as const;
 
 type ChannelId = keyof typeof CHANNELS;

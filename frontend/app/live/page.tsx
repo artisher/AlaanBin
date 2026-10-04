@@ -17,6 +17,11 @@ const CHANNELS = [
         title: "شبکه ورزش",
         description: "پخش زنده شبکه ورزش",
     },
+    {
+        id: "irinn",
+        title: "شبکه خبر",
+        description: "پخش زنده شبکه خبر",
+    },
 ];
 
 export default function LivePage() {
