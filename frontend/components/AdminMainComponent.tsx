@@ -463,9 +463,7 @@ export const AdminMainComponent = ({
      * هیچ وقت روی null کرش نکند.
      */
 
-    const currentMonitoring =
-        monitoring ??
-        createEmptyMonitoring(userList.length);
+
 
     const tabs = [
         {
@@ -495,17 +493,25 @@ export const AdminMainComponent = ({
         },
     ] as const;
 
+    const currentMonitoring =
+        monitoring ?? createEmptyMonitoring(userList.length);
+    console.log("MONITORING:", monitoring);
+    console.log("CURRENT MONITORING:", currentMonitoring);
     const server =
-        currentMonitoring.server;
+        currentMonitoring?.server ??
+        createEmptyMonitoring(userList.length).server;
 
     const users =
-        currentMonitoring.users;
+        currentMonitoring?.users ??
+        createEmptyMonitoring(userList.length).users;
 
     const subscription =
-        currentMonitoring.subscription;
+        currentMonitoring?.subscription ??
+        createEmptyMonitoring(userList.length).subscription;
 
     const live =
-        currentMonitoring.live;
+        currentMonitoring?.live ??
+        createEmptyMonitoring(userList.length).live;
 
     return (
         <div className="min-h-screen bg-dark text-gray-200 flex flex-col md:flex-row">
@@ -533,8 +539,8 @@ export const AdminMainComponent = ({
                                 setActiveTab(tab.id)
                             }
                             className={`w-full flex items-center gap-3 text-right px-4 py-3 rounded-lg transition-all duration-200 ${activeTab === tab.id
-                                    ? "bg-primary text-dark font-bold shadow-lg shadow-green-900/20"
-                                    : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                                ? "bg-primary text-dark font-bold shadow-lg shadow-green-900/20"
+                                : "text-gray-400 hover:bg-gray-800 hover:text-white"
                                 }`}
                         >
                             <span className="text-lg">
@@ -585,10 +591,10 @@ export const AdminMainComponent = ({
 
                                 <span
                                     className={`w-2 h-2 rounded-full ${monitoringError
-                                            ? "bg-red-500"
-                                            : monitoringLoading
-                                                ? "bg-yellow-400"
-                                                : "bg-green-500"
+                                        ? "bg-red-500"
+                                        : monitoringLoading
+                                            ? "bg-yellow-400"
+                                            : "bg-green-500"
                                         }`}
                                 />
 
