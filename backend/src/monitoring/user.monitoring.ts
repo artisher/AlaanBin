@@ -3,19 +3,37 @@ import { User } from "../models/User";
 export const getUserMonitoring = async () => {
     const now = new Date();
 
+    const startOfToday = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate()
+    );
+
+    const sevenDaysFromNow = new Date(
+        now.getTime() +
+        7 * 24 * 60 * 60 * 1000
+    );
+
     const [
         total,
         admins,
         active,
         expired,
         neverSubscribed,
+        newToday,
+        expiringSoon,
     ] = await Promise.all([
-        User.countDocuments(),
+        // کل کاربران
+        User.countDocuments({
+            role: "user",
+        }),
 
+        // ادمین‌ها
         User.countDocuments({
             role: "admin",
         }),
 
+        // اشتراک واقعاً فعال
         User.countDocuments({
             role: "user",
             hasActiveSubscription: true,
@@ -24,13 +42,7 @@ export const getUserMonitoring = async () => {
             },
         }),
 
-        User.countDocuments({
-            role: "user",
-            subscriptionExpireDate: {
-                $lte: now,
-            },
-        }),
-
+        // اشتراک منقضی یا غیرفعال
         User.countDocuments({
             role: "user",
             $or: [
@@ -39,10 +51,43 @@ export const getUserMonitoring = async () => {
                 },
                 {
                     subscriptionExpireDate: {
-                        $exists: false,
+                        $lte: now,
                     },
                 },
             ],
+        }),
+
+        // هیچ اشتراکی نداشته
+        User.countDocuments({
+            role: "user",
+            $or: [
+                {
+                    subscriptionExpireDate: {
+                        $exists: false,
+                    },
+                },
+                {
+                    subscriptionExpireDate: null,
+                },
+            ],
+        }),
+
+        // ثبت‌نام امروز
+        User.countDocuments({
+            role: "user",
+            signUpDate: {
+                $gte: startOfToday,
+            },
+        }),
+
+        // اشتراک‌هایی که تا ۷ روز آینده منقضی می‌شوند
+        User.countDocuments({
+            role: "user",
+            hasActiveSubscription: true,
+            subscriptionExpireDate: {
+                $gt: now,
+                $lte: sevenDaysFromNow,
+            },
         }),
     ]);
 
@@ -56,9 +101,14 @@ export const getUserMonitoring = async () => {
     return {
         total,
         admins,
+
         active,
         expired,
         neverSubscribed,
+
+        newToday,
+        expiringSoon,
+
         activePercentage,
     };
 };

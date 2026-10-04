@@ -358,67 +358,104 @@ export const AdminMainComponent = ({
             setMonitoringLoading(true);
             setMonitoringError(null);
 
-            const response = await fetch(
-                "/api/admin/monitoring/server",
-                {
-                    method: "GET",
+            const [serverResponse, usersResponse] =
+                await Promise.all([
+                    fetch("/api/admin/monitoring/server", {
+                        method: "GET",
+                        credentials: "include",
+                        cache: "no-store",
+                    }),
 
-                    // خیلی مهم:
-                    // Cookie لاگین همراه Request ارسال می‌شود.
-                    credentials: "include",
+                    fetch("/api/admin/monitoring/users", {
+                        method: "GET",
+                        credentials: "include",
+                        cache: "no-store",
+                    }),
+                ]);
 
-                    cache: "no-store",
-                }
-            );
-
-            if (!response.ok) {
-                if (response.status === 401) {
+            if (!serverResponse.ok) {
+                if (serverResponse.status === 401) {
                     throw new Error(
                         "احراز هویت انجام نشده یا Cookie لاگین وجود ندارد."
                     );
                 }
 
-                if (response.status === 403) {
+                if (serverResponse.status === 403) {
                     throw new Error(
                         "شما دسترسی ادمین ندارید."
                     );
                 }
 
                 throw new Error(
-                    `Monitoring API Error: ${response.status}`
+                    `Monitoring Server API Error: ${serverResponse.status}`
                 );
             }
 
-            const data = await response.json();
+            if (!usersResponse.ok) {
+                if (usersResponse.status === 401) {
+                    throw new Error(
+                        "احراز هویت انجام نشده یا Cookie لاگین وجود ندارد."
+                    );
+                }
 
-            if (!data?.success || !data?.server) {
+                if (usersResponse.status === 403) {
+                    throw new Error(
+                        "شما دسترسی ادمین ندارید."
+                    );
+                }
+
                 throw new Error(
-                    "پاسخ نامعتبر از API مانیتورینگ"
+                    `Monitoring Users API Error: ${usersResponse.status}`
+                );
+            }
+
+            const serverData = await serverResponse.json();
+            const usersData = await usersResponse.json();
+            if (
+                !serverData?.success ||
+                !serverData?.server
+            ) {
+                throw new Error(
+                    "پاسخ نامعتبر از API سرور"
+                );
+            }
+
+            if (
+                !usersData?.success ||
+                !usersData?.users
+            ) {
+                throw new Error(
+                    "پاسخ نامعتبر از API کاربران"
                 );
             }
 
             setMonitoring((previous) => {
                 const empty =
-                    createEmptyMonitoring(
-                        userList.length
-                    );
+                    createEmptyMonitoring(userList.length);
 
                 return {
                     ...empty,
 
-                    server: data.server,
+                    server: serverData.server,
 
-                    /*
-                     * فعلاً اطلاعاتی که API سرور ندارد
-                     * از state قبلی حفظ می‌شوند.
-                     */
-                    users:
-                        previous?.users ??
-                        empty.users,
+                    users: {
+                        total: usersData.users.total,
+                        online: previous?.users?.online ?? 0,
+                        subscribed: usersData.users.active,
+                        expired: usersData.users.expired,
+                        newToday: usersData.users.newToday,
+                    },
 
-                    subscription:
-                        previous?.subscription ??
-                        empty.subscription,
+                    subscription: {
+                        revenue:
+                            previous?.subscription?.revenue ??
+                            "€0",
+
+                        active: usersData.users.active,
+
+                        expiringSoon:
+                            usersData.users.expiringSoon,
+                    },
 
                     live:
                         previous?.live ??
@@ -495,7 +532,7 @@ export const AdminMainComponent = ({
 
     const currentMonitoring =
         monitoring ?? createEmptyMonitoring(userList.length);
-  
+
 
 
     const server =

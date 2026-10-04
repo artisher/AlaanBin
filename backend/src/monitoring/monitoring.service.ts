@@ -3,7 +3,7 @@ import fs from "fs";
 import { execFile } from "child_process";
 import { promisify } from "util";
 
-import { User } from "../models/User";
+
 
 const execFileAsync = promisify(execFile);
 
@@ -319,62 +319,3 @@ export const getServerMonitoring = async () => {
 /**
  * User monitoring
  */
-export const getUserMonitoring = async () => {
-    const now = new Date();
-
-    const [
-        total,
-        activeSubscription,
-        expiredSubscription,
-        newToday,
-        expiringSoon,
-    ] = await Promise.all([
-        User.countDocuments(),
-
-        User.countDocuments({
-            hasActiveSubscription: true,
-        }),
-
-        User.countDocuments({
-            $or: [
-                {
-                    hasActiveSubscription: false,
-                },
-                {
-                    subscriptionExpireDate: {
-                        $lt: now,
-                    },
-                },
-            ],
-        }),
-
-        User.countDocuments({
-            signUpDate: {
-                $gte: new Date(
-                    now.getFullYear(),
-                    now.getMonth(),
-                    now.getDate()
-                ),
-            },
-        }),
-
-        User.countDocuments({
-            hasActiveSubscription: true,
-            subscriptionExpireDate: {
-                $gte: now,
-                $lte: new Date(
-                    now.getTime() +
-                    7 * 24 * 60 * 60 * 1000
-                ),
-            },
-        }),
-    ]);
-
-    return {
-        total,
-        activeSubscription,
-        expiredSubscription,
-        newToday,
-        expiringSoon,
-    };
-};
