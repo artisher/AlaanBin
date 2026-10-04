@@ -60,7 +60,12 @@ export const ManageSeries = ({
                 );
             }
 
-            setStorageSeries(data.series || []);
+            const newSeries = (data.series || []).filter(
+                (storageItem: StorageSeries) =>
+                    !findMatchingSeries(storageItem.name)
+            );
+
+            setStorageSeries(newSeries);
 
             toast.success(
                 `${data.series?.length || 0} سریال در Storage پیدا شد`
