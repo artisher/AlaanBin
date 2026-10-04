@@ -23,6 +23,8 @@ import { randomUUID } from "crypto";
 import { Readable } from "stream";
 import crypto from "crypto";
 
+import monitoringRoutes from "./monitoring/monitoring.routes";
+
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -41,6 +43,11 @@ app.use(
 ); // اجازه دسترسی از فرانت
 app.use(express.json()); // خواندن داده‌های JSON
 app.use(cookieParser());
+app.use(
+    "/api/admin/monitoring",
+    monitoringRoutes
+);
+
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {

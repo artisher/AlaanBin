@@ -26,6 +26,7 @@ const util_1 = require("util");
 const crypto_1 = require("crypto");
 const stream_1 = require("stream");
 const crypto_2 = __importDefault(require("crypto"));
+const monitoring_routes_1 = __importDefault(require("./monitoring/monitoring.routes"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
@@ -42,6 +43,7 @@ app.use((0, cors_1.default)({
 })); // اجازه دسترسی از فرانت
 app.use(express_1.default.json()); // خواندن داده‌های JSON
 app.use((0, cookie_parser_1.default)());
+app.use("/api/admin/monitoring", monitoring_routes_1.default);
 const storage = multer_1.default.diskStorage({
     destination: (req, file, cb) => {
         cb(null, "/mnt/alanbin/movies");
@@ -813,6 +815,144 @@ app.get("/api/live/tv3/segment/:segment", async (req, res) => {
     }
     catch (err) {
         console.error("❌ TV3 SEGMENT ERROR:", err);
+        if (!res.headersSent) {
+            res
+                .status(502)
+                .end();
+        }
+    }
+});
+// ===============================
+// LIVE IRINN STREAM
+// ===============================
+const IRINN_RELAY_URL = process.env.IRINN_RELAY_URL ||
+    "http://10.77.0.1:8790";
+// ===============================
+// BUILD PLAYLIST
+// ===============================
+async function buildIrinnPlaylist() {
+    const playlistUrl = `${IRINN_RELAY_URL}/irinn/index.m3u8`;
+    const response = await fetch(playlistUrl, {
+        cache: "no-store",
+    });
+    if (!response.ok) {
+        throw new Error(`Iran relay IRINN playlist failed: ${response.status}`);
+    }
+    const playlist = await response.text();
+    const lines = playlist.split("\n");
+    const segments = [];
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line.startsWith("#EXTINF:")) {
+            const segment = lines[i + 1]?.trim();
+            if (segment &&
+                !segment.startsWith("#")) {
+                segments.push(`${line}\n${segment}`);
+            }
+        }
+    }
+    const lastSegments = segments.slice(-10);
+    if (!lastSegments.length) {
+        throw new Error("No IRINN live segments found");
+    }
+    const sourceMediaSequence = Number(lines
+        .find(line => line.startsWith("#EXT-X-MEDIA-SEQUENCE:"))
+        ?.split(":")[1]);
+    const droppedSegments = segments.length -
+        lastSegments.length;
+    const mediaSequence = Number.isFinite(sourceMediaSequence)
+        ? sourceMediaSequence + droppedSegments
+        : 0;
+    const header = lines.filter(line => line.startsWith("#EXTM3U") ||
+        line.startsWith("#EXT-X-VERSION") ||
+        line.startsWith("#EXT-X-TARGETDURATION"));
+    let output = [
+        ...header,
+        `#EXT-X-MEDIA-SEQUENCE:${mediaSequence}`,
+        ...lastSegments,
+    ].join("\n");
+    // تبدیل مسیر سگمنت Relay ایران
+    // به مسیر عمومی AlanBin
+    output =
+        output
+            .split("\n")
+            .map(line => {
+            const trimmed = line.trim();
+            if (!trimmed ||
+                trimmed.startsWith("#")) {
+                return line;
+            }
+            if (!trimmed.startsWith("/irinn/segment/")) {
+                return line;
+            }
+            const segment = trimmed.replace("/irinn/segment/", "");
+            return (`/api/live/irinn/segment/` +
+                `${encodeURIComponent(segment)}`);
+        })
+            .join("\n");
+    return output;
+}
+// ===============================
+// PLAYLIST
+// ===============================
+app.get("/api/live/irinn/index.m3u8", async (req, res) => {
+    try {
+        const playlist = await buildIrinnPlaylist();
+        res.setHeader("Content-Type", "application/vnd.apple.mpegurl");
+        res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        res.setHeader("Access-Control-Allow-Origin", "https://www.alanbin.com");
+        res.send(playlist);
+    }
+    catch (err) {
+        console.error("❌ IRINN PLAYLIST ERROR:", err);
+        res.status(502).json({
+            message: "خطا در دریافت پخش زنده ایرین"
+        });
+    }
+});
+// ===============================
+// SEGMENTS
+// ===============================
+app.get("/api/live/irinn/segment/:segment", async (req, res) => {
+    try {
+        const segment = String(req.params.segment);
+        if (segment.includes("/") ||
+            segment.includes("\\") ||
+            segment.includes("..") ||
+            !segment.endsWith(".ts")) {
+            return res
+                .status(400)
+                .json({
+                message: "Segment نامعتبر است"
+            });
+        }
+        const relaySegmentUrl = `${IRINN_RELAY_URL}` +
+            `/irinn/segment/` +
+            `${encodeURIComponent(segment)}`;
+        console.log("🎬 IRINN relay segment:", segment.slice(0, 30));
+        const response = await fetch(relaySegmentUrl, {
+            cache: "no-store",
+        });
+        if (!response.ok) {
+            console.log("⚠️ Iran relay IRINN segment failed:", response.status);
+            return res
+                .status(response.status)
+                .end();
+        }
+        if (!response.body) {
+            return res
+                .status(502)
+                .end();
+        }
+        res.setHeader("Content-Type", "video/mp2t");
+        res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        res.setHeader("Access-Control-Allow-Origin", "https://www.alanbin.com");
+        stream_1.Readable
+            .fromWeb(response.body)
+            .pipe(res);
+    }
+    catch (err) {
+        console.error("❌ IRINN SEGMENT ERROR:", err);
         if (!res.headersSent) {
             res
                 .status(502)
