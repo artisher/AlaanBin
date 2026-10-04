@@ -4,8 +4,7 @@ import { ManageUser } from "@/components/ManageUser";
 import { MangeFilms } from "@/components/MangeFilms";
 import { ManageSeries } from "@/components/ManageSeries";
 import { ManageRequests } from "@/components/ManageRequests";
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { User } from "@/types/user";
 import type { Movie } from "@/types/movies";
@@ -149,40 +148,46 @@ export const AdminMainComponent = ({
      * فعلاً Mock
      * بعداً این اطلاعات از API مانیتورینگ می‌آید.
      */
-    const monitoring = {
-        server: {
-            cpu: 24,
-            ram: 51,
-            disk: 21,
-            storage: 18,
-            download: "320 Mbps",
-            upload: "84 Mbps",
-            trafficToday: "1.42 TB",
-            trafficMonth: "38.7 TB",
-        },
 
-        users: {
-            total: userList.length,
-            online: 384,
-            subscribed: 4821,
-            expired: 1284,
-            newToday: 42,
-        },
+    const [monitoring, setMonitoring] = useState<any>(null);
+    const [monitoringLoading, setMonitoringLoading] = useState(true);
+    const [monitoringError, setMonitoringError] = useState<string | null>(null);
+    useEffect(() => {
+        if (activeTab !== "dashboard") return;
 
-        subscription: {
-            revenue: "€18,420",
-            active: 4821,
-            expiringSoon: 91,
-        },
+        const fetchMonitoring = async () => {
+            try {
+                setMonitoringError(null);
 
-        live: {
-            total: 12,
-            online: 11,
-            viewers: 1284,
-            bandwidth: "640 Mbps",
-        },
-    };
+                const response = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/admin/monitoring/server`,
+                    {
+                        credentials: "include",
+                        cache: "no-store",
+                    }
+                );
 
+                if (!response.ok) {
+                    throw new Error("خطا در دریافت اطلاعات سرور");
+                }
+
+                const data = await response.json();
+
+                setMonitoring(data.server);
+            } catch (error) {
+                console.error(error);
+                setMonitoringError("دریافت اطلاعات مانیتورینگ ناموفق بود");
+            } finally {
+                setMonitoringLoading(false);
+            }
+        };
+
+        fetchMonitoring();
+
+        const interval = setInterval(fetchMonitoring, 5000);
+
+        return () => clearInterval(interval);
+    }, [activeTab]);
     const tabs = [
         {
             id: "dashboard",
@@ -234,8 +239,8 @@ export const AdminMainComponent = ({
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`w-full flex items-center gap-3 text-right px-4 py-3 rounded-lg transition-all duration-200 ${activeTab === tab.id
-                                    ? "bg-primary text-dark font-bold shadow-lg shadow-green-900/20"
-                                    : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                                ? "bg-primary text-dark font-bold shadow-lg shadow-green-900/20"
+                                : "text-gray-400 hover:bg-gray-800 hover:text-white"
                                 }`}
                         >
                             <span className="text-lg">

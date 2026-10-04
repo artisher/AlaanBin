@@ -3,6 +3,8 @@ import fs from "fs";
 import { execFile } from "child_process";
 import { promisify } from "util";
 
+import { User } from "../models/User";
+
 const execFileAsync = promisify(execFile);
 
 type NetworkStats = {
@@ -161,7 +163,6 @@ const getNetworkStats = (): NetworkStats => {
             const [interfaceName, values] =
                 line.trim().split(":");
 
-            // Loopback را حساب نمی‌کنیم
             if (interfaceName === "lo") {
                 continue;
             }
@@ -195,6 +196,9 @@ const getNetworkStats = (): NetworkStats => {
     }
 };
 
+/**
+ * Server monitoring
+ */
 export const getServerMonitoring = async () => {
     const now = Date.now();
 
@@ -214,6 +218,7 @@ export const getServerMonitoring = async () => {
 
     const memoryTotal = os.totalmem();
     const memoryFree = os.freemem();
+
     const memoryUsed =
         memoryTotal - memoryFree;
 
@@ -264,10 +269,6 @@ export const getServerMonitoring = async () => {
     previousNetworkStats = network;
     previousNetworkTime = now;
 
-    // -------------------------
-    // Response
-    // -------------------------
-
     return {
         hostname: os.hostname(),
 
@@ -291,7 +292,6 @@ export const getServerMonitoring = async () => {
 
         disk: {
             root: rootDisk,
-
             storage: storageDisk,
         },
 
@@ -313,5 +313,68 @@ export const getServerMonitoring = async () => {
 
         timestamp:
             new Date().toISOString(),
+    };
+};
+
+/**
+ * User monitoring
+ */
+export const getUserMonitoring = async () => {
+    const now = new Date();
+
+    const [
+        total,
+        activeSubscription,
+        expiredSubscription,
+        newToday,
+        expiringSoon,
+    ] = await Promise.all([
+        User.countDocuments(),
+
+        User.countDocuments({
+            hasActiveSubscription: true,
+        }),
+
+        User.countDocuments({
+            $or: [
+                {
+                    hasActiveSubscription: false,
+                },
+                {
+                    subscriptionExpireDate: {
+                        $lt: now,
+                    },
+                },
+            ],
+        }),
+
+        User.countDocuments({
+            signUpDate: {
+                $gte: new Date(
+                    now.getFullYear(),
+                    now.getMonth(),
+                    now.getDate()
+                ),
+            },
+        }),
+
+        User.countDocuments({
+            hasActiveSubscription: true,
+            subscriptionExpireDate: {
+                $gte: now,
+                $lte: new Date(
+                    now.getTime() +
+                    7 * 24 * 60 * 60 * 1000
+                ),
+            },
+        }),
+    ]);
+
+    return {
+        total,
+        activeSubscription,
+        expiredSubscription,
+        newToday,
+        expiringSoon,
     };
 };
