@@ -172,6 +172,7 @@ export const Menu = () => {
 
                 <HamburgerMenu
                     isLoggedIn={isLoggedIn}
+                    onSearch={() => setSearchOpen(true)}
                 />
 
             </div>

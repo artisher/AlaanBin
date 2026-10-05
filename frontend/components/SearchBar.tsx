@@ -25,6 +25,8 @@ export const SearchBar = ({
 
     const searchRef = useRef<HTMLDivElement>(null);
 
+
+
     // --------------------------------
     // Search
     // --------------------------------

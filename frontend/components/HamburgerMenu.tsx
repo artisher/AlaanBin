@@ -11,23 +11,31 @@ import {
     LogOut,
     Menu,
     X,
+    TvMinimalPlay,
 } from "lucide-react";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+interface HamburgerMenuProps {
+    isLoggedIn: boolean;
+    onSearch: () => void;
+}
+
 export const HamburgerMenu = ({
     isLoggedIn,
-}: {
-    isLoggedIn: boolean;
-}) => {
+    onSearch,
+}: HamburgerMenuProps) => {
     const { logout } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
 
     const router = useRouter();
 
     const closeMenu = () => setIsOpen(false);
+
+
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
 
     const logoutHandler = async () => {
         await logout();
@@ -63,10 +71,11 @@ export const HamburgerMenu = ({
             label: "سریال‌ها",
             icon: Tv,
         },
+
         {
-            href: "/search",
-            label: "جستجو",
-            icon: Search,
+            href: "/live",
+            label: "پخش زنده",
+            icon: TvMinimalPlay,
         },
         {
             href: "/subscription",
@@ -158,7 +167,30 @@ export const HamburgerMenu = ({
                         {/* Links */}
 
                         <nav className="flex flex-col p-5 gap-2">
-
+                            <button
+                                onClick={() => {
+                                    setIsSearchOpen(true);
+                                    closeMenu();
+                                }}
+                                className="
+                                         flex
+                                         items-center
+                                         gap-3
+                                         rounded-xl
+                                         px-4
+                                         py-3
+                                         text-gray-300
+                                         hover:bg-[#14c78b]/10
+                                         hover:text-[#14c78b]
+                                         transition
+                                         cursor-pointer
+                                         w-full
+                                         text-right
+                                         "
+                            >
+                                <Search size={20} />
+                                جستجو
+                            </button>
                             {menuItems.map((item) => {
                                 const Icon = item.icon;
 
