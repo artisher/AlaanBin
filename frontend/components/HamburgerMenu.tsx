@@ -35,8 +35,6 @@ export const HamburgerMenu = ({
     const closeMenu = () => setIsOpen(false);
 
 
-    const [isSearchOpen, setIsSearchOpen] = useState(false);
-
     const logoutHandler = async () => {
         await logout();
 
@@ -169,24 +167,24 @@ export const HamburgerMenu = ({
                         <nav className="flex flex-col p-5 gap-2">
                             <button
                                 onClick={() => {
-                                    setIsSearchOpen(true);
+                                    onSearch();
                                     closeMenu();
                                 }}
                                 className="
-                                         flex
-                                         items-center
-                                         gap-3
-                                         rounded-xl
-                                         px-4
-                                         py-3
-                                         text-gray-300
-                                         hover:bg-[#14c78b]/10
-                                         hover:text-[#14c78b]
-                                         transition
-                                         cursor-pointer
-                                         w-full
-                                         text-right
-                                         "
+        flex
+        items-center
+        gap-3
+        rounded-xl
+        px-4
+        py-3
+        text-gray-300
+        hover:bg-[#14c78b]/10
+        hover:text-[#14c78b]
+        transition
+        cursor-pointer
+        w-full
+        text-right
+    "
                             >
                                 <Search size={20} />
                                 جستجو

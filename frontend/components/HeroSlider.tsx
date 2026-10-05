@@ -98,24 +98,17 @@ export const HeroSlider = ({
                             {/* Movie Content */}
                             <div
                                 className="
-                                    absolute
-                                    bottom-10
-                                    left-5
-                                    right-5
-                                    z-10
-                                    flex
-                                    flex-col
-                                    items-end
-                                    gap-3
-                                    sm:bottom-12
-                                    sm:left-8
-                                    sm:right-8
-                                    md:bottom-20
-                                    md:left-auto
-                                    md:right-16
-                                    md:gap-5
-                                    lg:right-24
-                                "
+        absolute
+        bottom-46
+        right-8
+        z-10
+        flex
+        flex-col
+        items-end
+        gap-5
+        md:right-16
+        lg:right-24
+    "
                             >
                                 {/* Title */}
                                 <h1

@@ -63,19 +63,24 @@ export const MovieModal = ({
                 <div
                     className="
         relative
-        h-[210px]
         w-full
+        aspect-[2/3]
         shrink-0
-        sm:h-[260px]
+        overflow-hidden
+        md:aspect-auto
         md:h-[650px]
         lg:h-[680px]
-        overflow-hidden
     "
                 >
                     <img
                         src={`https://alanbin.com${movie.poster}`}
                         alt={movie.title}
-                        className="h-full w-full object-cover"
+                        className="
+            h-full
+            w-full
+            object-cover
+            object-center
+        "
                     />
 
                     {/* Dark overlay */}
@@ -129,7 +134,6 @@ export const MovieModal = ({
                         </div>
                     </Link>
                 </div>
-
 
                 {/* =========================
                 CONTENT
