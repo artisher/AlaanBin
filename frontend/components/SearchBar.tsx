@@ -12,7 +12,9 @@ interface SearchBarProps {
     isOpen: boolean;
     onClose: () => void;
 }
-
+type SearchResult = Movie & {
+    type: "movie" | "series";
+};
 export const SearchBar = ({
     isOpen,
     onClose,
@@ -20,7 +22,7 @@ export const SearchBar = ({
     const router = useRouter();
 
     const [search, setSearch] = useState("");
-    const [movies, setMovies] = useState<Movie[]>([]);
+    const [results, setResults] = useState<SearchResult[]>([]);
     const [loading, setLoading] = useState(false);
 
     const searchRef = useRef<HTMLDivElement>(null);
@@ -33,7 +35,7 @@ export const SearchBar = ({
 
     useEffect(() => {
         if (!isOpen || !search.trim()) {
-            setMovies([]);
+            setResults([]);
             setLoading(false);
             return;
         }
@@ -51,7 +53,7 @@ export const SearchBar = ({
                 });
 
                 const res = await fetch(
-                    `${API_URL}/api/movies?${params.toString()}`,
+                    `${API_URL}/api/search?${params.toString()}`,
                     {
                         credentials: "include",
                         signal: controller.signal,
@@ -64,11 +66,11 @@ export const SearchBar = ({
 
                 const data = await res.json();
 
-                setMovies(data.movies || []);
+                setResults(data.movies || []);
             } catch (error: any) {
                 if (error?.name !== "AbortError") {
                     console.error("Search error:", error);
-                    setMovies([]);
+                    setResults([]);
                 }
             } finally {
                 if (!controller.signal.aborted) {
@@ -115,7 +117,7 @@ export const SearchBar = ({
 
     const closeSearch = () => {
         setSearch("");
-        setMovies([]);
+        setResults([]);
         onClose();
     };
 
@@ -123,12 +125,18 @@ export const SearchBar = ({
     // Movie click
     // --------------------------------
 
-    const movieHandler = (id: string) => {
+    const resultHandler = (
+        id: string,
+        type: "movie" | "series"
+    ) => {
         closeSearch();
 
-        router.push(`/movies/${id}`);
+        if (type === "movie") {
+            router.push(`/movies/${id}`);
+        } else {
+            router.push(`/series/${id}`);
+        }
     };
-
     // --------------------------------
     // View all
     // --------------------------------
@@ -180,7 +188,7 @@ export const SearchBar = ({
                     autoFocus
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="جستجوی فیلم..."
+                    placeholder="جستجوی فیلم و سریال..."
                     className="
                         w-full
                         bg-transparent
@@ -250,7 +258,7 @@ export const SearchBar = ({
                         >
                             در حال جستجو...
                         </div>
-                    ) : movies.length === 0 ? (
+                    ) : results.length === 0 ? (
                         <div
                             className="
                                 px-5
@@ -267,17 +275,17 @@ export const SearchBar = ({
                             {/* Movies */}
 
                             <div className="p-2">
-                                {movies.map((movie) => {
+                                {results.map((result) => {
                                     const posterUrl =
-                                        movie.poster?.startsWith("http")
-                                            ? movie.poster
-                                            : `https://alanbin.com${movie.poster}`;
+                                        result.poster?.startsWith("http")
+                                            ? result.poster
+                                            : `https://alanbin.com${result.poster}`;
 
                                     return (
                                         <button
-                                            key={movie._id}
+                                            key={result._id}
                                             onClick={() =>
-                                                movieHandler(movie._id)
+                                                resultHandler(result._id, result.type)
                                             }
                                             className="
                                                 w-full
@@ -296,7 +304,7 @@ export const SearchBar = ({
 
                                             <img
                                                 src={posterUrl}
-                                                alt={movie.title}
+                                                alt={result.title}
                                                 className="
                                                     w-11
                                                     h-14
@@ -317,7 +325,7 @@ export const SearchBar = ({
                                                         truncate
                                                     "
                                                 >
-                                                    {movie.title}
+                                                    {result.title}
                                                 </p>
 
                                                 <div
@@ -330,13 +338,13 @@ export const SearchBar = ({
                                                         text-gray-500
                                                     "
                                                 >
-                                                    {movie.year && (
+                                                    {result.year && (
                                                         <span>
-                                                            {movie.year}
+                                                            {result.year}
                                                         </span>
                                                     )}
 
-                                                    {movie.rating != null && (
+                                                    {result.rating != null && (
                                                         <>
                                                             <span>•</span>
 
@@ -352,7 +360,7 @@ export const SearchBar = ({
                                                                     className="text-yellow-400"
                                                                 />
 
-                                                                {movie.rating}
+                                                                {result.rating}
                                                             </span>
                                                         </>
                                                     )}

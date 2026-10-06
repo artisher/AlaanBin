@@ -3006,7 +3006,73 @@ app.get('/api/movies', async (req, res) => {
         });
     }
 });
+app.get('/api/search', async (req, res) => {
+    const escapeRegex = (text: string) => {
+        return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    };
 
+    try {
+        const search = String(req.query.search || "").trim();
+
+        if (!search) {
+            return res.json({
+                results: []
+            });
+        }
+
+        const regex = escapeRegex(search);
+
+        const searchQuery = {
+            $or: [
+                {
+                    title: {
+                        $regex: regex,
+                        $options: "i",
+                    },
+                },
+                {
+                    description: {
+                        $regex: regex,
+                        $options: "i",
+                    },
+                },
+            ],
+        };
+
+        const [movies, series] = await Promise.all([
+            Movie.find(searchQuery)
+                .sort({ year: -1 })
+                .limit(6),
+
+            Series.find(searchQuery)
+                .sort({ year: -1 })
+                .limit(6),
+        ]);
+
+        const results = [
+            ...movies.map((movie) => ({
+                ...movie.toObject(),
+                type: "movie",
+            })),
+
+            ...series.map((series) => ({
+                ...series.toObject(),
+                type: "series",
+            })),
+        ];
+
+        res.json({
+            results,
+        });
+
+    } catch (err) {
+        console.error(err);
+
+        res.status(500).json({
+            message: "خطا در جستجو",
+        });
+    }
+});
 //serial
 app.post(
     "/api/admin/series",
