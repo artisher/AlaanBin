@@ -48,8 +48,6 @@ export const SearchBar = ({
 
                 const params = new URLSearchParams({
                     search: search.trim(),
-                    limit: "6",
-                    page: "1",
                 });
 
                 const res = await fetch(
@@ -66,7 +64,8 @@ export const SearchBar = ({
 
                 const data = await res.json();
 
-                setResults(data.movies || []);
+                setResults(data.results || []);
+
             } catch (error: any) {
                 if (error?.name !== "AbortError") {
                     console.error("Search error:", error);
@@ -268,7 +267,7 @@ export const SearchBar = ({
                                 text-gray-400
                             "
                         >
-                            فیلمی پیدا نشد
+                           نتیجه‌ای پیدا نشد
                         </div>
                     ) : (
                         <div>
