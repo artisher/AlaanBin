@@ -3036,17 +3036,21 @@ app.get('/api/search', async (req, res) => {
                         $options: "i",
                     },
                 },
+                {
+                    aliases: {
+                        $regex: regex,
+                        $options: "i",
+                    },
+                },
             ],
         };
 
         const [movies, series] = await Promise.all([
             Movie.find(searchQuery)
-                .sort({ year: -1 })
-                .limit(6),
+                .sort({ year: -1 }),
 
             Series.find(searchQuery)
-                .sort({ year: -1 })
-                .limit(6),
+                .sort({ year: -1 }),
         ]);
 
         const results = [
