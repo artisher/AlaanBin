@@ -36,6 +36,7 @@ export const HomeContent = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+    const [loadingFavorites, setLoadingFavorites] = useState(false);
 
 
 
@@ -145,6 +146,52 @@ export const HomeContent = () => {
 
         fetchHomeContent();
     }, []);
+    const fetchFavorites = async () => {
+        try {
+            setLoadingFavorites(true);
+
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites`,
+                {
+                    credentials: "include",
+                }
+            );
+
+            let data: { message?: string; favoriteMovies?: Movie[] } = {};
+
+            try {
+                data = await res.json();
+            } catch {
+                // پاسخ API JSON نبود.
+            }
+
+            if (!res.ok) {
+                throw new Error(
+                    data.message ||
+                    "خطا در دریافت فیلم‌های مورد علاقه."
+                );
+            }
+
+            const movies = Array.isArray(data.favoriteMovies)
+                ? data.favoriteMovies
+                : [];
+
+            setFavoriteIds(
+                movies.map((movie: Movie) => movie._id)
+            );
+        } catch (error) {
+            console.error("FETCH FAVORITES ERROR:", error);
+
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "خطا در دریافت فیلم‌های مورد علاقه."
+            );
+        } finally {
+            setLoadingFavorites(false);
+        }
+    };
+
     const favoriteHandler = async (id: string) => {
         try {
             const res = await fetch(
@@ -155,13 +202,11 @@ export const HomeContent = () => {
                 }
             );
 
-            let data: { message?: string } = {};
-
-            try {
-                data = await res.json();
-            } catch {
-                // پاسخ API JSON نبود.
-            }
+            const data: {
+                message?: string;
+                success?: boolean;
+                favoriteTitle?: string[];
+            } = await res.json();
 
             if (!res.ok) {
                 throw new Error(
@@ -169,18 +214,20 @@ export const HomeContent = () => {
                 );
             }
 
-            const wasFavorite = favoriteIds.includes(id);
+            if (!data.success || !Array.isArray(data.favoriteTitle)) {
+                throw new Error("پاسخ نامعتبر از سرور دریافت شد.");
+            }
 
-            setFavoriteIds((prev) =>
-                prev.includes(id)
-                    ? prev.filter((x) => x !== id)
-                    : [...prev, id]
-            );
+            const updatedIds = data.favoriteTitle.map(String);
+
+            setFavoriteIds(updatedIds);
+
+            const isFavoriteNow = updatedIds.includes(id);
 
             toast.success(
-                wasFavorite
-                    ? "از علاقه‌مندی‌ها حذف شد."
-                    : "به علاقه‌مندی‌ها اضافه شد."
+                isFavoriteNow
+                    ? "به علاقه‌مندی‌ها اضافه شد."
+                    : "از علاقه‌مندی‌ها حذف شد."
             );
         } catch (error) {
             console.error("FAVORITE ERROR:", error);
@@ -191,7 +238,10 @@ export const HomeContent = () => {
                     : "خطا در تغییر علاقه‌مندی."
             );
         }
+
+
     };
+
 
 
 
