@@ -34,7 +34,7 @@ export const HomeContent = () => {
 
     const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    
+
     const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
 
 
@@ -426,6 +426,9 @@ export const HomeContent = () => {
                         setSelectedMovie(null);
                     }}
                     favoriteHandler={favoriteHandler}
+                    isFavorite={favoriteIds.includes(
+                        selectedMovie._id
+                    )}
 
                 />
             )}
