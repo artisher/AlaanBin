@@ -145,10 +145,62 @@ export const HomeContent = () => {
 
         fetchHomeContent();
     }, []);
+    const favoriteHandler = async (id: string) => {
+        try {
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${id}`,
+                {
+                    method: "POST",
+                    credentials: "include",
+                }
+            );
+
+            let data: { message?: string } = {};
+
+            try {
+                data = await res.json();
+            } catch {
+                // پاسخ API JSON نبود.
+            }
+
+            if (!res.ok) {
+                throw new Error(
+                    data.message || "خطا در تغییر وضعیت علاقه‌مندی."
+                );
+            }
+
+            const wasFavorite = favoriteIds.includes(id);
+
+            setFavoriteIds((prev) =>
+                prev.includes(id)
+                    ? prev.filter((x) => x !== id)
+                    : [...prev, id]
+            );
+
+            toast.success(
+                wasFavorite
+                    ? "از علاقه‌مندی‌ها حذف شد."
+                    : "به علاقه‌مندی‌ها اضافه شد."
+            );
+        } catch (error) {
+            console.error("FAVORITE ERROR:", error);
+
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "خطا در تغییر علاقه‌مندی."
+            );
+        }
+    };
+
+
+
     const handleMovieClick = (movie: Movie) => {
         setSelectedMovie(movie);
         setIsModalOpen(true);
     };
+
+
     const renderMovieRow = (movies: Movie[]) => {
         return movies.map((movie) => (
             <SwiperSlide key={movie._id}>
@@ -226,53 +278,6 @@ export const HomeContent = () => {
     }
 
 
-    const favoriteHandler = async (id: string) => {
-        try {
-            const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${id}`,
-                {
-                    method: "POST",
-                    credentials: "include",
-                }
-            );
-
-            let data: { message?: string } = {};
-
-            try {
-                data = await res.json();
-            } catch {
-                // پاسخ API JSON نبود.
-            }
-
-            if (!res.ok) {
-                throw new Error(
-                    data.message || "خطا در تغییر وضعیت علاقه‌مندی."
-                );
-            }
-
-            const wasFavorite = favoriteIds.includes(id);
-
-            setFavoriteIds((prev) =>
-                prev.includes(id)
-                    ? prev.filter((x) => x !== id)
-                    : [...prev, id]
-            );
-
-            toast.success(
-                wasFavorite
-                    ? "از علاقه‌مندی‌ها حذف شد."
-                    : "به علاقه‌مندی‌ها اضافه شد."
-            );
-        } catch (error) {
-            console.error("FAVORITE ERROR:", error);
-
-            toast.error(
-                error instanceof Error
-                    ? error.message
-                    : "خطا در تغییر علاقه‌مندی."
-            );
-        }
-    };
 
     return (<>
         <section className="relative">
