@@ -34,6 +34,11 @@ export const HomeContent = () => {
 
     const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    
+    const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+
+
+
     useEffect(() => {
         const fetchHomeContent = async () => {
             try {
@@ -220,7 +225,6 @@ export const HomeContent = () => {
         );
     }
 
-    const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
 
     const favoriteHandler = async (id: string) => {
         try {
