@@ -12,6 +12,7 @@ import { MovieCard } from "./MovieCard";
 import { SeriesCard } from "./SeriesCard";
 import { MovieModal } from "./MovieMedal";
 import { HeroSlider } from "./HeroSlider";
+import toast from "react-hot-toast";
 
 type ContentItem = Movie | Series;
 
@@ -219,6 +220,55 @@ export const HomeContent = () => {
         );
     }
 
+    const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+
+    const favoriteHandler = async (id: string) => {
+        try {
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${id}`,
+                {
+                    method: "POST",
+                    credentials: "include",
+                }
+            );
+
+            let data: { message?: string } = {};
+
+            try {
+                data = await res.json();
+            } catch {
+                // پاسخ API JSON نبود.
+            }
+
+            if (!res.ok) {
+                throw new Error(
+                    data.message ||
+                    "خطا در تغییر وضعیت علاقه‌مندی."
+                );
+            }
+
+            setFavoriteIds((prev) =>
+                prev.includes(id)
+                    ? prev.filter((x) => x !== id)
+                    : [...prev, id]
+            );
+
+            toast.success(
+                favoriteIds.includes(id)
+                    ? "از علاقه‌مندی‌ها حذف شد."
+                    : "به علاقه‌مندی‌ها اضافه شد."
+            );
+        } catch (error) {
+            console.error("FAVORITE ERROR:", error);
+
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "خطا در تغییر علاقه‌مندی."
+            );
+        }
+    };
+
     return (<>
         <section className="relative">
             {/* Hero */}
@@ -371,6 +421,8 @@ export const HomeContent = () => {
                         setIsModalOpen(false);
                         setSelectedMovie(null);
                     }}
+                    favoriteHandler={favoriteHandler}
+
                 />
             )}
         </div>
