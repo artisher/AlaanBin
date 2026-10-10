@@ -246,10 +246,11 @@ export const HomeContent = () => {
 
             if (!res.ok) {
                 throw new Error(
-                    data.message ||
-                    "خطا در تغییر وضعیت علاقه‌مندی."
+                    data.message || "خطا در تغییر وضعیت علاقه‌مندی."
                 );
             }
+
+            const wasFavorite = favoriteIds.includes(id);
 
             setFavoriteIds((prev) =>
                 prev.includes(id)
@@ -258,7 +259,7 @@ export const HomeContent = () => {
             );
 
             toast.success(
-                favoriteIds.includes(id)
+                wasFavorite
                     ? "از علاقه‌مندی‌ها حذف شد."
                     : "به علاقه‌مندی‌ها اضافه شد."
             );
