@@ -311,7 +311,7 @@ app.get(
 
 const VARZESH_RELAY_URL =
     process.env.VARZESH_RELAY_URL ||
-    "http://10.77.0.1:8787";
+    "http://10.78.0.1:8787";
 
 type VarzeshSession = {
     createdAt: number;
@@ -844,7 +844,7 @@ app.get(
 
 const TV1_RELAY_URL =
     process.env.TV1_RELAY_URL ||
-    "http://10.77.0.1:8788";
+    "http://10.78.0.1:8788";
 
 type Tv1Session = {
     createdAt: number;
@@ -1377,7 +1377,7 @@ app.get(
 
 const TV3_RELAY_URL =
     process.env.TV3_RELAY_URL ||
-    "http://10.77.0.1:8789";
+    "http://10.78.0.1:8789";
 
 
 // ===============================
@@ -1687,7 +1687,7 @@ app.get(
 
 const IRINN_RELAY_URL =
     process.env.IRINN_RELAY_URL ||
-    "http://10.77.0.1:8790";
+    "http://10.78.0.1:8790";
 
 
 // ===============================
