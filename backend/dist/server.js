@@ -215,7 +215,7 @@ app.get("/posters/:filename", auth_middleware_1.default, async (req, res) => {
 // LIVE VARZESH STREAM
 // ===============================
 const VARZESH_RELAY_URL = process.env.VARZESH_RELAY_URL ||
-    "http://10.77.0.1:8787";
+    "http://10.78.0.1:8787";
 const varzeshSessions = new Map();
 const VARZESH_SESSION_TTL = 10 * 60 * 1000;
 // ===============================
@@ -452,7 +452,7 @@ app.get("/api/live/varzesh/segment/:sessionId/:segment", async (req, res) => {
 // LIVE TV1 STREAM
 // ===============================
 const TV1_RELAY_URL = process.env.TV1_RELAY_URL ||
-    "http://10.77.0.1:8788";
+    "http://10.78.0.1:8788";
 const tv1Sessions = new Map();
 const TV1_SESSION_TTL = 10 * 60 * 1000;
 // ===============================
@@ -688,7 +688,7 @@ app.get("/api/live/tv1/segment/:sessionId/:segment", async (req, res) => {
 // LIVE TV3 STREAM
 // ===============================
 const TV3_RELAY_URL = process.env.TV3_RELAY_URL ||
-    "http://10.77.0.1:8789";
+    "http://10.78.0.1:8789";
 // ===============================
 // BUILD PLAYLIST
 // ===============================
@@ -826,7 +826,7 @@ app.get("/api/live/tv3/segment/:segment", async (req, res) => {
 // LIVE IRINN STREAM
 // ===============================
 const IRINN_RELAY_URL = process.env.IRINN_RELAY_URL ||
-    "http://10.77.0.1:8790";
+    "http://10.78.0.1:8790";
 // ===============================
 // BUILD PLAYLIST
 // ===============================
@@ -1564,6 +1564,25 @@ const genreMap = {
     Crime: "جنایی",
     Romance: "عاشقانه",
     Family: "خانوادگی",
+    Horror: "ترسناک",
+    Thriller: "هیجان‌انگیز",
+    Mystery: "معمایی",
+    ScienceFiction: "علمی تخیلی",
+    Adventure: "ماجراجویی",
+    Fantasy: "فانتزی",
+    History: "تاریخی",
+    Documentary: "مستند",
+    Musical: "موزیکال",
+    Sport: "ورزشی",
+    Animation: "انیمیشن",
+    War: "جنگی",
+    Biography: "زندگی‌نامه‌ای",
+    Political: "سیاسی",
+    Disaster: "فاجعه",
+    Social: "اجتماعی",
+    Psychological: "روان‌شناختی",
+    Melodrama: "ملودرام",
+    Kids: "کودک و نوجوان",
 };
 const productMap = {
     IR: "ایرانی",
@@ -1654,6 +1673,67 @@ app.get('/api/movies', async (req, res) => {
         console.error(err);
         res.status(500).json({
             message: "خطا در دریافت فیلم‌ها"
+        });
+    }
+});
+app.get('/api/search', async (req, res) => {
+    const escapeRegex = (text) => {
+        return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    };
+    try {
+        const search = String(req.query.search || "").trim();
+        if (!search) {
+            return res.json({
+                results: []
+            });
+        }
+        const regex = escapeRegex(search);
+        const searchQuery = {
+            $or: [
+                {
+                    title: {
+                        $regex: regex,
+                        $options: "i",
+                    },
+                },
+                {
+                    description: {
+                        $regex: regex,
+                        $options: "i",
+                    },
+                },
+                {
+                    aliases: {
+                        $regex: regex,
+                        $options: "i",
+                    },
+                },
+            ],
+        };
+        const [movies, series] = await Promise.all([
+            Movie_1.Movie.find(searchQuery)
+                .sort({ year: -1 }),
+            Series_1.Series.find(searchQuery)
+                .sort({ year: -1 }),
+        ]);
+        const results = [
+            ...movies.map((movie) => ({
+                ...movie.toObject(),
+                type: "movie",
+            })),
+            ...series.map((series) => ({
+                ...series.toObject(),
+                type: "series",
+            })),
+        ];
+        res.json({
+            results,
+        });
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({
+            message: "خطا در جستجو",
         });
     }
 });
