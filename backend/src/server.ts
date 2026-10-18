@@ -2886,6 +2886,7 @@ app.post(
 // --- API مربوط به فیلم‌ها ---
 
 // 1. دریافت همه فیلم‌ها
+
 const genreMap: Record<string, string> = {
     Comedy: "کمدی",
     Drama: "درام",
@@ -2893,7 +2894,27 @@ const genreMap: Record<string, string> = {
     Crime: "جنایی",
     Romance: "عاشقانه",
     Family: "خانوادگی",
+    Horror: "ترسناک",
+    Thriller: "هیجان‌انگیز",
+    Mystery: "معمایی",
+    ScienceFiction: "علمی تخیلی",
+    Adventure: "ماجراجویی",
+    Fantasy: "فانتزی",
+    History: "تاریخی",
+    Documentary: "مستند",
+    Musical: "موزیکال",
+    Sport: "ورزشی",
+    Animation: "انیمیشن",
+    War: "جنگی",
+    Biography: "زندگی‌نامه‌ای",
+    Political: "سیاسی",
+    Disaster: "فاجعه",
+    Social: "اجتماعی",
+    Psychological: "روان‌شناختی",
+    Melodrama: "ملودرام",
+    Kids: "کودک و نوجوان",
 };
+
 const productMap: Record<string, string> = {
     IR: "ایرانی",
 };

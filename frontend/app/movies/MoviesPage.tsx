@@ -17,6 +17,7 @@ import { MovieCard } from "@/components/MovieCard";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+
 const GENRES = [
     { label: "همه", value: "" },
     { label: "اکشن", value: "Action" },
@@ -24,10 +25,28 @@ const GENRES = [
     { label: "درام", value: "Drama" },
     { label: "عاشقانه", value: "Romance" },
     { label: "ترسناک", value: "Horror" },
+    { label: "جنایی", value: "Crime" },
+    { label: "هیجان‌انگیز", value: "Thriller" },
+    { label: "معمایی", value: "Mystery" },
     { label: "اجتماعی", value: "Social" },
+    { label: "روان‌شناختی", value: "Psychological" },
+    { label: "علمی تخیلی", value: "Sci-Fi" },
     { label: "ماجراجویی", value: "Adventure" },
+    { label: "فانتزی", value: "Fantasy" },
     { label: "تاریخی", value: "Historical" },
+    { label: "جنگی", value: "War" },
+    { label: "خانوادگی", value: "Family" },
+    { label: "کودک و نوجوان", value: "Kids" },
+    { label: "انیمیشن", value: "Animation" },
+    { label: "مستند", value: "Documentary" },
+    { label: "موزیکال", value: "Musical" },
+    { label: "ورزشی", value: "Sport" },
+    { label: "سیاسی", value: "Political" },
+    { label: "زندگی‌نامه‌ای", value: "Biography" },
+    { label: "فاجعه", value: "Disaster" },
+    { label: "ملودرام", value: "Melodrama" },
 ];
+
 
 const PRODUCTS = [
     { label: "همه", value: "" },
