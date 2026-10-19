@@ -1,7 +1,24 @@
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 
+
+type Props = {
+    params: Promise<{ id: string }>;
+};
+
+export async function generateMetadata({
+    params,
+}: Props): Promise<Metadata> {
+    const { id } = await params;
+
+    return {
+        alternates: {
+            canonical: `/movies/${id}`,
+        },
+    };
+}
 export default async function MoviePage({
     params,
 }: {
