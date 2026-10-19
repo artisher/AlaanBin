@@ -17,9 +17,7 @@ export const metadata: Metadata = {
   description:
     "الان بین، پلتفرم معرفی و تماشای فیلم‌ها و سریال‌های ایرانی و خارجی؛ اطلاعات آثار، داستان سریال‌ها و جدیدترین محتوا را در الان بین دنبال کنید.",
 
-  alternates: {
-    canonical: "https://alanbin.com/",
-  },
+
 
   robots: {
     index: true,
