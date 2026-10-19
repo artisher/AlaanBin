@@ -56,7 +56,7 @@ export async function generateMetadata({
 
         if (!series) return fallback;
 
-        const title = `${series.title} | الان بین`;
+        const title = series.title;
 
         const description =
             series.description?.trim() ||
