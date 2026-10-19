@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
             userAgent: "*",
             allow: "/",
         },
-        sitemap: "https://www.alanbin.com/sitemap.xml",
+        sitemap: "https://alanbin.com/sitemap.xml",
     };
 }
