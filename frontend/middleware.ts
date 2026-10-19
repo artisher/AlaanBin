@@ -35,14 +35,6 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(url);
     }
 
-    if (url.pathname.startsWith('/movies') && !sessionCookie) {
-        url.pathname = '/login';
-        return NextResponse.redirect(url);
-    }
-    if (url.pathname.startsWith('/series') && !sessionCookie) {
-        url.pathname = '/login';
-        return NextResponse.redirect(url);
-    }
 
     
     if (url.pathname === '/account' && !sessionCookie) {
