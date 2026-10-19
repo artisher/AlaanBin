@@ -7,37 +7,35 @@ import { AuthProvider } from "./providers/AuthProvider";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    metadataBase: new URL("https://www.alanbin.com"),
+  metadataBase: new URL("https://alanbin.com"),
 
-    title: {
-        default: "الان بین | تماشای فیلم و سریال",
-        template: "%s | الان بین",
-    },
+  title: {
+    default: "الان بین | پلتفرم فیلم و سریال",
+    template: "%s | الان بین",
+  },
 
+  description:
+    "الان بین، پلتفرم معرفی و تماشای فیلم‌ها و سریال‌های ایرانی و خارجی؛ اطلاعات آثار، داستان سریال‌ها و جدیدترین محتوا را در الان بین دنبال کنید.",
+
+  alternates: {
+    canonical: "https://alanbin.com/",
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+  },
+
+  openGraph: {
+    type: "website",
+    locale: "fa_IR",
+    url: "https://alanbin.com/",
+    siteName: "الان بین",
+    title: "الان بین | پلتفرم فیلم و سریال",
     description:
-        "در الان بین، اطلاعات فیلم‌ها و سریال‌های ایرانی و خارجی را پیدا کنید و با آثار جدید آشنا شوید.",
-
-    alternates: {
-        canonical: "/",
-    },
-
-    robots: {
-        index: true,
-        follow: true,
-    },
-
-    openGraph: {
-        type: "website",
-        locale: "fa_IR",
-        url: "https://www.alanbin.com/",
-        siteName: "الان بین",
-        title: "الان بین | تماشای فیلم و سریال",
-        description:
-            "فیلم‌ها و سریال‌های ایرانی و خارجی را در الان بین کشف کنید.",
-    },
+      "فیلم‌ها و سریال‌های ایرانی و خارجی را در پلتفرم الان بین کشف کنید.",
+  },
 };
-
-
 
 export default function RootLayout({
   children,
