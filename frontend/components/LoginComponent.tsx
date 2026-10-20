@@ -28,9 +28,7 @@ export const LoginComponent = () => {
         const data = await res.json();
 
         if (!res.ok) {
-            toast.error("An error occurred. Check the console");
-            console.log(data.message);;
-
+            toast.error(data.message || "خطا در ورود به حساب کاربری");
             return;
         }
         toast.success("Successfully Logged in.");
