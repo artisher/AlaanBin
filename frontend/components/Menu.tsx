@@ -8,7 +8,7 @@ import {
     Search,
 } from "lucide-react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { BuySub } from "./BuySub";
 import { HamburgerMenu } from "./HamburgerMenu";
@@ -21,22 +21,59 @@ export const Menu = () => {
     const { user } = useAuth();
 
     const [searchOpen, setSearchOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
 
     const hasActiveSubscription = user?.hasActiveSubscription;
     const isLoggedIn = !!user;
 
+    useEffect(() => {
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 150);
+        };
+
+        handleScroll();
+
+        window.addEventListener("scroll", handleScroll, {
+            passive: true,
+        });
+
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+        };
+    }, []);
+
+    const navLinkClass = `
+        flex
+        items-center
+        gap-2
+        px-4
+        py-2
+        rounded-xl
+        text-gray-200
+        hover:text-[#14c78b]
+        hover:bg-[#14c78b]/10
+        transition
+        duration-300
+    `;
+
     return (
         <div
-            className="
-                sticky
+            className={`
+                fixed
                 top-0
+                left-0
+                right-0
                 z-50
                 w-full
                 border-b
-                border-white/10
-                bg-[#0B0F14]/90
-                backdrop-blur-xl
-            "
+                transition-all
+                duration-300
+                ease-in-out
+                ${scrolled
+                    ? "bg-[#0B0F14]/95 border-white/10 backdrop-blur-xl shadow-lg"
+                    : "bg-transparent border-transparent backdrop-blur-none"
+                }
+            `}
         >
             <div
                 className="
@@ -49,7 +86,6 @@ export const Menu = () => {
                     gap-8
                 "
             >
-
                 {/* Logo */}
 
                 <Logo />
@@ -58,97 +94,32 @@ export const Menu = () => {
 
                 <nav className="hidden md:flex items-center gap-1">
 
-                    <Link
-                        href="/"
-                        className="
-                            flex
-                            items-center
-                            gap-2
-                            px-4
-                            py-2
-                            rounded-xl
-                            text-gray-300
-                            hover:text-[#14c78b]
-                            hover:bg-[#14c78b]/10
-                            transition
-                        "
-                    >
+                    <Link href="/" className={navLinkClass}>
                         <Home size={18} />
                         صفحه اصلی
                     </Link>
 
-                    <Link
-                        href="/movies"
-                        className="
-                            flex
-                            items-center
-                            gap-2
-                            px-4
-                            py-2
-                            rounded-xl
-                            text-gray-300
-                            hover:text-[#14c78b]
-                            hover:bg-[#14c78b]/10
-                            transition
-                        "
-                    >
+                    <Link href="/movies" className={navLinkClass}>
                         <Film size={18} />
                         فیلم‌ها
                     </Link>
 
-                    <Link
-                        href="/series"
-                        className="
-                            flex
-                            items-center
-                            gap-2
-                            px-4
-                            py-2
-                            rounded-xl
-                            text-gray-300
-                            hover:text-[#14c78b]
-                            hover:bg-[#14c78b]/10
-                            transition
-                        "
-                    >
+                    <Link href="/series" className={navLinkClass}>
                         <Tv size={18} />
                         سریال‌ها
                     </Link>
 
-                    {/* Search */}
-                    <Link
-                        href="/live"
-                        className="
-                            flex
-                            items-center
-                            gap-2
-                            px-4
-                            py-2
-                            rounded-xl
-                            text-gray-300
-                            hover:text-[#14c78b]
-                            hover:bg-[#14c78b]/10
-                            transition
-                        "
-                    >
+                    <Link href="/live" className={navLinkClass}>
                         <Film size={18} />
                         پخش زنده
                     </Link>
+
                     <button
                         onClick={() => setSearchOpen(true)}
-                        className="
-                            flex
-                            items-center
-                            gap-2
-                            px-4
-                            py-2
-                            rounded-xl
-                            text-gray-300
-                            hover:text-[#14c78b]
-                            hover:bg-[#14c78b]/10
-                            transition
+                        className={`
+                            ${navLinkClass}
                             cursor-pointer
-                        "
+                        `}
                     >
                         <Search size={18} />
                         جستجو

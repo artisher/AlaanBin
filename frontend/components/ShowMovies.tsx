@@ -404,24 +404,23 @@ export const ShowMovies = () => {
 
                     ) : (
 
-                        <div className="   grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-26
-        justify-items-center">
+                        <div className="
+                          grid
+                          grid-cols-[repeat(auto-fill,minmax(160px,1fr))]
+                          gap-x-5
+                          gap-y-8
+">
                             {movies.map((movie: Movie) => (
-
                                 <MovieCard
                                     key={movie._id}
                                     movie={movie}
                                     favoriteHandler={favoriteHandler}
                                     onClick={() => {
-
-                                        setSelectedMovie(movie)
-                                        setIsModalOpen(true)
-
+                                        setSelectedMovie(movie);
+                                        setIsModalOpen(true);
                                     }}
                                 />
-
                             ))}
-
                         </div>
 
                     )}
