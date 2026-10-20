@@ -3236,7 +3236,6 @@ app.get("/api/public/seo", async (_req, res) => {
 
 //showSeries 
 app.get("/api/series",
-    checkSubscription,
     async (req, res) => {
         const escapeRegex = (text: string) => {
             return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
