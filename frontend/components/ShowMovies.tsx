@@ -404,12 +404,15 @@ export const ShowMovies = () => {
 
                     ) : (
 
-                        <div className="
-                          grid
-                          grid-cols-[repeat(auto-fill,minmax(160px,1fr))]
-                          gap-x-5
-                          gap-y-8
-">
+                        <div
+                            dir="rtl"
+                            className="
+        grid
+        grid-cols-[repeat(auto-fill,minmax(160px,1fr))]
+        gap-x-5
+        gap-y-8
+    "
+                        >
                             {movies.map((movie: Movie) => (
                                 <MovieCard
                                     key={movie._id}
