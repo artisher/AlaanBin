@@ -1814,8 +1814,34 @@ app.post("/api/admin/series/:seriesId/episodes", auth_middleware_1.default, admi
         });
     }
 });
+// Public metadata for SEO — no video URLs or episodes
+app.get("/api/public/seo", async (_req, res) => {
+    try {
+        const [movies, series] = await Promise.all([
+            Movie_1.Movie.find({})
+                .select("_id title description poster year rating genre")
+                .sort({ year: -1 })
+                .lean(),
+            Series_1.Series.find({})
+                .select("_id title description poster year rating genre")
+                .sort({ year: -1 })
+                .lean(),
+        ]);
+        res.set("Cache-Control", "public, max-age=300");
+        res.json({
+            movies,
+            series,
+        });
+    }
+    catch (err) {
+        console.error("PUBLIC SEO API ERROR:", err);
+        res.status(500).json({
+            message: "خطا در دریافت اطلاعات عمومی آثار",
+        });
+    }
+});
 //showSeries 
-app.get("/api/series", auth_middleware_1.default, async (req, res) => {
+app.get("/api/series", async (req, res) => {
     const escapeRegex = (text) => {
         return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     };

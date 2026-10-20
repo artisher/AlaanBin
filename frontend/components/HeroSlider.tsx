@@ -40,7 +40,7 @@ export const HeroSlider = ({
                 loop={movies.length > 1}
                 className="hero-swiper"
             >
-                {movies.slice(0, 8).map((movie) => (
+                {movies.slice(0, 8).map((movie, index) => (
                     <SwiperSlide key={movie._id}>
                         <div
                             className="
@@ -56,16 +56,19 @@ export const HeroSlider = ({
                             <img
                                 src={movie.heroImage || movie.poster}
                                 alt={movie.title}
+                                fetchPriority={index === 0 ? "high" : "low"}
+                                loading={index === 0 ? "eager" : "lazy"}
+                                decoding="async"
                                 className="
-                                    absolute
-                                    inset-0
-                                    h-full
-                                    w-full
-                                    object-cover
-                                    object-center
-                                    sm:object-center
-                                    md:object-center
-                                "
+                                 absolute
+                                 inset-0
+                                 h-full
+                                 w-full
+                                 object-cover
+                                 object-center
+                                 sm:object-center
+                                 md:object-center
+                                 "
                             />
 
                             {/* Main Gradient */}
