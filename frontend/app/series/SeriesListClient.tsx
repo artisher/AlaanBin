@@ -14,6 +14,8 @@ import {
 
 import type { Series } from "@/types/Series";
 import { SeriesCard } from "@/components/SeriesCard";
+import { SeriesModal } from "@/components/SeriesModal";
+import toast from "react-hot-toast";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -84,6 +86,12 @@ export default function SeriesPage() {
     const [sort, setSort] = useState("newest");
 
     const [filtersOpen, setFiltersOpen] = useState(false);
+
+    const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+    const [loadingFavorites, setLoadingFavorites] = useState(false);
+
+
+
 
     useEffect(() => {
         const fetchSeries = async () => {
@@ -161,6 +169,67 @@ export default function SeriesPage() {
         rating ||
         sort !== "newest";
 
+    const [selectedSeries, setSelectedSeries] =
+        useState<Series | null>(null);
+
+    const [isSeriesModalOpen, setIsSeriesModalOpen] =
+        useState(false);
+
+
+
+    const handleSeriesClick = (series: Series) => {
+        setSelectedSeries(series);
+        setIsSeriesModalOpen(true);
+    };
+    const favoriteHandler = async (id: string) => {
+        try {
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${id}`,
+                {
+                    method: "POST",
+                    credentials: "include",
+                }
+            );
+
+            const data: {
+                message?: string;
+                success?: boolean;
+                favoriteTitle?: string[];
+            } = await res.json();
+
+            if (!res.ok) {
+                throw new Error(
+                    data.message || "خطا در تغییر وضعیت علاقه‌مندی."
+                );
+            }
+
+            if (!data.success || !Array.isArray(data.favoriteTitle)) {
+                throw new Error("پاسخ نامعتبر از سرور دریافت شد.");
+            }
+
+            const updatedIds = data.favoriteTitle.map(String);
+
+            setFavoriteIds(updatedIds);
+
+            const isFavoriteNow = updatedIds.includes(id);
+
+            toast.success(
+                isFavoriteNow
+                    ? "به علاقه‌مندی‌ها اضافه شد."
+                    : "از علاقه‌مندی‌ها حذف شد."
+            );
+        } catch (error) {
+            console.error("FAVORITE ERROR:", error);
+
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "خطا در تغییر علاقه‌مندی."
+            );
+        }
+
+
+    };
     return (
         <main className="min-h-screen overflow-hidden bg-[#0B0F14] text-white">
             {/* =====================================================
@@ -665,11 +734,7 @@ export default function SeriesPage() {
                             >
                                 <SeriesCard
                                     series={item}
-                                    onClick={() =>
-                                        router.push(
-                                            `/series/${item._id}`
-                                        )
-                                    }
+                                    onClick={() => handleSeriesClick(item)}
                                 />
                             </div>
                         ))}
@@ -753,7 +818,20 @@ export default function SeriesPage() {
                         </div>
                     </div>
                 )}
+                {selectedSeries && (
+                    <SeriesModal
+                        series={selectedSeries}
+                        isOpen={isSeriesModalOpen}
+                        onClose={() => {
+                            setIsSeriesModalOpen(false);
+                            setSelectedSeries(null);
+                        }}
+                        favoriteHandler={favoriteHandler}
+                        isFavorite={favoriteIds.includes(selectedSeries._id)}
+                    />
+                )}
             </section>
+
         </main>
     );
 }
