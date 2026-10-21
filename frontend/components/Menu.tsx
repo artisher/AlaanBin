@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -49,11 +50,19 @@ export const Menu = () => {
         px-4
         py-2
         rounded-xl
-        text-gray-200
+        text-white
+        border
+        border-white/25
+        bg-slate-950/25
+        backdrop-blur-md
+        shadow-sm
+        shadow-black/10
         hover:text-[#14c78b]
+        hover:border-[#14c78b]/50
         hover:bg-[#14c78b]/10
-        transition
-        duration-300
+        transition-all
+        duration-200
+        whitespace-nowrap
     `;
 
     return (
@@ -71,7 +80,7 @@ export const Menu = () => {
                 ease-in-out
                 ${scrolled
                     ? "bg-[#0B0F14]/95 border-white/10 backdrop-blur-xl shadow-lg"
-                    : "bg-transparent border-transparent backdrop-blur-none"
+                    : "bg-transparent border-transparent"
                 }
             `}
         >
@@ -92,8 +101,7 @@ export const Menu = () => {
 
                 {/* Desktop Navigation */}
 
-                <nav className="hidden md:flex items-center gap-1">
-
+                <nav className="hidden md:flex items-center gap-2">
                     <Link href="/" className={navLinkClass}>
                         <Home size={18} />
                         صفحه اصلی
@@ -115,16 +123,13 @@ export const Menu = () => {
                     </Link>
 
                     <button
+                        type="button"
                         onClick={() => setSearchOpen(true)}
-                        className={`
-                            ${navLinkClass}
-                            cursor-pointer
-                        `}
+                        className={`${navLinkClass} cursor-pointer`}
                     >
                         <Search size={18} />
                         جستجو
                     </button>
-
                 </nav>
 
                 {/* Push right side */}
@@ -145,7 +150,6 @@ export const Menu = () => {
                     isLoggedIn={isLoggedIn}
                     onSearch={() => setSearchOpen(true)}
                 />
-
             </div>
 
             {/* Search */}
@@ -158,7 +162,6 @@ export const Menu = () => {
                     />
                 </div>
             )}
-
         </div>
     );
 };
