@@ -37,7 +37,7 @@ export function AuthProvider({
     async function refreshUser() {
         try {
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL} /api/auth / me`,
+                `${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`,
                 {
                     credentials: "include",
                 }
