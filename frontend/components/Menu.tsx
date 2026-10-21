@@ -53,8 +53,8 @@ export const Menu = () => {
         text-white
         border
         border-white/25
-        bg-slate-950/25
-        backdrop-blur-md
+        bg-slate-950/15
+        backdrop-blur-sm
         shadow-sm
         shadow-black/10
         hover:text-[#14c78b]
