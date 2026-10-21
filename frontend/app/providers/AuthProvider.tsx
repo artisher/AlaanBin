@@ -33,30 +33,40 @@ export function AuthProvider({
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
-    async function refreshUser() {
-     
 
+    async function refreshUser() {
         try {
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`,
+                `${process.env.NEXT_PUBLIC_API_URL} /api/auth / me`,
                 {
                     credentials: "include",
                 }
             );
 
+            if (res.status === 401) {
+                setUser(null);
+                return;
+            }
 
             if (!res.ok) {
                 setUser(null);
+                console.error(
+                    "خطا در دریافت اطلاعات کاربر:",
+                    res.status
+                );
                 return;
             }
 
             const data = await res.json();
 
-
             setUser(data.user ?? null);
 
         } catch (error) {
             setUser(null);
+            console.error(
+                "خطا در ارتباط با سرور:",
+                error
+            );
         }
     }
     useEffect(() => {
