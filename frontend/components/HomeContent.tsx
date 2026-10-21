@@ -13,6 +13,7 @@ import { SeriesCard } from "./SeriesCard";
 import { MovieModal } from "./MovieMedal";
 import { HeroSlider } from "./HeroSlider";
 import toast from "react-hot-toast";
+import { SeriesModal } from "./SeriesModal";
 
 type ContentItem = Movie | Series;
 
@@ -34,6 +35,13 @@ export const HomeContent = () => {
 
     const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const [selectedSeries, setSelectedSeries] =
+        useState<Series | null>(null);
+
+    const [isSeriesModalOpen, setIsSeriesModalOpen] =
+        useState(false);
+
 
     const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
     const [loadingFavorites, setLoadingFavorites] = useState(false);
@@ -249,7 +257,10 @@ export const HomeContent = () => {
         setSelectedMovie(movie);
         setIsModalOpen(true);
     };
-
+    const handleSeriesClick = (series: Series) => {
+        setSelectedSeries(series);
+        setIsSeriesModalOpen(true);
+    };
 
     const renderMovieRow = (movies: Movie[]) => {
         return movies.map((movie) => (
@@ -267,14 +278,11 @@ export const HomeContent = () => {
             <SwiperSlide key={item._id}>
                 <SeriesCard
                     series={item}
-                    onClick={() =>
-                        router.push(`/series/${item._id}`)
-                    }
+                    onClick={() => handleSeriesClick(item)}
                 />
             </SwiperSlide>
         ));
     };
-
     const renderMixedTopWeek = () => {
         const mixed: ContentItem[] = [
             ...topWeekMovies,
@@ -486,6 +494,18 @@ export const HomeContent = () => {
                         selectedMovie._id
                     )}
 
+                />
+            )}
+            {selectedSeries && (
+                <SeriesModal
+                    series={selectedSeries}
+                    isOpen={isSeriesModalOpen}
+                    onClose={() => {
+                        setIsSeriesModalOpen(false);
+                        setSelectedSeries(null);
+                    }}
+                    favoriteHandler={favoriteHandler}
+                    isFavorite={favoriteIds.includes(selectedSeries._id)}
                 />
             )}
         </div>

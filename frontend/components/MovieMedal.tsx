@@ -1,7 +1,6 @@
-import { Calendar, Clock3, Film, Heart, Play, Star } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
 import type { Movie } from "@/types/movies";
+import { Calendar, Clock3, Film, Heart, Play, Star } from "lucide-react";
+import Link from "next/link";
 type MovieModalProps = {
     movie: Movie | null;
     isOpen: boolean;
