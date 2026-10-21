@@ -305,7 +305,7 @@ export const HomeContent = () => {
                         <SeriesCard
                             series={item as Series}
                             onClick={() =>
-                                router.push(`/series/${item._id}`)
+                                handleSeriesClick(item as Series)
                             }
                         />
                     )}
