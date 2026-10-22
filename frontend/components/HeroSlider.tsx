@@ -23,7 +23,7 @@ export const HeroSlider = ({
     if (!movies.length) return null;
 
     return (
-        <section className="relative w-full overflow-hidden">
+        <section className="relative w-full overflow-hidden -mt-16">
             <Swiper
                 modules={[Autoplay, EffectFade, Pagination]}
                 effect="fade"
