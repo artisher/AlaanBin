@@ -417,7 +417,7 @@ export default function FavoritesPage() {
                                 md:text-6xl
                             "
                         >
-                            فیلم‌ها
+                            فیلم‌های مورد علاقه من
                         </h1>
 
                         <p

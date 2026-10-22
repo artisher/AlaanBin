@@ -116,7 +116,10 @@ export const Menu = () => {
                         <Tv size={18} />
                         سریال‌ها
                     </Link>
-
+                    <Link href="/favorites" className={navLinkClass}>
+                        <Film size={18} />
+                        مورد علاقه های من
+                    </Link>
                     <Link href="/live" className={navLinkClass}>
                         <Film size={18} />
                         پخش زنده

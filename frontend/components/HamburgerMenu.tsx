@@ -12,6 +12,7 @@ import {
     Menu,
     X,
     TvMinimalPlay,
+    Heart,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -69,7 +70,11 @@ export const HamburgerMenu = ({
             label: "سریال‌ها",
             icon: Tv,
         },
-
+        {
+            href: "/favorites",
+            label: "مورد علاقه های من ",
+            icon: Heart,
+        },
         {
             href: "/live",
             label: "پخش زنده",
