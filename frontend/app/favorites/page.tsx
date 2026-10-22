@@ -1,5 +1,6 @@
 
 import { Suspense } from "react";
+import FavoritesPage from "./FavoritesPage";
 
 
 export default function Page() {
@@ -12,7 +13,7 @@ export default function Page() {
                 />
             }
         >
-            <favoritesPage />
+            <FavoritesPage />
         </Suspense>
     );
 }

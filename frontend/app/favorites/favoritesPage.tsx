@@ -68,7 +68,7 @@ const SORT_OPTIONS = [
     { label: "کمترین امتیاز", value: "lowRating" },
 ];
 
-export default function favoritesPage () {
+export default function FavoritesPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -880,7 +880,7 @@ export default function favoritesPage () {
                             )
                         )}
                     </div>
-                ) : movies.length === 0 ? (
+                ) : favoritesMovies.length === 0 ? (
                     <div
                         className="
                             flex
@@ -959,7 +959,7 @@ export default function favoritesPage () {
                             md:gap-y-12
                         "
                     >
-                        {movies.map((movie) => (
+                        {favoritesMovies.map((movie) => (
                             <div
                                 key={movie._id}
                                 className="
