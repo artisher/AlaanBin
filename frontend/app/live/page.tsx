@@ -6,21 +6,25 @@ const CHANNELS = [
         id: "tv1",
         title: "شبکه ۱",
         description: "پخش زنده شبکه یک سیما",
+        icon: "/logos/1.png",
     },
     {
         id: "tv3",
         title: "شبکه ۳",
         description: "پخش زنده شبکه سه سیما",
+        icon: "/logos/3.png",
     },
     {
         id: "varzesh",
         title: "شبکه ورزش",
         description: "پخش زنده شبکه ورزش",
+        icon: "/logos/varzesh.png",
     },
     {
         id: "irinn",
         title: "شبکه خبر",
         description: "پخش زنده شبکه خبر",
+        icon: "/logos/khabar.png",
     },
 ];
 
@@ -95,35 +99,26 @@ export default function LivePage() {
                             <div className="relative z-10">
 
                                 {/* Icon */}
+
                                 <div
                                     className="
-                                        mb-6
-                                        flex
-                                        h-14
-                                        w-14
-                                        items-center
-                                        justify-center
-                                        rounded-xl
-                                        bg-[#14c78b]/10
-                                        text-[#14c78b]
-                                        transition-colors
-                                        group-hover:bg-[#14c78b]/20
-                                    "
+                                              mb-6
+                                              flex
+                                              h-14
+                                              w-14
+                                              items-center
+                                              justify-center
+                                              rounded-xl
+                                              bg-[#14c78b]/10
+                                              transition-colors
+                                              group-hover:bg-[#14c78b]/20
+                                                "
                                 >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="1.8"
-                                        className="h-7 w-7"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M15.75 10.5 19.5 7.5v9l-3.75-3M4.5 6.75h8.25a2.25 2.25 0 0 1 2.25 2.25v6a2.25 2.25 0 0 1-2.25 2.25H4.5a2.25 2.25 0 0 1-2.25-2.25V9A2.25 2.25 0 0 1 4.5 6.75Z"
-                                        />
-                                    </svg>
+                                    <img
+                                        src={channel.icon}
+                                        alt={channel.title}
+                                        className="h-7 w-7 object-contain"
+                                    />
                                 </div>
 
                                 <h2 className="text-xl font-bold text-white">
