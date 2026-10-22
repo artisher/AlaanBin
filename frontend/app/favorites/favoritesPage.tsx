@@ -192,13 +192,19 @@ export default function FavoritesPage() {
                     }
                 );
 
-                if (!res.ok) {
-                    throw new Error("Failed to fetch favorites movies");
-                }
-
                 const data = await res.json();
 
-                setFavoritesMovies(data.favoriteMovies  || []);
+                console.log("API URL:", API_URL);
+                console.log("Status:", res.status);
+                console.log("Response:", data);
+
+                if (!res.ok) {
+                    throw new Error(data.message || "Failed to fetch favorites");
+                }
+
+                console.log("Favorite movies:", data.favoriteMovies);
+
+                setFavoritesMovies(data.favoriteMovies || []);
                 setTotalPages(data.totalPages || 1);
             } catch (error) {
                 console.error("Error fetching movies:", error);
