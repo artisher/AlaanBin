@@ -14,6 +14,8 @@ import {
 
 import type { Movie } from "@/types/movies";
 import { MovieCard } from "@/components/MovieCard";
+import { MovieModal } from "@/components/MovieMedal";
+import toast from "react-hot-toast";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -99,6 +101,16 @@ export default function MoviesPage() {
     );
 
     const [filtersOpen, setFiltersOpen] = useState(false);
+
+    const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+    const [loadingFavorites, setLoadingFavorites] = useState(false);
+
+
+    const [selectedMovies, setSelectedMovies] =
+        useState<Movie | null>(null);
+
+    const [isMoviesModalOpen, setIsMoviesModalOpen] =
+        useState(false);
 
     // =========================
     // Sync state with URL
@@ -312,6 +324,60 @@ export default function MoviesPage() {
         });
     };
 
+
+    const favoriteHandler = async (id: string) => {
+        try {
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${id}`,
+                {
+                    method: "POST",
+                    credentials: "include",
+                }
+            );
+
+            const data: {
+                message?: string;
+                success?: boolean;
+                favoriteTitle?: string[];
+            } = await res.json();
+
+            if (!res.ok) {
+                throw new Error(
+                    data.message || "خطا در تغییر وضعیت علاقه‌مندی."
+                );
+            }
+
+            if (!data.success || !Array.isArray(data.favoriteTitle)) {
+                throw new Error("پاسخ نامعتبر از سرور دریافت شد.");
+            }
+
+            const updatedIds = data.favoriteTitle.map(String);
+
+            setFavoriteIds(updatedIds);
+
+            const isFavoriteNow = updatedIds.includes(id);
+
+            toast.success(
+                isFavoriteNow
+                    ? "به علاقه‌مندی‌ها اضافه شد."
+                    : "از علاقه‌مندی‌ها حذف شد."
+            );
+        } catch (error) {
+            console.error("FAVORITE ERROR:", error);
+
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "خطا در تغییر علاقه‌مندی."
+            );
+        }
+
+
+    };
+    const handleMoviesClick = (series: Movie) => {
+        setSelectedMovies(series);
+        setIsMoviesModalOpen(true);
+    };
     const hasFilters =
         search.trim() ||
         genre ||
@@ -969,11 +1035,7 @@ export default function MoviesPage() {
                             >
                                 <MovieCard
                                     movie={movie}
-                                    onClick={() =>
-                                        router.push(
-                                            `/movies/${movie._id}`
-                                        )
-                                    }
+                                    onClick={() => handleMoviesClick(movie)}
                                 />
                             </div>
                         ))}
@@ -1082,6 +1144,18 @@ export default function MoviesPage() {
                     </div>
                 )}
             </section>
+            {selectedMovies && (
+                <MovieModal
+                    movie={selectedMovies}
+                    isOpen={isMoviesModalOpen}
+                    onClose={() => {
+                        setIsMoviesModalOpen(false);
+                        setSelectedMovies(null);
+                    }}
+                    favoriteHandler={favoriteHandler}
+                    isFavorite={favoriteIds.includes(selectedMovies._id)}
+                />
+            )}
         </main>
     );
 }
