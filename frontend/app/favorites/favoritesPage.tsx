@@ -198,7 +198,7 @@ export default function FavoritesPage() {
 
                 const data = await res.json();
 
-                setFavoritesMovies(data.movies || []);
+                setFavoritesMovies(data.favoriteMovies  || []);
                 setTotalPages(data.totalPages || 1);
             } catch (error) {
                 console.error("Error fetching movies:", error);
