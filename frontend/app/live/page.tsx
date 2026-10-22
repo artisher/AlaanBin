@@ -117,7 +117,7 @@ export default function LivePage() {
                                     <img
                                         src={channel.icon}
                                         alt={channel.title}
-                                        className="h-7 w-7 object-contain"
+                                        className="h-11 w-11 object-contain"
                                     />
                                 </div>
 
