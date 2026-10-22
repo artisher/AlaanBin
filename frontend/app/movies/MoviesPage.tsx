@@ -186,7 +186,7 @@ export default function MoviesPage() {
                 }
 
                 const res = await fetch(
-                    `${API_URL}/api/movies?${params.toString()}`,
+                    `${API_URL}/api/favorites?${params.toString()}`,
                     {
                         credentials: "include",
                     }
