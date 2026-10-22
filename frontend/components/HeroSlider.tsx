@@ -45,11 +45,11 @@ export const HeroSlider = ({
                         <div
                             className="
                                 relative
-                                h-[540px]
-                                w-full
-                                sm:h-[620px]
-                                md:h-[750px]
-                                lg:h-[850px]
+                               h-[600px]
+sm:h-[680px]
+md:h-[min(750px,85vh)]
+lg:h-[min(850px,90vh)]
+2xl:h-[min(950px,95vh)]
                             "
                         >
                             {/* Hero Image */}
