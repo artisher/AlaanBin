@@ -67,8 +67,9 @@ export const Menu = () => {
     `;
 
     return (
-        <div
-            className={`
+        <div>
+            <div
+                className={`
                 fixed
                 top-0
                 left-0
@@ -80,13 +81,13 @@ export const Menu = () => {
                 duration-300
                 ease-in-out
                 ${scrolled
-                    ? "bg-[#0B0F14]/95 border-white/10 backdrop-blur-xl shadow-lg"
-                    : "bg-transparent border-transparent"
-                }
+                        ? "bg-[#0B0F14]/95 border-white/10 backdrop-blur-xl shadow-lg"
+                        : "bg-transparent border-transparent"
+                    }
             `}
-        >
-            <div
-                className="
+            >
+                <div
+                    className="
                     max-w-[1650px]
                     mx-auto
                     h-16
@@ -95,77 +96,79 @@ export const Menu = () => {
                     items-center
                     gap-8
                 "
-            >
-                {/* Logo */}
+                >
+                    {/* Logo */}
 
-                <Logo />
+                    <Logo />
 
-                {/* Desktop Navigation */}
+                    {/* Desktop Navigation */}
 
-                <nav className="hidden md:flex items-center gap-2">
-                    <Link href="/" className={navLinkClass}>
-                        <Home size={18} />
-                        صفحه اصلی
-                    </Link>
+                    <nav className="hidden md:flex items-center gap-2">
+                        <Link href="/" className={navLinkClass}>
+                            <Home size={18} />
+                            صفحه اصلی
+                        </Link>
 
-                    <Link href="/movies" className={navLinkClass}>
-                        <Film size={18} />
-                        فیلم‌ها
-                    </Link>
+                        <Link href="/movies" className={navLinkClass}>
+                            <Film size={18} />
+                            فیلم‌ها
+                        </Link>
 
-                    <Link href="/series" className={navLinkClass}>
-                        <Tv size={18} />
-                        سریال‌ها
-                    </Link>
-                    <Link href="/favorites" className={navLinkClass}>
-                        <Heart size={18} />
-                        مورد علاقه  
-                    </Link>
-                    <Link href="/live" className={navLinkClass}>
-                        <Film size={18} />
-                        پخش زنده
-                    </Link>
+                        <Link href="/series" className={navLinkClass}>
+                            <Tv size={18} />
+                            سریال‌ها
+                        </Link>
+                        <Link href="/favorites" className={navLinkClass}>
+                            <Heart size={18} />
+                            مورد علاقه
+                        </Link>
+                        <Link href="/live" className={navLinkClass}>
+                            <Film size={18} />
+                            پخش زنده
+                        </Link>
 
-                    <button
-                        type="button"
-                        onClick={() => setSearchOpen(true)}
-                        className={`${navLinkClass} cursor-pointer`}
-                    >
-                        <Search size={18} />
-                        جستجو
-                    </button>
-                </nav>
+                        <button
+                            type="button"
+                            onClick={() => setSearchOpen(true)}
+                            className={`${navLinkClass} cursor-pointer`}
+                        >
+                            <Search size={18} />
+                            جستجو
+                        </button>
+                    </nav>
 
-                {/* Push right side */}
+                    {/* Push right side */}
 
-                <div className="flex-1" />
+                    <div className="flex-1" />
 
-                {/* Subscription */}
+                    {/* Subscription */}
 
-                {!hasActiveSubscription && (
-                    <div className="hidden md:block">
-                        <BuySub />
-                    </div>
-                )}
+                    {!hasActiveSubscription && (
+                        <div className="hidden md:block">
+                            <BuySub />
+                        </div>
+                    )}
 
-                {/* Account / Login + Mobile Menu */}
+                    {/* Account / Login + Mobile Menu */}
 
-                <HamburgerMenu
-                    isLoggedIn={isLoggedIn}
-                    onSearch={() => setSearchOpen(true)}
-                />
-            </div>
-
-            {/* Search */}
-
-            {searchOpen && (
-                <div className="absolute top-16 right-0 left-0 flex justify-center px-5">
-                    <SearchBar
-                        isOpen={searchOpen}
-                        onClose={() => setSearchOpen(false)}
+                    <HamburgerMenu
+                        isLoggedIn={isLoggedIn}
+                        onSearch={() => setSearchOpen(true)}
                     />
                 </div>
-            )}
+
+                {/* Search */}
+
+                {searchOpen && (
+                    <div className="absolute top-16 right-0 left-0 flex justify-center px-5">
+                        <SearchBar
+                            isOpen={searchOpen}
+                            onClose={() => setSearchOpen(false)}
+                        />
+                    </div>
+                )}
+            </div>
         </div>
+
     );
 };
