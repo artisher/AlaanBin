@@ -7,6 +7,7 @@ import {
     Film,
     Tv,
     Search,
+    Heart,
 } from "lucide-react";
 
 import { useState, useEffect } from "react";
@@ -117,8 +118,8 @@ export const Menu = () => {
                         سریال‌ها
                     </Link>
                     <Link href="/favorites" className={navLinkClass}>
-                        <Film size={18} />
-                        مورد علاقه های من
+                        <Heart size={18} />
+                        مورد علاقه  
                     </Link>
                     <Link href="/live" className={navLinkClass}>
                         <Film size={18} />
