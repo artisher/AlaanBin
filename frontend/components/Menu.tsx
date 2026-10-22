@@ -67,7 +67,8 @@ export const Menu = () => {
     `;
 
     return (
-        <div>
+        <>
+            <div className="h-16" />
             <div
                 className={`
                 fixed
@@ -168,7 +169,7 @@ export const Menu = () => {
                     </div>
                 )}
             </div>
-        </div>
-
-    );
+            
+         </>
+    ); 
 };
