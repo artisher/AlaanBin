@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -13,6 +12,9 @@ import { MovieCard } from "@/components/MovieCard";
 import { SeriesCard } from "@/components/SeriesCard";
 import type { Movie } from "@/types/movies";
 import { Series } from "@/types/Series";
+import { MovieModal } from "@/components/MovieMedal";
+import { SeriesModal } from "@/components/SeriesModal";
+import toast from "react-hot-toast";
 
 type FavoriteMovie = Movie & {
     contentType: "movie";
@@ -28,6 +30,9 @@ interface FavoritesPageProps {
     userFavorites: FavoriteItem[];
 }
 
+interface UserFavorites {
+    favorites: FavoriteItem[];
+}
 
 export default function FavoritesPage({
     userFavorites,
@@ -47,9 +52,118 @@ export default function FavoritesPage({
     );
 
 
+    const [selectedMovie, setSelectedMovie] =
+        useState<Movie | null>(null);
 
-    const [filtersOpen, setFiltersOpen] = useState(false);
+    const [selectedSeries, setSelectedSeries] =
+        useState<Series | null>(null);
 
+    const [isMovieModalOpen, setIsMovieModalOpen] =
+        useState(false);
+
+    const [isSeriesModalOpen, setIsSeriesModalOpen] =
+        useState(false);
+    const [favorites, setFavorites] = useState<FavoriteItem[]>(
+        userFavorites ?? []
+    );
+    const [loadingFavorites, setLoadingFavorites] = useState(false);
+    const [pendingFavorite, setPendingFavorite] = useState<string | null>(null);
+    const closeModals = () => {
+        setIsMovieModalOpen(false);
+        setIsSeriesModalOpen(false);
+        setSelectedMovie(null);
+        setSelectedSeries(null);
+    };
+    const isFavorite = (
+        id: string,
+        contentType: "movie" | "series"
+    ) =>
+        favorites.some(
+            (item) =>
+                item._id === id &&
+                item.contentType === contentType
+        );
+    const fetchFavorites = async () => {
+        try {
+            setLoadingFavorites(true);
+
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites`,
+                {
+                    credentials: "include",
+                    cache: "no-store",
+                }
+            );
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(
+                    data.message || "خطا در دریافت علاقه‌مندی‌ها"
+                );
+            }
+
+            if (!Array.isArray(data.favorites)) {
+                throw new Error("ساختار پاسخ علاقه‌مندی‌ها نامعتبر است");
+            }
+
+            setFavorites(data.favorites);
+        } catch (error) {
+            console.error("FETCH FAVORITES ERROR:", error);
+
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "خطا در دریافت علاقه‌مندی‌ها"
+            );
+        } finally {
+            setLoadingFavorites(false);
+        }
+    };
+
+    const favoriteHandler = async (
+        id: string,
+        contentType: "movie" | "series"
+    ) => {
+        const key = `${contentType}:${id}`;
+
+        if (pendingFavorite === key) return;
+
+        try {
+            setPendingFavorite(key);
+
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${contentType}/${id}`,
+                {
+                    method: "POST",
+                    credentials: "include",
+                }
+            );
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(
+                    data.message || "خطا در تغییر علاقه‌مندی"
+                );
+            }
+
+            await fetchFavorites();
+            router.refresh();
+
+            toast.success("علاقه‌مندی به‌روزرسانی شد");
+        } catch (error) {
+            console.error("FAVORITE ERROR:", error);
+
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "خطا در تغییر علاقه‌مندی"
+            );
+        } finally {
+            setPendingFavorite(null);
+        }
+    };
     // =========================
     // Sync state with URL
     // =========================
@@ -58,15 +172,6 @@ export default function FavoritesPage({
         setSearch(searchParams.get("search") || "");
         setPage(1);
     }, [searchParams]);
-
-
-    // =========================
-    // Filter Handlers
-    // =========================
-
-
-
-
 
 
 
@@ -473,6 +578,30 @@ export default function FavoritesPage({
                     </div>
                 )}
             </section>
+            {selectedMovie && (
+                <MovieModal
+                    movie={selectedMovie}
+                    isOpen={isMovieModalOpen}
+                    onClose={closeModals}
+                    isFavorite={isFavorite(selectedMovie._id, "movie")}
+                    favoriteHandler={(id) =>
+                        favoriteHandler(id, "movie")
+                    }
+                />
+            )}
+
+            {/* Series Modal */}
+            {selectedSeries && (
+                <SeriesModal
+                    series={selectedSeries}
+                    isOpen={isSeriesModalOpen}
+                    onClose={closeModals}
+                    isFavorite={isFavorite(selectedSeries._id, "series")}
+                    favoriteHandler={(id) =>
+                        favoriteHandler(id, "series")
+                    }
+                />
+            )}
         </main>
     );
 }
