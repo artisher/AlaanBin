@@ -37,7 +37,7 @@ export default function FavoritesPage({
 
     const [favoritesMovies, setFavoritesMovies] =
         useState<FavoriteItem[]>(userFavorites);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
 
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
