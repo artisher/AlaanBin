@@ -1,20 +1,26 @@
 
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { House, LogOut } from "lucide-react";
+import { House, LogOut, Heart } from "lucide-react";
+import toast from "react-hot-toast";
+
 import type { Movie } from "@/types/movies";
+import type { Series } from "@/types/Series";
+
 import ProfileRow from "./ProfileRow";
 import { MovieModal } from "./MovieMedal";
 import { MovieCard } from "./MovieCard";
-import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { SeriesCard } from "./SeriesCard";
+import { SeriesModal } from "./SeriesModal";
+
 import { useAuth } from "@/app/providers/AuthProvider";
 
 interface Profile {
     _id: string;
     fullName: string;
-    phoneNumber: number;
+    phoneNumber: string;
     email: string;
     country: string;
     city: string;
@@ -22,8 +28,18 @@ interface Profile {
     hasActiveSubscription: boolean;
 }
 
+type FavoriteMovie = Movie & {
+    contentType: "movie";
+};
+
+type FavoriteSeries = Series & {
+    contentType: "series";
+};
+
+type FavoriteItem = FavoriteMovie | FavoriteSeries;
+
 interface UserFavorites {
-    favoriteMovies?: Movie[];
+    favorites: FavoriteItem[];
 }
 
 export const ProfileCard = ({
@@ -33,17 +49,33 @@ export const ProfileCard = ({
     userProfile: Profile;
     userFavorites: UserFavorites;
 }) => {
-    const profile = userProfile;
-    const favoritesMovie = userFavorites?.favoriteMovies ?? [];
-
     const router = useRouter();
+    const { logout } = useAuth();
 
-    const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+    const [favorites, setFavorites] = useState<FavoriteItem[]>(
+        userFavorites?.favorites ?? []
+    );
+
+    const [selectedMovie, setSelectedMovie] =
+        useState<Movie | null>(null);
+
+    const [selectedSeries, setSelectedSeries] =
+        useState<Series | null>(null);
+
+    const [isMovieModalOpen, setIsMovieModalOpen] =
+        useState(false);
+
+    const [isSeriesModalOpen, setIsSeriesModalOpen] =
+        useState(false);
+
     const [loadingFavorites, setLoadingFavorites] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
-    const { logout } = useAuth();
+    const [pendingFavorite, setPendingFavorite] = useState<string | null>(null);
+
+    useEffect(() => {
+        setFavorites(userFavorites?.favorites ?? []);
+    }, [userFavorites]);
+
     const fetchFavorites = async () => {
         try {
             setLoadingFavorites(true);
@@ -52,149 +84,120 @@ export const ProfileCard = ({
                 `${process.env.NEXT_PUBLIC_API_URL}/api/favorites`,
                 {
                     credentials: "include",
+                    cache: "no-store",
                 }
             );
 
-            let data: { message?: string; favoriteMovies?: Movie[] } = {};
-
-            try {
-                data = await res.json();
-            } catch {
-                // پاسخ API JSON نبود.
-            }
+            const data = await res.json();
 
             if (!res.ok) {
                 throw new Error(
-                    data.message ||
-                    "خطا در دریافت فیلم‌های مورد علاقه."
+                    data.message || "خطا در دریافت علاقه‌مندی‌ها"
                 );
             }
 
-            const movies = Array.isArray(data.favoriteMovies)
-                ? data.favoriteMovies
-                : [];
+            if (!Array.isArray(data.favorites)) {
+                throw new Error("ساختار پاسخ علاقه‌مندی‌ها نامعتبر است");
+            }
 
-            setFavoriteIds(
-                movies.map((movie: Movie) => movie._id)
-            );
+            setFavorites(data.favorites);
         } catch (error) {
             console.error("FETCH FAVORITES ERROR:", error);
 
             toast.error(
                 error instanceof Error
                     ? error.message
-                    : "خطا در دریافت فیلم‌های مورد علاقه."
+                    : "خطا در دریافت علاقه‌مندی‌ها"
             );
         } finally {
             setLoadingFavorites(false);
         }
     };
 
-    const favoriteHandler = async (id: string) => {
+    const favoriteHandler = async (
+        id: string,
+        contentType: "movie" | "series"
+    ) => {
+        const key = `${contentType}:${id}`;
+
+        if (pendingFavorite === key) return;
+
         try {
+            setPendingFavorite(key);
+
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${id}`,
+                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${contentType}/${id}`,
                 {
                     method: "POST",
                     credentials: "include",
                 }
             );
 
-            let data: { message?: string } = {};
-
-            try {
-                data = await res.json();
-            } catch {
-                // پاسخ API JSON نبود.
-            }
+            const data = await res.json();
 
             if (!res.ok) {
                 throw new Error(
-                    data.message ||
-                    "خطا در تغییر وضعیت علاقه‌مندی."
+                    data.message || "خطا در تغییر علاقه‌مندی"
                 );
             }
 
-            setFavoriteIds((prev) =>
-                prev.includes(id)
-                    ? prev.filter((x) => x !== id)
-                    : [...prev, id]
-            );
+            await fetchFavorites();
+            router.refresh();
 
-            toast.success(
-                favoriteIds.includes(id)
-                    ? "از علاقه‌مندی‌ها حذف شد."
-                    : "به علاقه‌مندی‌ها اضافه شد."
-            );
+            toast.success("علاقه‌مندی به‌روزرسانی شد");
         } catch (error) {
             console.error("FAVORITE ERROR:", error);
 
             toast.error(
                 error instanceof Error
                     ? error.message
-                    : "خطا در تغییر علاقه‌مندی."
+                    : "خطا در تغییر علاقه‌مندی"
             );
+        } finally {
+            setPendingFavorite(null);
         }
-    };
-
-    const homeHandler = () => {
-        router.push("/home");
     };
 
     const logoutHandler = async () => {
         try {
             setLoggingOut(true);
-
             await logout();
-
             router.push("/login");
             router.refresh();
-
         } catch (error) {
             console.error("LOGOUT ERROR:", error);
+            toast.error("خروج انجام نشد");
         } finally {
             setLoggingOut(false);
         }
     };
 
-    useEffect(() => {
-        fetchFavorites();
-    }, []);
+    const closeModals = () => {
+        setIsMovieModalOpen(false);
+        setIsSeriesModalOpen(false);
+        setSelectedMovie(null);
+        setSelectedSeries(null);
+    };
+
+    const isFavorite = (
+        id: string,
+        contentType: "movie" | "series"
+    ) =>
+        favorites.some(
+            (item) =>
+                item._id === id &&
+                item.contentType === contentType
+        );
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#090909] via-[#111315] to-[#0b0b0b] py-10 px-5">
-            <div
-                className="
-                max-w-5xl
-                mx-auto
-                rounded-3xl
-                border
-                border-[#14c78b]/20
-                bg-white/[0.03]
-                backdrop-blur-xl
-                shadow-[0_0_40px_rgba(20,199,139,.12)]
-                overflow-hidden
-                "
-            >
-                {/* Header */}
+        <div className="min-h-screen bg-gradient-to-br from-[#090909] via-[#111315] to-[#0b0b0b] px-5 py-10">
+            <div className="mx-auto max-w-5xl overflow-hidden rounded-3xl border border-[#14c78b]/20 bg-white/[0.03] shadow-[0_0_40px_rgba(20,199,139,.12)] backdrop-blur-xl">
 
-                <div className="flex flex-col md:flex-row items-center justify-between gap-5 p-8 border-b border-[#14c78b]/10">
+                {/* Header */}
+                <div className="flex flex-col items-center justify-between gap-5 border-b border-[#14c78b]/10 p-8 md:flex-row">
                     <button
-                        onClick={homeHandler}
-                        className="
-                        flex items-center gap-2
-                        rounded-xl
-                        border border-[#14c78b]/30
-                        bg-[#14c78b]/10
-                        px-5 py-3
-                        text-[#14c78b]
-                        transition-all
-                        duration-300
-                        hover:bg-[#14c78b]
-                        hover:text-black
-                        hover:shadow-[0_0_20px_rgba(20,199,139,.35)]
-                        cursor-pointer
-                        "
+                        onClick={() => router.push("/home")}
+                        className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#14c78b]/30 bg-[#14c78b]/10 px-5 py-3 text-[#14c78b] transition hover:bg-[#14c78b] hover:text-black"
                     >
                         <House size={18} />
                         خانه
@@ -202,157 +205,181 @@ export const ProfileCard = ({
 
                     <div className="text-center">
                         <h1 className="text-4xl font-bold text-white">
-                            {profile.fullName}
+                            {userProfile.fullName}
                         </h1>
-
                         <div className="mx-auto mt-3 h-1 w-24 rounded-full bg-[#14c78b]" />
                     </div>
 
                     <button
                         onClick={logoutHandler}
                         disabled={loggingOut}
-                        className="
-                        flex items-center gap-2
-                        rounded-xl
-                        border border-red-500/30
-                        bg-red-500/10
-                        px-5 py-3
-                        text-red-400
-                        transition-all
-                        duration-300
-                        hover:bg-red-500
-                        hover:text-white
-                        cursor-pointer
-                        disabled:opacity-50
-                        disabled:cursor-not-allowed
-                        "
+                        className="flex cursor-pointer items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-5 py-3 text-red-400 transition hover:bg-red-500 hover:text-white disabled:opacity-50"
                     >
                         <LogOut size={18} />
-
                         {loggingOut ? "در حال خروج..." : "خروج"}
                     </button>
                 </div>
 
-                {/* Body */}
-
-                <div className="p-8 space-y-4">
+                {/* Profile */}
+                <div className="space-y-4 p-8">
                     <ProfileRow
                         label="نام و نام خانوادگی"
-                        value={profile.fullName}
+                        value={userProfile.fullName}
                     />
 
                     <ProfileRow
                         label="ایمیل"
-                        value={profile.email}
+                        value={userProfile.email}
                     />
 
                     <ProfileRow
                         label="شماره موبایل"
-                        value={profile.phoneNumber}
+                        value={userProfile.phoneNumber}
                     />
 
                     <ProfileRow
                         label="کشور"
-                        value={profile.country}
+                        value={userProfile.country}
                     />
 
                     <ProfileRow
                         label="شهر"
-                        value={profile.city}
+                        value={userProfile.city}
                     />
 
                     {/* Subscription */}
-
-                    <div
-                        className="
-                        rounded-2xl
-                        border
-                        border-white/5
-                        bg-white/[0.03]
-                        p-5
-                        "
-                    >
-                        <div className="flex items-center justify-between mb-4">
+                    <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-5">
+                        <div className="mb-4 flex items-center justify-between">
                             <span className="text-gray-400">
                                 وضعیت اشتراک
                             </span>
 
-                            {profile.hasActiveSubscription ? (
-                                <span className="rounded-full bg-[#14c78b]/10 border border-[#14c78b]/30 px-4 py-1 text-[#14c78b] font-semibold">
-                                    فعال
-                                </span>
-                            ) : (
-                                <span className="rounded-full bg-red-500/10 border border-red-500/30 px-4 py-1 text-red-400 font-semibold">
-                                    منقضی شده
-                                </span>
-                            )}
+                            <span
+                                className={
+                                    userProfile.hasActiveSubscription
+                                        ? "rounded-full border border-[#14c78b]/30 bg-[#14c78b]/10 px-4 py-1 font-semibold text-[#14c78b]"
+                                        : "rounded-full border border-red-500/30 bg-red-500/10 px-4 py-1 font-semibold text-red-400"
+                                }
+                            >
+                                {userProfile.hasActiveSubscription
+                                    ? "فعال"
+                                    : "منقضی شده"}
+                            </span>
                         </div>
 
                         <div className="text-gray-300">
-                            {profile.hasActiveSubscription
-                                ? `تاریخ پایان اشتراک : ${profile.subscriptionExpireDate
-                                    ? profile.subscriptionExpireDate.split("T")[0]
+                            {userProfile.hasActiveSubscription
+                                ? `تاریخ پایان اشتراک: ${userProfile.subscriptionExpireDate
+                                    ? userProfile.subscriptionExpireDate.split("T")[0]
                                     : "نامشخص"
                                 }`
                                 : "اشتراک شما به پایان رسیده است."}
                         </div>
                     </div>
 
-                    {/* Favorites */}
-
-                    <div
-                        className="
-                        rounded-2xl
-                        border
-                        border-white/5
-                        bg-white/[0.03]
-                        p-5
-                        "
-                    >
-                        <h3 className="text-lg font-semibold text-white mb-5">
-                            فیلم‌های مورد علاقه
-                        </h3>
+                    {/* Unified Favorites */}
+                    <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-5">
+                        <div className="mb-5 flex items-center gap-2">
+                            <Heart
+                                className="text-[#14c78b]"
+                                size={22}
+                            />
+                            <h3 className="text-lg font-semibold text-white">
+                                علاقه‌مندی‌های من
+                            </h3>
+                            <span className="rounded-full bg-[#14c78b]/10 px-2.5 py-1 text-sm text-[#14c78b]">
+                                {favorites.length}
+                            </span>
+                        </div>
 
                         {loadingFavorites ? (
-                            <div className="text-center py-8 text-gray-500">
-                                در حال دریافت فیلم‌های مورد علاقه...
+                            <div className="py-8 text-center text-gray-500">
+                                در حال دریافت علاقه‌مندی‌ها...
                             </div>
-                        ) : favoritesMovie.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {favoritesMovie.map(
-                                    (movie: Movie) => (
-                                        <MovieCard
-                                            key={movie._id}
-                                            movie={movie}
-                                            onClick={() => {
-                                                setSelectedMovie(movie);
-                                                setIsModalOpen(true);
-                                            }}
-                                            favoriteHandler={
-                                                favoriteHandler
+                        ) : favorites.length > 0 ? (
+                            <div className="flex flex-wrap justify-center gap-6 sm:justify-start">
+                                {favorites.map((item) => (
+                                    <div
+                                        key={`${item.contentType}:${item._id}`}
+                                        className="relative"
+                                    >
+                                        {item.contentType === "movie" ? (
+                                            <MovieCard
+                                                movie={item}
+                                                onClick={() => {
+                                                    setSelectedMovie(item);
+                                                    setIsMovieModalOpen(true);
+                                                }}
+                                                favoriteHandler={() =>
+                                                    favoriteHandler(item._id, "movie")
+                                                }
+                                            />
+                                        ) : (
+                                            <SeriesCard
+                                                series={item}
+                                                onClick={() => {
+                                                    setSelectedSeries(item);
+                                                    setIsSeriesModalOpen(true);
+                                                }}
+                                            />
+                                        )}
+
+                                        <button
+                                            type="button"
+                                            title="حذف از علاقه‌مندی‌ها"
+                                            aria-label="حذف از علاقه‌مندی‌ها"
+                                            disabled={
+                                                pendingFavorite ===
+                                                `${item.contentType}:${item._id}`
                                             }
-                                        />
-                                    )
-                                )}
+                                            onClick={() =>
+                                                favoriteHandler(
+                                                    item._id,
+                                                    item.contentType
+                                                )
+                                            }
+                                            className="absolute right-2 top-2 z-20 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-black/80 text-[#14c78b] transition hover:bg-red-500 hover:text-white disabled:opacity-50"
+                                        >
+                                            <Heart
+                                                size={18}
+                                                fill="currentColor"
+                                            />
+                                        </button>
+                                    </div>
+                                ))}
                             </div>
                         ) : (
-                            <span className="text-gray-500">
-                                هنوز فیلمی به علاقه‌مندی‌ها اضافه نشده.
-                            </span>
+                            <p className="py-5 text-gray-500">
+                                هنوز فیلم یا سریالی به علاقه‌مندی‌ها اضافه نکرده‌ای.
+                            </p>
                         )}
                     </div>
                 </div>
             </div>
 
+            {/* Movie Modal */}
             {selectedMovie && (
                 <MovieModal
                     movie={selectedMovie}
-                    isOpen={isModalOpen}
-                    onClose={() => setIsModalOpen(false)}
-                    isFavorite={favoriteIds.includes(
-                        selectedMovie._id
-                    )}
-                    favoriteHandler={favoriteHandler}
+                    isOpen={isMovieModalOpen}
+                    onClose={closeModals}
+                    isFavorite={isFavorite(selectedMovie._id, "movie")}
+                    favoriteHandler={(id) =>
+                        favoriteHandler(id, "movie")
+                    }
+                />
+            )}
+
+            {/* Series Modal */}
+            {selectedSeries && (
+                <SeriesModal
+                    series={selectedSeries}
+                    isOpen={isSeriesModalOpen}
+                    onClose={closeModals}
+                    isFavorite={isFavorite(selectedSeries._id, "series")}
+                    favoriteHandler={(id) =>
+                        favoriteHandler(id, "series")
+                    }
                 />
             )}
         </div>
@@ -360,4 +387,3 @@ export const ProfileCard = ({
 };
 
 export default ProfileCard;
-

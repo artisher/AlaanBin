@@ -33,7 +33,19 @@ const userSchema = new mongoose.Schema({
       ref: "Movie"
     }
   ],
-
+  favorites: [
+    {
+      contentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+      },
+      contentType: {
+        type: String,
+        enum: ["movie", "series"],
+        required: true,
+      },
+    },
+  ],
   country: String,
 
   city: String

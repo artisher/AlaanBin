@@ -2220,39 +2220,128 @@ app.get("/api/movies/top", async (req, res) => {
         });
     }
 });
-//فیلم مورد علاقه اضافه کردن یا حذف کردن
-app.post("/api/favorites/:movieId", async (req, res) => {
+// افزودن یا حذف فیلم و سریال از یک لیست مشترک
+app.post("/api/favorites/:contentType/:contentId", async (req, res) => {
     try {
         const token = req.cookies.token;
         if (!token) {
             return res.status(401).json({
-                message: "احراز هویت نشده"
+                message: "احراز هویت نشده",
             });
         }
-        const { movieId } = req.params;
+        const { contentType, contentId } = req.params;
+        if (!["movie", "series"].includes(contentType) ||
+            !mongoose_1.default.isValidObjectId(contentId)) {
+            return res.status(400).json({
+                message: "نوع محتوا یا شناسه نامعتبر است",
+            });
+        }
         const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
         const user = await User_1.User.findById(decoded.id);
         if (!user) {
             return res.status(404).json({
-                message: "کاربر پیدا نشد"
+                message: "کاربر پیدا نشد",
             });
         }
-        const exists = user.favoriteTitle.some(id => id.toString() === movieId);
-        if (!exists) {
-            user.favoriteTitle.push(new mongoose_1.default.Types.ObjectId(movieId));
+        const type = contentType;
+        const id = new mongoose_1.default.Types.ObjectId(contentId);
+        // بررسی وجود محتوا در لیست جدید
+        const favoriteIndex = user.favorites.findIndex((item) => item.contentType === type &&
+            item.contentId.toString() === contentId);
+        // پشتیبانی از فیلم‌های ذخیره‌شده در ساختار قدیمی
+        const legacyMovieExists = type === "movie" &&
+            user.favoriteTitle.some((movieId) => movieId.toString() === contentId);
+        if (favoriteIndex !== -1) {
+            user.favorites.splice(favoriteIndex, 1);
+        }
+        else if (legacyMovieExists) {
+            user.favoriteTitle = user.favoriteTitle.filter((movieId) => movieId.toString() !== contentId);
         }
         else {
-            user.favoriteTitle = user.favoriteTitle.filter(id => id.toString() !== movieId);
+            user.favorites.push({
+                contentId: id,
+                contentType: type,
+            });
         }
         await user.save();
-        res.json({
+        return res.json({
             success: true,
-            favoriteTitle: user.favoriteTitle
+            message: "علاقه‌مندی به‌روزرسانی شد",
         });
     }
-    catch (err) {
-        res.status(500).json({
-            message: "خطا"
+    catch (error) {
+        console.error("TOGGLE FAVORITE ERROR:", error);
+        return res.status(500).json({
+            message: "خطا در تغییر علاقه‌مندی",
+        });
+    }
+});
+// دریافت تمام علاقه‌مندی‌ها در یک آرایه
+app.get("/api/favorites", async (req, res) => {
+    try {
+        const token = req.cookies.token;
+        if (!token) {
+            return res.status(401).json({
+                message: "احراز هویت نشده",
+            });
+        }
+        const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
+        const user = await User_1.User.findById(decoded.id);
+        if (!user) {
+            return res.status(404).json({
+                message: "کاربر پیدا نشد",
+            });
+        }
+        // تبدیل علاقه‌مندی‌های قدیمی فیلم به ساختار مشترک
+        const legacyMovieIds = user.favoriteTitle.map((id) => id.toString());
+        const favoriteItems = user.favorites.map((item) => ({
+            contentId: item.contentId.toString(),
+            contentType: item.contentType,
+        }));
+        const combined = [
+            ...favoriteItems,
+            ...legacyMovieIds
+                .filter((id) => !favoriteItems.some((item) => item.contentType === "movie" &&
+                item.contentId === id))
+                .map((id) => ({
+                contentId: id,
+                contentType: "movie",
+            })),
+        ];
+        // دریافت فیلم‌ها و سریال‌ها
+        const movieIds = combined
+            .filter((item) => item.contentType === "movie")
+            .map((item) => item.contentId);
+        const seriesIds = combined
+            .filter((item) => item.contentType === "series")
+            .map((item) => item.contentId);
+        const [movies, series] = await Promise.all([
+            Movie_1.Movie.find({ _id: { $in: movieIds } }).lean(),
+            Series_1.Series.find({ _id: { $in: seriesIds } }).lean(),
+        ]);
+        const favorites = [
+            ...movies.map((movie) => ({
+                ...movie,
+                contentType: "movie",
+            })),
+            ...series.map((item) => ({
+                ...item,
+                contentType: "series",
+            })),
+        ];
+        // حفظ ترتیب لیست علاقه‌مندی‌ها
+        const order = new Map(combined.map((item, index) => [
+            `${item.contentType}:${item.contentId}`,
+            index,
+        ]));
+        favorites.sort((a, b) => (order.get(`${a.contentType}:${a._id}`) ?? Infinity) -
+            (order.get(`${b.contentType}:${b._id}`) ?? Infinity));
+        return res.json({ favorites });
+    }
+    catch (error) {
+        console.error("GET FAVORITES ERROR:", error);
+        return res.status(500).json({
+            message: "خطا در دریافت علاقه‌مندی‌ها",
         });
     }
 });

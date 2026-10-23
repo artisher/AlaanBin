@@ -37,7 +37,7 @@ async function getUserProfile() {
     return data;
 }
 
-async function getUserFavoritesMovie() {
+async function getUserFavorites() {
     const cookieStore = await cookies();
 
     const res = await fetch(
@@ -50,22 +50,19 @@ async function getUserFavoritesMovie() {
         }
     );
 
-    // کاربر لاگین نیست
     if (res.status === 401) {
         redirect("/login");
     }
 
-    // خطای API
     if (!res.ok) {
         throw new Error(
-            `Failed to fetch favorite movies: ${res.status}`
+            `Failed to fetch favorites: ${res.status}`
         );
     }
 
     const data = await res.json();
 
-    // API باید آبجکتی شامل favoriteMovies برگرداند
-    if (!data || !Array.isArray(data.favoriteMovies)) {
+    if (!data || !Array.isArray(data.favorites)) {
         throw new Error("Invalid favorites response");
     }
 
@@ -75,7 +72,7 @@ async function getUserFavoritesMovie() {
 export default async function ProfilePage() {
     const [userProfile, userFavorites] = await Promise.all([
         getUserProfile(),
-        getUserFavoritesMovie(),
+        getUserFavorites(),
     ]);
 
     return (
