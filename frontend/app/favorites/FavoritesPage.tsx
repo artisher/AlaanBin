@@ -1,78 +1,42 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import {
-    Search,
-    SlidersHorizontal,
-    X,
     ChevronLeft,
     ChevronRight,
-    Film,
+    Film
 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
-import type { Movie } from "@/types/movies";
 import { MovieCard } from "@/components/MovieCard";
+import { SeriesCard } from "@/components/SeriesCard";
+import type { Movie } from "@/types/movies";
+import { Series } from "@/types/Series";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+type FavoriteMovie = Movie & {
+    contentType: "movie";
+};
 
+type FavoriteSeries = Series & {
+    contentType: "series";
+};
 
-const GENRES = [
-    { label: "همه", value: "" },
-    { label: "اکشن", value: "Action" },
-    { label: "کمدی", value: "Comedy" },
-    { label: "درام", value: "Drama" },
-    { label: "عاشقانه", value: "Romance" },
-    { label: "ترسناک", value: "Horror" },
-    { label: "جنایی", value: "Crime" },
-    { label: "هیجان‌انگیز", value: "Thriller" },
-    { label: "معمایی", value: "Mystery" },
-    { label: "اجتماعی", value: "Social" },
-    { label: "روان‌شناختی", value: "Psychological" },
-    { label: "علمی تخیلی", value: "Sci-Fi" },
-    { label: "ماجراجویی", value: "Adventure" },
-    { label: "فانتزی", value: "Fantasy" },
-    { label: "تاریخی", value: "Historical" },
-    { label: "جنگی", value: "War" },
-    { label: "خانوادگی", value: "Family" },
-    { label: "کودک و نوجوان", value: "Kids" },
-    { label: "انیمیشن", value: "Animation" },
-    { label: "مستند", value: "Documentary" },
-    { label: "موزیکال", value: "Musical" },
-    { label: "ورزشی", value: "Sport" },
-    { label: "سیاسی", value: "Political" },
-    { label: "زندگی‌نامه‌ای", value: "Biography" },
-    { label: "فاجعه", value: "Disaster" },
-    { label: "ملودرام", value: "Melodrama" },
-];
+type FavoriteItem = FavoriteMovie | FavoriteSeries;
+
+interface FavoritesPageProps {
+    userFavorites: FavoriteItem[];
+}
 
 
-const PRODUCTS = [
-    { label: "همه", value: "" },
-    { label: "ایرانی", value: "ایرانی" },
-    { label: "خارجی", value: "خارجی" },
-];
-
-const RATINGS = [
-    { label: "همه امتیازها", value: "" },
-    { label: "7 به بالا", value: "7" },
-    { label: "8 به بالا", value: "8" },
-    { label: "9 به بالا", value: "9" },
-];
-
-const SORT_OPTIONS = [
-    { label: "جدیدترین", value: "newest" },
-    { label: "قدیمی‌ترین", value: "oldest" },
-    { label: "بیشترین امتیاز", value: "highRating" },
-    { label: "کمترین امتیاز", value: "lowRating" },
-];
-
-export default function FavoritesPage() {
+export default function FavoritesPage({
+    userFavorites,
+}: FavoritesPageProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    const [favoritesMovies, setFavoritesMovies] = useState<Movie[]>([]);
+    const [favoritesMovies, setFavoritesMovies] =
+        useState<FavoriteItem[]>(userFavorites);
     const [loading, setLoading] = useState(true);
 
     const [page, setPage] = useState(1);
@@ -82,21 +46,7 @@ export default function FavoritesPage() {
         searchParams.get("search") || ""
     );
 
-    const [genre, setGenre] = useState(
-        searchParams.get("genre") || ""
-    );
 
-    const [product, setProduct] = useState(
-        searchParams.get("product") || ""
-    );
-
-    const [rating, setRating] = useState(
-        searchParams.get("rating") || ""
-    );
-
-    const [sort, setSort] = useState(
-        searchParams.get("sort") || "newest"
-    );
 
     const [filtersOpen, setFiltersOpen] = useState(false);
 
@@ -106,224 +56,20 @@ export default function FavoritesPage() {
 
     useEffect(() => {
         setSearch(searchParams.get("search") || "");
-        setGenre(searchParams.get("genre") || "");
-        setProduct(searchParams.get("product") || "");
-        setRating(searchParams.get("rating") || "");
-        setSort(searchParams.get("sort") || "newest");
         setPage(1);
     }, [searchParams]);
 
-    // =========================
-    // Update URL
-    // =========================
-
-    const updateUrl = (
-        nextSearch: string,
-        nextGenre: string,
-        nextProduct: string,
-        nextRating: string,
-        nextSort: string
-    ) => {
-        const params = new URLSearchParams();
-
-        if (nextSearch.trim()) {
-            params.set("search", nextSearch.trim());
-        }
-
-        if (nextGenre) {
-            params.set("genre", nextGenre);
-        }
-
-        if (nextProduct) {
-            params.set("product", nextProduct);
-        }
-
-        if (nextRating) {
-            params.set("rating", nextRating);
-        }
-
-        if (nextSort !== "newest") {
-            params.set("sort", nextSort);
-        }
-
-        const query = params.toString();
-
-        router.replace(
-            query ? `/favorites?${query}` : "/favorites",
-            { scroll: false }
-        );
-    };
-
-    // =========================
-    // Fetch Movies
-    // =========================
-
-    useEffect(() => {
-        const fetchFavorites = async () => {
-            try {
-                setLoading(true);
-
-                const params = new URLSearchParams({
-                    page: String(page),
-                    limit: "24",
-                    sort,
-                });
-
-                if (search.trim()) {
-                    params.set("search", search.trim());
-                }
-
-                if (genre) {
-                    params.set("genre", genre);
-                }
-
-                if (product) {
-                    params.set("product", product);
-                }
-
-                if (rating) {
-                    params.set("rating", rating);
-                }
-
-                const res = await fetch(
-                    `${API_URL}/api/favorites?${params.toString()}`,
-                    {
-                        credentials: "include",
-                    }
-                );
-
-                const data = await res.json();
-
-                console.log("API URL:", API_URL);
-                console.log("Status:", res.status);
-                console.log("Response:", data);
-
-                if (!res.ok) {
-                    throw new Error(data.message || "Failed to fetch favorites");
-                }
-
-                console.log("Favorite movies:", data.favoriteMovies);
-
-                setFavoritesMovies(data.favoriteMovies || []);
-                setTotalPages(data.totalPages || 1);
-            } catch (error) {
-                console.error("Error fetching movies:", error);
-
-                setFavoritesMovies([]);
-                setTotalPages(1);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchFavorites();
-    }, [
-        page,
-        search,
-        genre,
-        product,
-        rating,
-        sort,
-    ]);
 
     // =========================
     // Filter Handlers
     // =========================
 
-    const handleSearchChange = (
-        value: string
-    ) => {
-        setSearch(value);
-        setPage(1);
 
-        updateUrl(
-            value,
-            genre,
-            product,
-            rating,
-            sort
-        );
-    };
 
-    const handleGenreChange = (
-        value: string
-    ) => {
-        setGenre(value);
-        setPage(1);
 
-        updateUrl(
-            search,
-            value,
-            product,
-            rating,
-            sort
-        );
-    };
 
-    const handleProductChange = (
-        value: string
-    ) => {
-        setProduct(value);
-        setPage(1);
 
-        updateUrl(
-            search,
-            genre,
-            value,
-            rating,
-            sort
-        );
-    };
 
-    const handleRatingChange = (
-        value: string
-    ) => {
-        setRating(value);
-        setPage(1);
-
-        updateUrl(
-            search,
-            genre,
-            product,
-            value,
-            sort
-        );
-    };
-
-    const handleSortChange = (
-        value: string
-    ) => {
-        setSort(value);
-        setPage(1);
-
-        updateUrl(
-            search,
-            genre,
-            product,
-            rating,
-            value
-        );
-    };
-
-    const clearFilters = () => {
-        setSearch("");
-        setGenre("");
-        setProduct("");
-        setRating("");
-        setSort("newest");
-        setPage(1);
-
-        router.replace("/favorites", {
-            scroll: false,
-        });
-    };
-
-    const hasFilters =
-        search.trim() ||
-        genre ||
-        product ||
-        rating ||
-        sort !== "newest";
 
     return (
         <main
@@ -467,351 +213,7 @@ export default function FavoritesPage() {
                 />
             </section>
 
-            {/* ================= Filters ================= */}
 
-            <section
-                className="
-                    relative
-                    mx-auto
-                    max-w-[1650px]
-                    px-5
-                    pb-10
-                "
-            >
-                <div
-                    className="
-                        rounded-2xl
-                        border
-                        border-white/[0.07]
-                        bg-[#111820]/80
-                        p-3
-                        shadow-[0_20px_60px_rgba(0,0,0,0.2)]
-                        backdrop-blur-xl
-                        md:p-4
-                    "
-                >
-                    <div
-                        className="
-                            flex
-                            flex-col
-                            gap-3
-                            md:flex-row
-                        "
-                    >
-                        {/* Search */}
-
-                        <div
-                            className="
-                                group
-                                flex
-                                h-12
-                                flex-1
-                                items-center
-                                gap-3
-                                rounded-xl
-                                border
-                                border-white/[0.07]
-                                bg-[#0B0F14]/70
-                                px-4
-                                transition-all
-                                duration-300
-                                focus-within:border-[#14c78b]/40
-                                focus-within:shadow-[0_0_25px_rgba(20,199,139,0.06)]
-                            "
-                        >
-                            <Search
-                                size={19}
-                                className="
-                                    shrink-0
-                                    text-gray-500
-                                    transition
-                                    group-focus-within:text-[#14c78b]
-                                "
-                            />
-
-                            <input
-                                value={search}
-                                onChange={(e) =>
-                                    handleSearchChange(
-                                        e.target.value
-                                    )
-                                }
-                                placeholder="جستجوی فیلم..."
-                                className="
-                                    w-full
-                                    bg-transparent
-                                    text-sm
-                                    text-white
-                                    outline-none
-                                    placeholder:text-gray-600
-                                "
-                            />
-
-                            {search && (
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        handleSearchChange("")
-                                    }
-                                    className="
-                                        flex
-                                        h-7
-                                        w-7
-                                        shrink-0
-                                        items-center
-                                        justify-center
-                                        rounded-lg
-                                        text-gray-500
-                                        transition
-                                        hover:bg-white/5
-                                        hover:text-white
-                                    "
-                                >
-                                    <X size={16} />
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Mobile filter button */}
-
-                        <button
-                            type="button"
-                            onClick={() =>
-                                setFiltersOpen(
-                                    (prev) => !prev
-                                )
-                            }
-                            className="
-                                flex
-                                h-12
-                                items-center
-                                justify-center
-                                gap-2
-                                rounded-xl
-                                border
-                                border-white/[0.07]
-                                bg-[#0B0F14]/70
-                                px-5
-                                text-sm
-                                font-medium
-                                text-gray-300
-                                transition-all
-                                hover:border-[#14c78b]/30
-                                hover:text-[#14c78b]
-                                md:hidden
-                            "
-                        >
-                            <SlidersHorizontal size={18} />
-
-                            فیلترها
-
-                            <span
-                                className="
-                                    h-1.5
-                                    w-1.5
-                                    rounded-full
-                                    bg-[#14c78b]
-                                "
-                            />
-                        </button>
-                    </div>
-
-                    {/* Filters */}
-
-                    <div
-                        className={`
-                                mt-3
-                                flex-wrap
-                                gap-2.5
-                                border-t
-                                border-white/[0.05]
-                                pt-3
-                                ${filtersOpen
-                                ? "flex"
-                                : "hidden md:flex"
-                            }
-                    `}
-                    >
-                        {/* Genre */}
-
-                        <select
-                            value={genre}
-                            onChange={(e) =>
-                                handleGenreChange(
-                                    e.target.value
-                                )
-                            }
-                            className="
-                                h-10
-                                min-w-[125px]
-                                cursor-pointer
-                                rounded-xl
-                                border
-                                border-white/[0.07]
-                                bg-[#0B0F14]
-                                px-3
-                                text-sm
-                                text-gray-300
-                                outline-none
-                                transition
-                                hover:border-white/15
-                                focus:border-[#14c78b]/40
-                            "
-                        >
-                            {GENRES.map((item) => (
-                                <option
-                                    key={item.value}
-                                    value={item.value}
-                                    className="bg-[#111820]"
-                                >
-                                    {item.label === "همه"
-                                        ? "همه ژانرها"
-                                        : item.label}
-                                </option>
-                            ))}
-                        </select>
-
-                        {/* Product */}
-
-                        <select
-                            value={product}
-                            onChange={(e) =>
-                                handleProductChange(
-                                    e.target.value
-                                )
-                            }
-                            className="
-                                h-10
-                                min-w-[110px]
-                                cursor-pointer
-                                rounded-xl
-                                border
-                                border-white/[0.07]
-                                bg-[#0B0F14]
-                                px-3
-                                text-sm
-                                text-gray-300
-                                outline-none
-                                transition
-                                hover:border-white/15
-                                focus:border-[#14c78b]/40
-                            "
-                        >
-                            {PRODUCTS.map((item) => (
-                                <option
-                                    key={item.value}
-                                    value={item.value}
-                                    className="bg-[#111820]"
-                                >
-                                    {item.label}
-                                </option>
-                            ))}
-                        </select>
-
-                        {/* Rating */}
-
-                        <select
-                            value={rating}
-                            onChange={(e) =>
-                                handleRatingChange(
-                                    e.target.value
-                                )
-                            }
-                            className="
-                                h-10
-                                min-w-[125px]
-                                cursor-pointer
-                                rounded-xl
-                                border
-                                border-white/[0.07]
-                                bg-[#0B0F14]
-                                px-3
-                                text-sm
-                                text-gray-300
-                                outline-none
-                                transition
-                                hover:border-white/15
-                                focus:border-[#14c78b]/40
-                            "
-                        >
-                            {RATINGS.map((item) => (
-                                <option
-                                    key={item.value}
-                                    value={item.value}
-                                    className="bg-[#111820]"
-                                >
-                                    {item.label}
-                                </option>
-                            ))}
-                        </select>
-
-                        {/* Sort */}
-
-                        <select
-                            value={sort}
-                            onChange={(e) =>
-                                handleSortChange(
-                                    e.target.value
-                                )
-                            }
-                            className="
-                                h-10
-                                min-w-[130px]
-                                cursor-pointer
-                                rounded-xl
-                                border
-                                border-white/[0.07]
-                                bg-[#0B0F14]
-                                px-3
-                                text-sm
-                                text-gray-300
-                                outline-none
-                                transition
-                                hover:border-white/15
-                                focus:border-[#14c78b]/40
-                            "
-                        >
-                            {SORT_OPTIONS.map((item) => (
-                                <option
-                                    key={item.value}
-                                    value={item.value}
-                                    className="bg-[#111820]"
-                                >
-                                    {item.label}
-                                </option>
-                            ))}
-                        </select>
-
-                        {/* Clear */}
-
-                        {hasFilters && (
-                            <button
-                                type="button"
-                                onClick={clearFilters}
-                                className="
-                                    flex
-                                    h-10
-                                    items-center
-                                    gap-2
-                                    rounded-xl
-                                    border
-                                    border-red-400/10
-                                    px-4
-                                    text-sm
-                                    text-gray-500
-                                    transition-all
-                                    hover:border-red-400/25
-                                    hover:bg-red-400/[0.04]
-                                    hover:text-red-400
-                                "
-                            >
-                                <X size={15} />
-                                پاک کردن
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </section>
 
             {/* ================= Movies ================= */}
 
@@ -923,30 +325,9 @@ export default function FavoritesPage() {
                             فیلمی پیدا نشد
                         </p>
 
-                        <p className="mt-2 text-sm text-gray-600">
-                            فیلترها یا عبارت جستجو را تغییر بده.
-                        </p>
 
-                        {hasFilters && (
-                            <button
-                                type="button"
-                                onClick={clearFilters}
-                                className="
-                                    mt-6
-                                    rounded-xl
-                                    bg-[#14c78b]
-                                    px-5
-                                    py-2.5
-                                    text-sm
-                                    font-bold
-                                    text-[#06110d]
-                                    transition
-                                    hover:bg-[#18d995]
-                                "
-                            >
-                                حذف فیلترها
-                            </button>
-                        )}
+
+
                     </div>
                 ) : (
                     <div
@@ -965,22 +346,26 @@ export default function FavoritesPage() {
                             md:gap-y-12
                         "
                     >
-                        {favoritesMovies.map((movie) => (
+                        {favoritesMovies.map((item) => (
                             <div
-                                key={movie._id}
-                                className="
-                                    w-full
-                                    max-w-[215px]
-                                "
+                                key={`${item.contentType}:${item._id}`}
+                                className="w-full max-w-[215px]"
                             >
-                                <MovieCard
-                                    movie={movie}
-                                    onClick={() =>
-                                        router.push(
-                                            `/movies/${movie._id}`
-                                        )
-                                    }
-                                />
+                                {item.contentType === "movie" ? (
+                                    <MovieCard
+                                        movie={item}
+                                        onClick={() =>
+                                            router.push(`/movies/${item._id}`)
+                                        }
+                                    />
+                                ) : (
+                                    <SeriesCard
+                                        series={item}
+                                        onClick={() =>
+                                            router.push(`/series/${item._id}`)
+                                        }
+                                    />
+                                )}
                             </div>
                         ))}
                     </div>

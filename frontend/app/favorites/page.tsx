@@ -1,8 +1,43 @@
+
 import { Suspense } from "react";
 import FavoritesPage from "./FavoritesPage";
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
+async function getUserFavorites() {
+    const cookieStore = await cookies();
 
-export default function Page() {
+    const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/favorites`,
+        {
+            cache: "no-store",
+            headers: {
+                Cookie: cookieStore.toString(),
+            },
+        }
+    );
+
+    if (res.status === 401) {
+        redirect("/login");
+    }
+
+    if (!res.ok) {
+        throw new Error(
+            `Failed to fetch favorites: ${res.status}`
+        );
+    }
+
+    const data = await res.json();
+
+    if (!data || !Array.isArray(data.favorites)) {
+        throw new Error("Invalid favorites response");
+    }
+
+    return data;
+}
+export default async function Page() {
+    const data = await getUserFavorites();
+
     return (
         <Suspense
             fallback={
@@ -12,7 +47,9 @@ export default function Page() {
                 />
             }
         >
-            <FavoritesPage />
+            <FavoritesPage
+                userFavorites={data.favorites}
+            />
         </Suspense>
     );
 }
