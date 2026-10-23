@@ -459,16 +459,21 @@ export default function FavoritesPage({
                                 {item.contentType === "movie" ? (
                                     <MovieCard
                                         movie={item}
-                                        onClick={() =>
-                                            router.push(`/movies/${item._id}`)
-                                        }
+                                        onClick={() => {
+                                            setSelectedMovie(item);
+                                            setIsMovieModalOpen(true);
+                                        }}
+                                        favoriteHandler={() =>
+                                            favoriteHandler(item._id, "movie")
+                                        } 
                                     />
                                 ) : (
                                     <SeriesCard
                                         series={item}
-                                        onClick={() =>
-                                            router.push(`/series/${item._id}`)
-                                        }
+                                        onClick={() => {
+                                            setSelectedSeries(item);
+                                            setIsSeriesModalOpen(true);
+                                        }}
                                     />
                                 )}
                             </div>
