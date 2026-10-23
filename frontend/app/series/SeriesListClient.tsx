@@ -181,21 +181,20 @@ export default function SeriesPage() {
         setSelectedSeries(series);
         setIsSeriesModalOpen(true);
     };
-    const favoriteHandler = async (id: string) => {
+    const favoriteHandler = async (
+        id: string,
+        contentType: "movie" | "series"
+    ) => {
         try {
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${id}`,
+                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${contentType}/${id}`,
                 {
                     method: "POST",
                     credentials: "include",
                 }
             );
 
-            const data: {
-                message?: string;
-                success?: boolean;
-                favoriteTitle?: string[];
-            } = await res.json();
+            const data = await res.json();
 
             if (!res.ok) {
                 throw new Error(
@@ -203,21 +202,18 @@ export default function SeriesPage() {
                 );
             }
 
-            if (!data.success || !Array.isArray(data.favoriteTitle)) {
-                throw new Error("پاسخ نامعتبر از سرور دریافت شد.");
+            if (!data.success) {
+                throw new Error("تغییر علاقه‌مندی انجام نشد.");
             }
 
-            const updatedIds = data.favoriteTitle.map(String);
-
-            setFavoriteIds(updatedIds);
-
-            const isFavoriteNow = updatedIds.includes(id);
-
-            toast.success(
-                isFavoriteNow
-                    ? "به علاقه‌مندی‌ها اضافه شد."
-                    : "از علاقه‌مندی‌ها حذف شد."
+            // به‌روزرسانی لیست شناسه‌های علاقه‌مندی
+            setFavoriteIds((prev) =>
+                prev.includes(id)
+                    ? prev.filter((favoriteId) => favoriteId !== id)
+                    : [...prev, id]
             );
+
+            toast.success("وضعیت علاقه‌مندی تغییر کرد.");
         } catch (error) {
             console.error("FAVORITE ERROR:", error);
 
@@ -227,8 +223,6 @@ export default function SeriesPage() {
                     : "خطا در تغییر علاقه‌مندی."
             );
         }
-
-
     };
     return (
         <main className="min-h-screen overflow-hidden bg-[#0B0F14] text-white">
@@ -826,7 +820,7 @@ export default function SeriesPage() {
                             setIsSeriesModalOpen(false);
                             setSelectedSeries(null);
                         }}
-                        favoriteHandler={favoriteHandler}
+                        favoriteHandler={(id) => favoriteHandler(id, "series")}
                         isFavorite={favoriteIds.includes(selectedSeries._id)}
                     />
                 )}

@@ -200,21 +200,20 @@ export const HomeContent = () => {
         }
     };
 
-    const favoriteHandler = async (id: string) => {
+    const favoriteHandler = async (
+        id: string,
+        contentType: "movie" | "series"
+    ) => {
         try {
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${id}`,
+                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${contentType}/${id}`,
                 {
                     method: "POST",
                     credentials: "include",
                 }
             );
 
-            const data: {
-                message?: string;
-                success?: boolean;
-                favoriteTitle?: string[];
-            } = await res.json();
+            const data = await res.json();
 
             if (!res.ok) {
                 throw new Error(
@@ -222,21 +221,14 @@ export const HomeContent = () => {
                 );
             }
 
-            if (!data.success || !Array.isArray(data.favoriteTitle)) {
-                throw new Error("پاسخ نامعتبر از سرور دریافت شد.");
+            if (!data.success) {
+                throw new Error("تغییر علاقه‌مندی انجام نشد.");
             }
 
-            const updatedIds = data.favoriteTitle.map(String);
+            toast.success("وضعیت علاقه‌مندی تغییر کرد.");
 
-            setFavoriteIds(updatedIds);
-
-            const isFavoriteNow = updatedIds.includes(id);
-
-            toast.success(
-                isFavoriteNow
-                    ? "به علاقه‌مندی‌ها اضافه شد."
-                    : "از علاقه‌مندی‌ها حذف شد."
-            );
+            // دریافت مجدد لیست علاقه‌مندی‌ها
+            router.refresh();
         } catch (error) {
             console.error("FAVORITE ERROR:", error);
 
@@ -246,8 +238,6 @@ export const HomeContent = () => {
                     : "خطا در تغییر علاقه‌مندی."
             );
         }
-
-
     };
 
 
@@ -489,11 +479,8 @@ export const HomeContent = () => {
                         setIsModalOpen(false);
                         setSelectedMovie(null);
                     }}
-                    favoriteHandler={favoriteHandler}
-                    isFavorite={favoriteIds.includes(
-                        selectedMovie._id
-                    )}
-
+                    favoriteHandler={(id) => favoriteHandler(id, "movie")}
+                    isFavorite={favoriteIds.includes(selectedMovie._id)}
                 />
             )}
             {selectedSeries && (
@@ -504,7 +491,7 @@ export const HomeContent = () => {
                         setIsSeriesModalOpen(false);
                         setSelectedSeries(null);
                     }}
-                    favoriteHandler={favoriteHandler}
+                    favoriteHandler={(id) => favoriteHandler(id, "series")}
                     isFavorite={favoriteIds.includes(selectedSeries._id)}
                 />
             )}
