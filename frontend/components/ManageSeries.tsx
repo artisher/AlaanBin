@@ -40,6 +40,7 @@ export const ManageSeries = ({
     const [importedEpisodes, setImportedEpisodes] =
         useState<Set<string>>(new Set());
 
+
     const handleScanStorage = async () => {
         try {
             setIsScanningStorage(true);
@@ -60,15 +61,11 @@ export const ManageSeries = ({
                 );
             }
 
-            const newSeries = (data.series || []).filter(
-                (storageItem: StorageSeries) =>
-                    !findMatchingSeries(storageItem.name)
-            );
-
-            setStorageSeries(newSeries);
+            // همه پوشه‌ها را نمایش بده؛ حتی سریال‌های ثبت‌شده
+            setStorageSeries(data.series || []);
 
             toast.success(
-                `${data.series?.length || 0} سریال در Storage پیدا شد`
+                `${data.series?.length || 0} پوشه سریال در Storage پیدا شد`
             );
         } catch (error: any) {
             console.error(
@@ -83,6 +80,7 @@ export const ManageSeries = ({
             setIsScanningStorage(false);
         }
     };
+
 
     const handleImportEpisode = async (
         seriesItem: Series,

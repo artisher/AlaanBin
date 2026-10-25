@@ -123,7 +123,7 @@ export const Footer = () => {
             </p>
 
             <div className="flex gap-4 pt-3">
-              <Link href="#" className="hover:text-[#10B981] transition">
+              <Link href="https://www.instagram.com/alanbin.tv" className="hover:text-[#10B981] transition">
                 Instagram
               </Link>
 
