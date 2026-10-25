@@ -549,6 +549,7 @@ async function buildVarzeshPlaylist(
 
 app.get(
     "/api/live/varzesh/index.m3u8",
+    checkSubscription,
     async (req, res) => {
 
         try {
