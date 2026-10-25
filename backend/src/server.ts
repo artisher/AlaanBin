@@ -2667,7 +2667,12 @@ app.get(
                     if (!parsed) return true;
 
                     const key = `${parsed.seasonNumber}-${parsed.episodeNumber}`;
-
+                    console.log({
+                        filename,
+                        parsed,
+                        key,
+                        isAlreadyRegistered: existingKeys.has(key),
+                    });
                     return !existingKeys.has(key);
                 });
 
