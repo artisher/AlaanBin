@@ -1,13 +1,19 @@
 
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Hls from "hls.js";
 
 type LivePlayerProps = {
     streamUrl: string;
     sessionType?: "tv1" | "varzesh";
 };
+type PlayerError =
+    | "AUTH_REQUIRED"
+    | "SUBSCRIPTION_REQUIRED"
+    | "PLAYBACK_ERROR";
+
+
 
 export default function LivePlayer({
     streamUrl,
@@ -16,6 +22,10 @@ export default function LivePlayer({
 
     const videoRef =
         useRef<HTMLVideoElement>(null);
+
+    const [playerError, setPlayerError] =
+        useState<PlayerError | null>(null);
+
 
     useEffect(() => {
 
@@ -305,12 +315,32 @@ export default function LivePlayer({
                             }
                         );
 
-
                     if (!response.ok) {
+                        let errorCode: PlayerError = "PLAYBACK_ERROR";
 
-                        throw new Error(
-                            `TV1 playlist request failed: ${response.status}`
-                        );
+                        try {
+                            const data = await response.clone().json();
+
+                            if (
+                                response.status === 401 &&
+                                data.code === "AUTH_REQUIRED"
+                            ) {
+                                errorCode = "AUTH_REQUIRED";
+                            } else if (
+                                response.status === 403 &&
+                                data.code === "SUBSCRIPTION_REQUIRED"
+                            ) {
+                                errorCode = "SUBSCRIPTION_REQUIRED";
+                            }
+                        } catch {
+                            // پاسخ JSON قابل خواندن نیست.
+                        }
+
+                        if (!cancelled) {
+                            setPlayerError(errorCode);
+                        }
+
+                        return;
                     }
 
 
@@ -388,12 +418,32 @@ export default function LivePlayer({
 
 
                     if (!response.ok) {
+                        let errorCode: PlayerError = "PLAYBACK_ERROR";
 
-                        throw new Error(
-                            `Playlist request failed: ${response.status}`
-                        );
+                        try {
+                            const data = await response.clone().json();
+
+                            if (
+                                response.status === 401 &&
+                                data.code === "AUTH_REQUIRED"
+                            ) {
+                                errorCode = "AUTH_REQUIRED";
+                            } else if (
+                                response.status === 403 &&
+                                data.code === "SUBSCRIPTION_REQUIRED"
+                            ) {
+                                errorCode = "SUBSCRIPTION_REQUIRED";
+                            }
+                        } catch {
+                            // پاسخ JSON قابل خواندن نیست.
+                        }
+
+                        if (!cancelled) {
+                            setPlayerError(errorCode);
+                        }
+
+                        return;
                     }
-
 
                     sessionId =
                         response.headers.get(
@@ -454,8 +504,8 @@ export default function LivePlayer({
                     sessionType === "varzesh"
                         ? "❌ VARZESH PLAYER ERROR:"
                         : sessionType === "tv1"
-                        ? "❌ TV1 PLAYER ERROR:"
-                        : "❌ LIVE PLAYER ERROR:",
+                            ? "❌ TV1 PLAYER ERROR:"
+                            : "❌ LIVE PLAYER ERROR:",
                     error
                 );
             }
