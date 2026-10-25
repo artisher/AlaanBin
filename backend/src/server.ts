@@ -2715,6 +2715,7 @@ app.get(
     adminMiddleware,
     async (req, res) => {
         try {
+            console.log("SECOND SERIES STORAGE HANDLER HIT");
             const seriesDir = "/mnt/alanbin/series";
 
             const entries = await fs.promises.readdir(seriesDir, {
