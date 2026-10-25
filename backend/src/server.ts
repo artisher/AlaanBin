@@ -2580,16 +2580,13 @@ app.get(
                 withFileTypes: true,
             });
 
+
             const series = [];
 
             for (const entry of entries) {
                 if (!entry.isDirectory()) continue;
 
-                const seriesPath = path.join(
-                    seriesDir,
-                    entry.name
-                );
-
+                const seriesPath = path.join(seriesDir, entry.name);
                 const files = await fs.promises.readdir(seriesPath);
 
                 const videoFiles = files.filter((file) =>
@@ -2598,30 +2595,13 @@ app.get(
                     )
                 );
 
-                /*
-                 * گروه‌بندی MP4 و MKV بر اساس basename
-                 *
-                 * مثال:
-                 *
-                 * Yaghi.S01E01.mkv
-                 * Yaghi.S01E01.mp4
-                 *
-                 * ↓
-                 *
-                 * Yaghi.S01E01
-                 */
                 const groupedVideos = new Map<
                     string,
-                    {
-                        mp4?: string;
-                        mkv?: string;
-                    }
+                    { mp4?: string; mkv?: string }
                 >();
 
                 for (const filename of videoFiles) {
-                    const ext = path
-                        .extname(filename)
-                        .toLowerCase();
+                    const ext = path.extname(filename).toLowerCase();
 
                     const baseName = path.basename(
                         filename,
@@ -2629,44 +2609,78 @@ app.get(
                     );
 
                     const key = baseName.toLowerCase();
-
                     const existing = groupedVideos.get(key);
 
                     if (!existing) {
                         groupedVideos.set(key, {
-                            [ext === ".mp4" ? "mp4" : "mkv"]:
-                                filename,
+                            [ext === ".mp4" ? "mp4" : "mkv"]: filename,
                         });
                     } else {
-                        if (ext === ".mp4") {
-                            existing.mp4 = filename;
-                        }
-
-                        if (ext === ".mkv") {
-                            existing.mkv = filename;
-                        }
+                        if (ext === ".mp4") existing.mp4 = filename;
+                        if (ext === ".mkv") existing.mkv = filename;
                     }
                 }
 
-                /*
-                 * اگر MP4 وجود داشته باشد:
-                 * فقط MP4 را نمایش بده.
-                 *
-                 * اگر MP4 وجود نداشته باشد:
-                 * MKV را نمایش بده.
-                 */
-                const videos = Array.from(
-                    groupedVideos.values()
-                ).map((video) => {
-                    return video.mp4 || video.mkv!;
+                // اولویت با MP4 است؛ در غیر این صورت MKV
+                const videos = Array.from(groupedVideos.values()).map(
+                    (video) => video.mp4 || video.mkv!
+                );
+
+                // سریال موجود در دیتابیس را پیدا کن
+                const normalizedName = entry.name.trim().toLowerCase();
+
+                const dbSeries = await Series.find({
+                    $or: [
+                        { title: new RegExp(`^${normalizedName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+                        { aliases: new RegExp(`^${normalizedName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+                    ],
+                }).select("_id");
+
+                // اگر سریال هنوز ثبت نشده، همه فایل‌ها را نگه دار
+                if (dbSeries.length === 0) {
+                    series.push({
+                        name: entry.name,
+                        path: entry.name,
+                        files: videos,
+                    });
+                    continue;
+                }
+
+                const seriesIds = dbSeries.map((item) => item._id);
+
+                // قسمت‌های ثبت‌شده این سریال‌ها
+                const existingEpisodes = await Episode.find({
+                    seriesId: { $in: seriesIds },
+                }).select("seasonNumber episodeNumber");
+
+                const existingKeys = new Set(
+                    existingEpisodes.map(
+                        (ep) => `${ep.seasonNumber}-${ep.episodeNumber}`
+                    )
+                );
+
+                // فقط قسمت‌های ثبت‌نشده را نمایش بده
+                const newVideos = videos.filter((filename) => {
+                    const parsed = parseEpisodeFilename(filename);
+
+                    // نام فایل نامعتبر را مخفی نکن تا قابل بررسی باشد
+                    if (!parsed) return true;
+
+                    const key = `${parsed.seasonNumber}-${parsed.episodeNumber}`;
+
+                    return !existingKeys.has(key);
                 });
+
+                // اگر همه قسمت‌ها قبلاً ثبت شده‌اند، خود سریال را هم نمایش نده
+                if (newVideos.length === 0) continue;
 
                 series.push({
                     name: entry.name,
                     path: entry.name,
-                    files: videos,
+                    files: newVideos,
                 });
             }
+
 
             res.json({
                 success: true,
