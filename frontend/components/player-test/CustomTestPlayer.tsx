@@ -16,6 +16,8 @@ export default function CustomTestPlayer() {
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [error, setError] = useState("");
+    const [seekTime, setSeekTime] = useState<number | null>(null);
+
 
     const togglePlayback = async () => {
         const video = videoRef.current;
@@ -141,13 +143,27 @@ export default function CustomTestPlayer() {
                         min={0}
                         max={duration}
                         step={1}
-                        value={Math.min(currentTime, duration || 0)}
-                        onInput={(event) => {
+                        value={seekTime ?? currentTime}
+                        onChange={(event) => {
+                            setSeekTime(Number(event.currentTarget.value));
+                        }}
+                        onPointerUp={(event) => {
                             const video = videoRef.current;
 
                             if (video) {
                                 video.currentTime = Number(event.currentTarget.value);
                             }
+
+                            setSeekTime(null);
+                        }}
+                        onKeyUp={(event) => {
+                            const video = videoRef.current;
+
+                            if (video) {
+                                video.currentTime = Number(event.currentTarget.value);
+                            }
+
+                            setSeekTime(null);
                         }}
                         disabled={!Number.isFinite(duration) || duration <= 0}
                         className="mt-5 w-full cursor-pointer accent-emerald-400"
