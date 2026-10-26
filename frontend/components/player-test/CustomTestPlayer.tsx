@@ -139,18 +139,18 @@ export default function CustomTestPlayer() {
                         aria-label="موقعیت پخش ویدئو"
                         type="range"
                         min={0}
-                        max={duration || 0}
-                        step={0.1}
+                        max={duration}
+                        step={1}
                         value={Math.min(currentTime, duration || 0)}
-                        onChange={(event) => {
+                        onInput={(event) => {
                             const video = videoRef.current;
 
                             if (video) {
-                                video.currentTime = Number(event.target.value);
+                                video.currentTime = Number(event.currentTarget.value);
                             }
                         }}
-                        disabled={!duration}
-                        className="mt-5 w-full accent-emerald-400"
+                        disabled={!Number.isFinite(duration) || duration <= 0}
+                        className="mt-5 w-full cursor-pointer accent-emerald-400"
                     />
 
                     {error && (
