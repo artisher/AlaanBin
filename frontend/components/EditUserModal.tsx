@@ -22,6 +22,7 @@ const updateUserOnServer = async (userId: string, userData: User) => {
             email: userData.email,
             country: userData.country,
             city: userData.city,
+            role: userData.role,
             hasActiveSubscription: userData.hasActiveSubscription,
             subscriptionExpireDate: userData.subscriptionExpireDate,
             favoriteTitle: userData.favoriteTitle,
@@ -106,7 +107,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, user, onClose, on
 
         } catch (error: any) {
             toast.error("An error occurred. Check the console .");
-          
+
             console.error(error);
         }
     };
@@ -220,8 +221,8 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, user, onClose, on
                             onChange={handleChange}
                             className="w-full rounded-md border border-gray-600 bg-gray-700 text-white shadow-sm focus:border-[#14c78b] focus:ring-[#14c78b] sm:text-sm p-2"
                         >
-                            <option value="کاربر">کاربر</option>
-                            <option value="ادمین">ادمین</option>
+                            <option value="user">کاربر</option>
+                            <option value="admin">ادمین</option>
                         </select>
                     </div>
 

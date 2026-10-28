@@ -2108,7 +2108,6 @@ app.put(
             const { id } = req.params;
             const updateData = { ...req.body };
 
-            // فقط اگر پسورد جدید وارد شده باشد
             if (updateData.password?.trim()) {
                 updateData.password = await bcrypt.hash(updateData.password, 10);
             } else {
@@ -2116,37 +2115,35 @@ app.put(
             }
 
             // فیلدهایی که نباید از فرانت تغییر کنند
-            delete updateData.role;
+            // (role از این لیست حذف شد)
             delete updateData._id;
             delete updateData.__v;
             delete updateData.signUpDate;
 
-            const updatedUser = await User.findByIdAndUpdate(
-                id,
-                updateData,
-                {
-                    new: true,
-                    runValidators: true,
-                }
-            );
-
-            if (!updatedUser) {
-                return res.status(404).json({
-                    message: "کاربر یافت نشد",
-                });
+            // فقط مقادیر مجاز برای نقش
+            if (updateData.role !== undefined && !["user", "admin"].includes(updateData.role)) {
+                return res.status(400).json({ message: "نقش نامعتبر است" });
             }
 
-            // تبدیل به آبجکت و حذف password بدون استفاده از delete
-            const { password, ...safeUser } = updatedUser.toObject();
+            // جلوگیری از اینکه ادمین نقش خودش رو بگیره و سیستم بدون ادمین بمونه
+            if (updateData.role === "user" && req.user?._id?.toString() === id) {
+                return res.status(400).json({ message: "نمی‌تونی نقش خودت رو تغییر بدی" });
+            }
 
+            const updatedUser = await User.findByIdAndUpdate(id, updateData, {
+                new: true,
+                runValidators: true,
+            });
+
+            if (!updatedUser) {
+                return res.status(404).json({ message: "کاربر یافت نشد" });
+            }
+
+            const { password, ...safeUser } = updatedUser.toObject();
             res.json(safeUser);
         } catch (err) {
             const error = err as Error;
-
-            res.status(500).json({
-                message: "خطا در بروزرسانی",
-                error: error.message,
-            });
+            res.status(500).json({ message: "خطا در بروزرسانی", error: error.message });
         }
     }
 );
