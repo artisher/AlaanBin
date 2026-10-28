@@ -4,7 +4,7 @@ import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import cors from 'cors';
 import mongoose from 'mongoose';
-
+import checkStreamAccess, { signStreamToken } from "./middleware/stream.middleware";
 import { Movie } from './models/Movie';
 import { Series } from "./models/Series";
 import { Episode } from "./models/Episode";
@@ -154,7 +154,7 @@ app.post(
 //serve video
 app.get(
     "/videos/:filename",
-    checkSubscription,
+    checkStreamAccess,
     async (req, res) => {
         try {
             const filename = String(req.params.filename);
@@ -195,7 +195,7 @@ app.get(
 // serve series 
 app.get(
     "/series-videos/:seriesName/:filename",
-    checkSubscription,
+    checkStreamAccess,
     async (req, res) => {
         try {
             const seriesName = String(req.params.seriesName);
@@ -4429,6 +4429,49 @@ app.get("/api/movies/:id",
         }
     });
 // شروع سرور
+app.get("/api/stream-token", checkSubscription, (req, res) => {
+    try {
+        const rawPath = req.query.path;
+
+        if (typeof rawPath !== "string") {
+            return res.status(400).json({
+                success: false,
+                message: "invalid path",
+            });
+        }
+
+        const p = decodeURIComponent(rawPath);
+
+        const validPath =
+            /^\/videos\/[^/]+\.mp4$/i.test(p) ||
+            /^\/series-videos\/[^/]+\/[^/]+\.mp4$/i.test(p);
+
+        if (!validPath || p.includes("..") || p.includes("\\")) {
+            return res.status(400).json({
+                success: false,
+                message: "invalid path",
+            });
+        }
+
+        const decoded = jwt.verify(
+            req.cookies.token,
+            process.env.JWT_SECRET!
+        ) as { id: string };
+
+        const token = signStreamToken(decoded.id, p);
+
+        res.setHeader("Cache-Control", "no-store");
+
+        return res.json({
+            url: `${p}?st=${encodeURIComponent(token)}`,
+        });
+    } catch {
+        return res.status(400).json({
+            success: false,
+            message: "invalid path",
+        });
+    }
+});
 app.listen(PORT, () => {
     console.log(`🚀 سرور روی پورت ${PORT} در حال اجراست!`);
     console.log(`📍 آدرس API: http://localhost:${PORT}/api/users`);

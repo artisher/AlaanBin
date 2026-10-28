@@ -1,8 +1,58 @@
+import { useEffect, useState } from "react";
 
 export const VideoPlayer = ({ video }: any) => {
     const movie = video;
+    const [videoSrc, setVideoSrc] = useState("");
+    useEffect(() => {
+        if (!movie?.videoUrl) {
+            setVideoSrc("");
+            return;
+        }
 
+        let cancelled = false;
 
+        const loadStreamUrl = async () => {
+            try {
+                setVideoSrc("");
+
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+                const response = await fetch(
+                    `${apiUrl}/api/stream-token?path=${encodeURIComponent(
+                        movie.videoUrl
+                    )}`,
+                    {
+                        credentials: "include",
+                        cache: "no-store",
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        `خطای دریافت آدرس ویدئو: ${response.status}`
+                    );
+                }
+
+                const data: { url: string } = await response.json();
+
+                if (!cancelled) {
+                    setVideoSrc(`${apiUrl}${data.url}`);
+                }
+            } catch (error) {
+                console.error("MOVIE STREAM URL ERROR:", error);
+
+                if (!cancelled) {
+                    setVideoSrc("");
+                }
+            }
+        };
+
+        void loadStreamUrl();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [movie?.videoUrl]);
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#090909] via-[#111315] to-[#0b0b0b] text-white">
             <div className="max-w-7xl mx-auto px-5 py-8">
@@ -10,12 +60,19 @@ export const VideoPlayer = ({ video }: any) => {
                 {/* Video */}
 
                 <div className="overflow-hidden rounded-3xl border border-[#14c78b]/20 shadow-[0_0_45px_rgba(20,199,139,.15)]">
-                    <video
-                        controlsList="nodownload"
-                        controls
-                        className="w-full"
-                        src={`${process.env.NEXT_PUBLIC_API_URL}${movie.videoUrl}`}
-                    />
+                    {videoSrc ? (
+                        <video
+                            controlsList="nodownload"
+                            controls
+                            playsInline
+                            className="w-full"
+                            src={videoSrc}
+                        />
+                    ) : (
+                        <div className="flex aspect-video w-full items-center justify-center bg-black text-white">
+                            در حال آماده‌سازی ویدئو...
+                        </div>
+                    )}
                 </div>
 
                 {/* Content */}

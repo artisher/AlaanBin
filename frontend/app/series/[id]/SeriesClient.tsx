@@ -18,6 +18,7 @@ export default function SeriesPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
+    const [videoSrc, setVideoSrc] = useState("");
     useEffect(() => {
         const fetchSeries = async () => {
             try {
@@ -58,7 +59,53 @@ export default function SeriesPage() {
             fetchSeries();
         }
     }, [id]);
+    useEffect(() => {
+        if (!selectedEpisode?.videoUrl) {
+            setVideoSrc("");
+            return;
+        }
 
+        let cancelled = false;
+
+        const loadStreamUrl = async () => {
+            try {
+                setVideoSrc("");
+
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+                const response = await fetch(
+                    `${apiUrl}/api/stream-token?path=${encodeURIComponent(
+                        selectedEpisode.videoUrl
+                    )}`,
+                    {
+                        credentials: "include",
+                        cache: "no-store",
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(`خطای دریافت آدرس ویدئو: ${response.status}`);
+                }
+
+                const data: { url: string } = await response.json();
+
+                if (!cancelled) {
+                    setVideoSrc(`${apiUrl}${data.url}`);
+                }
+            } catch (error) {
+                console.error("STREAM URL ERROR:", error);
+
+                if (!cancelled) {
+                    setVideoSrc("");
+                }
+            }
+        };
+
+        void loadStreamUrl();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [selectedEpisode?._id, selectedEpisode?.videoUrl]);
     if (loading) {
         return (
             <main className="min-h-screen bg-[#0B0F14] px-4 py-10 text-white">
@@ -154,13 +201,19 @@ export default function SeriesPage() {
                 {selectedEpisode && (
                     <section className="mb-10">
                         <div className="overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl">
-                            <video
-                                key={selectedEpisode._id}
-                                controls
-                                playsInline
-                                className="aspect-video w-full"
-                                src={`${process.env.NEXT_PUBLIC_API_URL}${selectedEpisode.videoUrl}`}
-                            />
+                            {videoSrc ? (
+                                <video
+                                    key={selectedEpisode._id}
+                                    controls
+                                    playsInline
+                                    className="aspect-video w-full"
+                                    src={videoSrc}
+                                />
+                            ) : (
+                                <div className="flex aspect-video w-full items-center justify-center bg-black text-white">
+                                    در حال آماده‌سازی ویدئو...
+                                </div>
+                            )}
                         </div>
 
                         <div className="mt-4 flex items-center gap-3">
@@ -176,11 +229,11 @@ export default function SeriesPage() {
                                 <h2 className="text-lg font-bold">
                                     قسمت {selectedEpisode.episodeNumber}
                                     {selectedEpisode.title &&
-                                    !selectedEpisode.title
-                                        .trim()
-                                        .match(
-                                            /^(قسمت|episode)\s*\d+$/i
-                                        )
+                                        !selectedEpisode.title
+                                            .trim()
+                                            .match(
+                                                /^(قسمت|episode)\s*\d+$/i
+                                            )
                                         ? ` — ${selectedEpisode.title}`
                                         : ""}
                                 </h2>
@@ -210,11 +263,11 @@ export default function SeriesPage() {
 
                             const cleanTitle =
                                 episode.title &&
-                                !episode.title
-                                    .trim()
-                                    .match(
-                                        /^(قسمت|episode)\s*\d+$/i
-                                    )
+                                    !episode.title
+                                        .trim()
+                                        .match(
+                                            /^(قسمت|episode)\s*\d+$/i
+                                        )
                                     ? episode.title
                                     : "";
 
@@ -224,11 +277,10 @@ export default function SeriesPage() {
                                     onClick={() =>
                                         setSelectedEpisode(episode)
                                     }
-                                    className={`group relative overflow-hidden rounded-2xl border p-4 text-right transition-all duration-200 ${
-                                        isSelected
-                                            ? "border-[#14c78b]/60 bg-[#14c78b]/10 shadow-[0_0_25px_rgba(20,199,139,0.08)]"
-                                            : "border-white/10 bg-[#111827] hover:-translate-y-0.5 hover:border-white/20 hover:bg-[#151e2d]"
-                                    }`}
+                                    className={`group relative overflow-hidden rounded-2xl border p-4 text-right transition-all duration-200 ${isSelected
+                                        ? "border-[#14c78b]/60 bg-[#14c78b]/10 shadow-[0_0_25px_rgba(20,199,139,0.08)]"
+                                        : "border-white/10 bg-[#111827] hover:-translate-y-0.5 hover:border-white/20 hover:bg-[#151e2d]"
+                                        }`}
                                 >
                                     {/* نوار سبز کنار کارت انتخاب‌شده */}
                                     {isSelected && (
@@ -239,11 +291,10 @@ export default function SeriesPage() {
 
                                         {/* Episode Number */}
                                         <div
-                                            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-lg font-bold ${
-                                                isSelected
-                                                    ? "bg-[#14c78b] text-[#0B0F14]"
-                                                    : "bg-white/5 text-gray-300 group-hover:bg-white/10"
-                                            }`}
+                                            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-lg font-bold ${isSelected
+                                                ? "bg-[#14c78b] text-[#0B0F14]"
+                                                : "bg-white/5 text-gray-300 group-hover:bg-white/10"
+                                                }`}
                                         >
                                             {episode.episodeNumber}
                                         </div>
@@ -255,11 +306,10 @@ export default function SeriesPage() {
                                             </div>
 
                                             <div
-                                                className={`mt-1 truncate font-semibold ${
-                                                    isSelected
-                                                        ? "text-[#14c78b]"
-                                                        : "text-white"
-                                                }`}
+                                                className={`mt-1 truncate font-semibold ${isSelected
+                                                    ? "text-[#14c78b]"
+                                                    : "text-white"
+                                                    }`}
                                             >
                                                 {cleanTitle ||
                                                     `قسمت ${episode.episodeNumber}`}
@@ -268,11 +318,10 @@ export default function SeriesPage() {
 
                                         {/* Play Icon */}
                                         <div
-                                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition ${
-                                                isSelected
-                                                    ? "bg-[#14c78b]/20 text-[#14c78b]"
-                                                    : "bg-white/5 text-gray-500 group-hover:bg-white/10 group-hover:text-white"
-                                            }`}
+                                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition ${isSelected
+                                                ? "bg-[#14c78b]/20 text-[#14c78b]"
+                                                : "bg-white/5 text-gray-500 group-hover:bg-white/10 group-hover:text-white"
+                                                }`}
                                         >
                                             {isSelected ? "▶" : "▷"}
                                         </div>
