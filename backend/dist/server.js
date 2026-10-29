@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -10,6 +43,7 @@ const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const cors_1 = __importDefault(require("cors"));
 const mongoose_1 = __importDefault(require("mongoose"));
+const stream_middleware_1 = __importStar(require("./middleware/stream.middleware"));
 const Movie_1 = require("./models/Movie");
 const Series_1 = require("./models/Series");
 const Episode_1 = require("./models/Episode");
@@ -120,7 +154,7 @@ app.post("/api/admin/storage/upload", auth_middleware_1.default, admin_1.adminMi
     }
 });
 //serve video
-app.get("/videos/:filename", auth_middleware_1.default, async (req, res) => {
+app.get("/videos/:filename", stream_middleware_1.default, async (req, res) => {
     try {
         const filename = String(req.params.filename);
         if (filename.includes("/") ||
@@ -143,7 +177,7 @@ app.get("/videos/:filename", auth_middleware_1.default, async (req, res) => {
     }
 });
 // serve series 
-app.get("/series-videos/:seriesName/:filename", auth_middleware_1.default, async (req, res) => {
+app.get("/series-videos/:seriesName/:filename", stream_middleware_1.default, async (req, res) => {
     try {
         const seriesName = String(req.params.seriesName);
         const filename = String(req.params.filename);
@@ -215,7 +249,7 @@ app.get("/posters/:filename", auth_middleware_1.default, async (req, res) => {
 // LIVE VARZESH STREAM
 // ===============================
 const VARZESH_RELAY_URL = process.env.VARZESH_RELAY_URL ||
-    "http://10.78.0.1:8787";
+    "http://10.79.0.1:8787";
 const varzeshSessions = new Map();
 const VARZESH_SESSION_TTL = 10 * 60 * 1000;
 // ===============================
@@ -325,7 +359,7 @@ async function buildVarzeshPlaylist(sessionId) {
 // ===============================
 // PLAYLIST
 // ===============================
-app.get("/api/live/varzesh/index.m3u8", async (req, res) => {
+app.get("/api/live/varzesh/index.m3u8", auth_middleware_1.default, async (req, res) => {
     try {
         let sessionId = String(req.query.session || "");
         let session = sessionId
@@ -452,7 +486,7 @@ app.get("/api/live/varzesh/segment/:sessionId/:segment", async (req, res) => {
 // LIVE TV1 STREAM
 // ===============================
 const TV1_RELAY_URL = process.env.TV1_RELAY_URL ||
-    "http://10.78.0.1:8788";
+    "http://10.79.0.1:8788";
 const tv1Sessions = new Map();
 const TV1_SESSION_TTL = 10 * 60 * 1000;
 // ===============================
@@ -688,7 +722,7 @@ app.get("/api/live/tv1/segment/:sessionId/:segment", async (req, res) => {
 // LIVE TV3 STREAM
 // ===============================
 const TV3_RELAY_URL = process.env.TV3_RELAY_URL ||
-    "http://10.78.0.1:8789";
+    "http://10.79.0.1:8789";
 // ===============================
 // BUILD PLAYLIST
 // ===============================
@@ -826,7 +860,7 @@ app.get("/api/live/tv3/segment/:segment", async (req, res) => {
 // LIVE IRINN STREAM
 // ===============================
 const IRINN_RELAY_URL = process.env.IRINN_RELAY_URL ||
-    "http://10.78.0.1:8790";
+    "http://10.79.0.1:8790";
 // ===============================
 // BUILD PLAYLIST
 // ===============================
@@ -1038,7 +1072,6 @@ app.put("/api/admin/users/:id", auth_middleware_1.default, admin_1.adminMiddlewa
     try {
         const { id } = req.params;
         const updateData = { ...req.body };
-        // فقط اگر پسورد جدید وارد شده باشد
         if (updateData.password?.trim()) {
             updateData.password = await bcryptjs_1.default.hash(updateData.password, 10);
         }
@@ -1046,29 +1079,31 @@ app.put("/api/admin/users/:id", auth_middleware_1.default, admin_1.adminMiddlewa
             delete updateData.password;
         }
         // فیلدهایی که نباید از فرانت تغییر کنند
-        delete updateData.role;
+        // (role از این لیست حذف شد)
         delete updateData._id;
         delete updateData.__v;
         delete updateData.signUpDate;
+        // فقط مقادیر مجاز برای نقش
+        if (updateData.role !== undefined && !["user", "admin"].includes(updateData.role)) {
+            return res.status(400).json({ message: "نقش نامعتبر است" });
+        }
+        // جلوگیری از اینکه ادمین نقش خودش رو بگیره و سیستم بدون ادمین بمونه
+        if (updateData.role === "user" && req.user?._id?.toString() === id) {
+            return res.status(400).json({ message: "نمی‌تونی نقش خودت رو تغییر بدی" });
+        }
         const updatedUser = await User_1.User.findByIdAndUpdate(id, updateData, {
             new: true,
             runValidators: true,
         });
         if (!updatedUser) {
-            return res.status(404).json({
-                message: "کاربر یافت نشد",
-            });
+            return res.status(404).json({ message: "کاربر یافت نشد" });
         }
-        // تبدیل به آبجکت و حذف password بدون استفاده از delete
         const { password, ...safeUser } = updatedUser.toObject();
         res.json(safeUser);
     }
     catch (err) {
         const error = err;
-        res.status(500).json({
-            message: "خطا در بروزرسانی",
-            error: error.message,
-        });
+        res.status(500).json({ message: "خطا در بروزرسانی", error: error.message });
     }
 });
 // 2. اضافه کردن فیلم جدید
@@ -1361,23 +1396,9 @@ app.get("/api/admin/storage/series", auth_middleware_1.default, admin_1.adminMid
             const seriesPath = path_1.default.join(seriesDir, entry.name);
             const files = await fs_1.default.promises.readdir(seriesPath);
             const videoFiles = files.filter((file) => [".mp4", ".mkv"].includes(path_1.default.extname(file).toLowerCase()));
-            /*
-             * گروه‌بندی MP4 و MKV بر اساس basename
-             *
-             * مثال:
-             *
-             * Yaghi.S01E01.mkv
-             * Yaghi.S01E01.mp4
-             *
-             * ↓
-             *
-             * Yaghi.S01E01
-             */
             const groupedVideos = new Map();
             for (const filename of videoFiles) {
-                const ext = path_1.default
-                    .extname(filename)
-                    .toLowerCase();
+                const ext = path_1.default.extname(filename).toLowerCase();
                 const baseName = path_1.default.basename(filename, path_1.default.extname(filename));
                 const key = baseName.toLowerCase();
                 const existing = groupedVideos.get(key);
@@ -1387,28 +1408,59 @@ app.get("/api/admin/storage/series", auth_middleware_1.default, admin_1.adminMid
                     });
                 }
                 else {
-                    if (ext === ".mp4") {
+                    if (ext === ".mp4")
                         existing.mp4 = filename;
-                    }
-                    if (ext === ".mkv") {
+                    if (ext === ".mkv")
                         existing.mkv = filename;
-                    }
                 }
             }
-            /*
-             * اگر MP4 وجود داشته باشد:
-             * فقط MP4 را نمایش بده.
-             *
-             * اگر MP4 وجود نداشته باشد:
-             * MKV را نمایش بده.
-             */
-            const videos = Array.from(groupedVideos.values()).map((video) => {
-                return video.mp4 || video.mkv;
+            // اولویت با MP4 است؛ در غیر این صورت MKV
+            const videos = Array.from(groupedVideos.values()).map((video) => video.mp4 || video.mkv);
+            // سریال موجود در دیتابیس را پیدا کن
+            const normalizedName = entry.name.trim().toLowerCase();
+            const dbSeries = await Series_1.Series.find({
+                $or: [
+                    { title: new RegExp(`^${normalizedName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+                    { aliases: new RegExp(`^${normalizedName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+                ],
+            }).select("_id");
+            // اگر سریال هنوز ثبت نشده، همه فایل‌ها را نگه دار
+            if (dbSeries.length === 0) {
+                series.push({
+                    name: entry.name,
+                    path: entry.name,
+                    files: videos,
+                });
+                continue;
+            }
+            const seriesIds = dbSeries.map((item) => item._id);
+            // قسمت‌های ثبت‌شده این سریال‌ها
+            const existingEpisodes = await Episode_1.Episode.find({
+                seriesId: { $in: seriesIds },
+            }).select("seasonNumber episodeNumber");
+            const existingKeys = new Set(existingEpisodes.map((ep) => `${ep.seasonNumber}-${ep.episodeNumber}`));
+            // فقط قسمت‌های ثبت‌نشده را نمایش بده
+            const newVideos = videos.filter((filename) => {
+                const parsed = parseEpisodeFilename(filename);
+                // نام فایل نامعتبر را مخفی نکن تا قابل بررسی باشد
+                if (!parsed)
+                    return true;
+                const key = `${parsed.seasonNumber}-${parsed.episodeNumber}`;
+                console.log({
+                    filename,
+                    parsed,
+                    key,
+                    isAlreadyRegistered: existingKeys.has(key),
+                });
+                return !existingKeys.has(key);
             });
+            // اگر همه قسمت‌ها قبلاً ثبت شده‌اند، خود سریال را هم نمایش نده
+            if (newVideos.length === 0)
+                continue;
             series.push({
                 name: entry.name,
                 path: entry.name,
-                files: videos,
+                files: newVideos,
             });
         }
         res.json({
@@ -1427,6 +1479,7 @@ app.get("/api/admin/storage/series", auth_middleware_1.default, admin_1.adminMid
 });
 app.get("/api/admin/storage/series", auth_middleware_1.default, admin_1.adminMiddleware, async (req, res) => {
     try {
+        console.log("SECOND SERIES STORAGE HANDLER HIT");
         const seriesDir = "/mnt/alanbin/series";
         const entries = await fs_1.default.promises.readdir(seriesDir, {
             withFileTypes: true,
@@ -2672,6 +2725,38 @@ app.get("/api/movies/:id", auth_middleware_1.default, async (req, res) => {
     }
 });
 // شروع سرور
+app.get("/api/stream-token", auth_middleware_1.default, (req, res) => {
+    try {
+        const rawPath = req.query.path;
+        if (typeof rawPath !== "string") {
+            return res.status(400).json({
+                success: false,
+                message: "invalid path",
+            });
+        }
+        const p = decodeURIComponent(rawPath);
+        const validPath = /^\/videos\/[^/]+\.mp4$/i.test(p) ||
+            /^\/series-videos\/[^/]+\/[^/]+\.mp4$/i.test(p);
+        if (!validPath || p.includes("..") || p.includes("\\")) {
+            return res.status(400).json({
+                success: false,
+                message: "invalid path",
+            });
+        }
+        const decoded = jsonwebtoken_1.default.verify(req.cookies.token, process.env.JWT_SECRET);
+        const token = (0, stream_middleware_1.signStreamToken)(decoded.id, p);
+        res.setHeader("Cache-Control", "no-store");
+        return res.json({
+            url: `${p}?st=${encodeURIComponent(token)}`,
+        });
+    }
+    catch {
+        return res.status(400).json({
+            success: false,
+            message: "invalid path",
+        });
+    }
+});
 app.listen(PORT, () => {
     console.log(`🚀 سرور روی پورت ${PORT} در حال اجراست!`);
     console.log(`📍 آدرس API: http://localhost:${PORT}/api/users`);
