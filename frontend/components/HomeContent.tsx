@@ -328,53 +328,6 @@ export const HomeContent = () => {
 
 
     return (<>
-
-        {/* Player Test Menu */}
-        <section
-            dir="rtl"
-            className="mx-auto w-full max-w-[1650px] px-5 pt-6"
-        >
-            <div className="rounded-2xl border border-emerald-400/20 bg-[#111827] p-5 sm:p-7">
-                <h2 className="text-xl font-bold text-white sm:text-2xl">
-                    تست پلیر تلویزیون
-                </h2>
-
-                <p className="mt-2 text-sm text-gray-400">
-                    نوع پلیر موردنظر را برای آزمایش انتخاب کن.
-                </p>
-
-                <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <Link
-                        href="/player-test/native"
-                        className="flex min-h-20 items-center justify-center rounded-xl border border-white/10 bg-[#0B0F14] px-4 py-5 text-center text-lg font-bold text-white transition hover:border-emerald-400 hover:bg-emerald-400/10 focus-visible:outline-4 focus-visible:outline-emerald-400"
-                    >
-                        Native Player
-                    </Link>
-
-                    <Link
-                        href="/player-test/inline"
-                        className="flex min-h-20 items-center justify-center rounded-xl border border-white/10 bg-[#0B0F14] px-4 py-5 text-center text-lg font-bold text-white transition hover:border-emerald-400 hover:bg-emerald-400/10 focus-visible:outline-4 focus-visible:outline-emerald-400"
-                    >
-                        Inline Player
-                    </Link>
-
-                    <Link
-                        href="/player-test/custom"
-                        className="flex min-h-20 items-center justify-center rounded-xl border border-white/10 bg-[#0B0F14] px-4 py-5 text-center text-lg font-bold text-white transition hover:border-emerald-400 hover:bg-emerald-400/10 focus-visible:outline-4 focus-visible:outline-emerald-400"
-                    >
-                        Custom Player
-                    </Link>
-
-                    <Link
-                        href="/player-test/fullscreen"
-                        className="flex min-h-20 items-center justify-center rounded-xl border border-white/10 bg-[#0B0F14] px-4 py-5 text-center text-lg font-bold text-white transition hover:border-emerald-400 hover:bg-emerald-400/10 focus-visible:outline-4 focus-visible:outline-emerald-400"
-                    >
-                        Fullscreen Player
-                    </Link>
-                </div>
-            </div>
-        </section>
-
         <section className="relative">
             {/* Hero */}
             <HeroSlider
