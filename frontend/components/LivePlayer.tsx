@@ -6,7 +6,7 @@ import Hls from "hls.js";
 
 type LivePlayerProps = {
     streamUrl: string;
-    sessionType?: "tv1" | "varzesh";
+    sessionType?: "tv1" | "varzesh" | "tv3" | "irinn";
 };
 type PlayerError =
     | "AUTH_REQUIRED"
@@ -266,36 +266,61 @@ export default function LivePlayer({
                  * هر کانالی که sessionType نداشته
                  * باشد مستقیماً با HLS پخش می‌شود.
                  */
-                if (!sessionType) {
+
+                /*
+                 * ============================
+                 * TV3 & IRINN
+                 * ============================
+                 */
+                if (
+                    sessionType === "tv3" ||
+                    sessionType === "irinn"
+                ) {
+                    const response = await fetch(streamUrl, {
+                        cache: "no-store",
+                        credentials: "include",
+                    });
+
+                    if (!response.ok) {
+                        let errorCode: PlayerError = "PLAYBACK_ERROR";
+
+                        try {
+                            const data = await response.clone().json();
+
+                            if (
+                                response.status === 401 &&
+                                data.code === "AUTH_REQUIRED"
+                            ) {
+                                errorCode = "AUTH_REQUIRED";
+                            } else if (
+                                response.status === 403 &&
+                                data.code === "SUBSCRIPTION_REQUIRED"
+                            ) {
+                                errorCode = "SUBSCRIPTION_REQUIRED";
+                            }
+                        } catch {
+                            // پاسخ JSON قابل خواندن نیست.
+                        }
+
+                        if (!cancelled) {
+                            setPlayerError(errorCode);
+                        }
+
+                        return;
+                    }
 
                     if (cancelled) return;
 
-
                     if (Hls.isSupported()) {
-
-                        await createPlayer(
-                            streamUrl
-                        );
-
+                        await createPlayer(streamUrl);
                     } else if (
-                        video.canPlayType(
-                            "application/vnd.apple.mpegurl"
-                        )
+                        video.canPlayType("application/vnd.apple.mpegurl")
                     ) {
-
-                        video.src =
-                            streamUrl;
-
-                    } else {
-
-                        console.error(
-                            "HLS is not supported in this browser"
-                        );
+                        video.src = streamUrl;
                     }
 
                     return;
                 }
-
 
                 /*
                  * ============================
@@ -497,7 +522,35 @@ export default function LivePlayer({
                     }
 
                 }
+                if (!sessionType) {
 
+                    if (cancelled) return;
+
+
+                    if (Hls.isSupported()) {
+
+                        await createPlayer(
+                            streamUrl
+                        );
+
+                    } else if (
+                        video.canPlayType(
+                            "application/vnd.apple.mpegurl"
+                        )
+                    ) {
+
+                        video.src =
+                            streamUrl;
+
+                    } else {
+
+                        console.error(
+                            "HLS is not supported in this browser"
+                        );
+                    }
+
+                    return;
+                }
             } catch (error) {
 
                 console.error(
@@ -531,63 +584,63 @@ export default function LivePlayer({
     }, [streamUrl, sessionType]);
 
 
-   return (
-    <div className="relative w-full aspect-video rounded-xl bg-black overflow-hidden">
+    return (
+        <div className="relative w-full aspect-video rounded-xl bg-black overflow-hidden">
 
-        {playerError ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-[#0B0F14] px-5 text-center">
-                <div className="max-w-md">
+            {playerError ? (
+                <div className="absolute inset-0 flex items-center justify-center bg-[#0B0F14] px-5 text-center">
+                    <div className="max-w-md">
 
-                    <div className="mb-4 text-4xl">
-                        {playerError === "PLAYBACK_ERROR" ? "⚠️" : "🔒"}
+                        <div className="mb-4 text-4xl">
+                            {playerError === "PLAYBACK_ERROR" ? "⚠️" : "🔒"}
+                        </div>
+
+                        <h2 className="mb-3 text-xl font-bold text-white">
+                            {playerError === "AUTH_REQUIRED"
+                                ? "برای تماشای پخش زنده وارد حساب شوید"
+                                : playerError === "SUBSCRIPTION_REQUIRED"
+                                    ? "اشتراک فعال ندارید"
+                                    : "مشکلی در پخش شبکه به وجود آمده است"}
+                        </h2>
+
+                        <p className="mb-5 text-sm leading-7 text-gray-400">
+                            {playerError === "AUTH_REQUIRED"
+                                ? "برای تماشای این شبکه ابتدا وارد حساب کاربری خود شوید."
+                                : playerError === "SUBSCRIPTION_REQUIRED"
+                                    ? "برای تماشای شبکه‌های زنده، ابتدا اشتراک AlanBin تهیه کنید."
+                                    : "لطفاً چند لحظه دیگر دوباره تلاش کنید."}
+                        </p>
+
+                        {playerError === "SUBSCRIPTION_REQUIRED" && (
+                            <a
+                                href="/"
+                                className="inline-flex rounded-lg bg-[#14c78b] px-6 py-3 font-bold text-[#0B0F14] transition hover:bg-[#10b981]"
+                            >
+                                تهیه اشتراک
+                            </a>
+                        )}
+
+                        {playerError === "AUTH_REQUIRED" && (
+                            <a
+                                href="/"
+                                className="inline-flex rounded-lg bg-[#14c78b] px-6 py-3 font-bold text-[#0B0F14] transition hover:bg-[#10b981]"
+                            >
+                                ورود به حساب
+                            </a>
+                        )}
+
                     </div>
-
-                    <h2 className="mb-3 text-xl font-bold text-white">
-                        {playerError === "AUTH_REQUIRED"
-                            ? "برای تماشای پخش زنده وارد حساب شوید"
-                            : playerError === "SUBSCRIPTION_REQUIRED"
-                                ? "اشتراک فعال ندارید"
-                                : "مشکلی در پخش شبکه به وجود آمده است"}
-                    </h2>
-
-                    <p className="mb-5 text-sm leading-7 text-gray-400">
-                        {playerError === "AUTH_REQUIRED"
-                            ? "برای تماشای این شبکه ابتدا وارد حساب کاربری خود شوید."
-                            : playerError === "SUBSCRIPTION_REQUIRED"
-                                ? "برای تماشای شبکه‌های زنده، ابتدا اشتراک AlanBin تهیه کنید."
-                                : "لطفاً چند لحظه دیگر دوباره تلاش کنید."}
-                    </p>
-
-                    {playerError === "SUBSCRIPTION_REQUIRED" && (
-                        <a
-                            href="/"
-                            className="inline-flex rounded-lg bg-[#14c78b] px-6 py-3 font-bold text-[#0B0F14] transition hover:bg-[#10b981]"
-                        >
-                            تهیه اشتراک
-                        </a>
-                    )}
-
-                    {playerError === "AUTH_REQUIRED" && (
-                        <a
-                            href="/"
-                            className="inline-flex rounded-lg bg-[#14c78b] px-6 py-3 font-bold text-[#0B0F14] transition hover:bg-[#10b981]"
-                        >
-                            ورود به حساب
-                        </a>
-                    )}
-
                 </div>
-            </div>
-        ) : (
-            <video
-                ref={videoRef}
-                controls
-                playsInline
-                className="aspect-video w-full rounded-xl bg-black"
-            />
-        )}
+            ) : (
+                <video
+                    ref={videoRef}
+                    controls
+                    playsInline
+                    className="aspect-video w-full rounded-xl bg-black"
+                />
+            )}
 
-    </div>
-);
+        </div>
+    );
 }
 

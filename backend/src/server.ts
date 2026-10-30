@@ -1533,6 +1533,7 @@ async function buildTv3Playlist() {
 
 app.get(
     "/api/live/tv3/index.m3u8",
+    checkSubscription,
     async (req, res) => {
 
         try {
@@ -1843,8 +1844,8 @@ async function buildIrinnPlaylist() {
 
 app.get(
     "/api/live/irinn/index.m3u8",
+    checkSubscription,
     async (req, res) => {
-
         try {
 
             const playlist =

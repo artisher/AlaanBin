@@ -102,7 +102,11 @@ export default async function LiveChannelPage({
                                 ? "tv1"
                                 : channel === "varzesh"
                                     ? "varzesh"
-                                    : undefined
+                                    : channel === "tv3"
+                                        ? "tv3"
+                                        : channel === "irinn"
+                                            ? "irinn"
+                                            : undefined
                         }
                     />
                 </div>
