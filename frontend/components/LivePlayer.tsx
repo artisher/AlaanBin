@@ -531,13 +531,63 @@ export default function LivePlayer({
     }, [streamUrl, sessionType]);
 
 
-    return (
-        <video
-            ref={videoRef}
-            controls
-            playsInline
-            className="aspect-video w-full rounded-xl bg-black"
-        />
-    );
+   return (
+    <div className="relative w-full aspect-video rounded-xl bg-black overflow-hidden">
+
+        {playerError ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-[#0B0F14] px-5 text-center">
+                <div className="max-w-md">
+
+                    <div className="mb-4 text-4xl">
+                        {playerError === "PLAYBACK_ERROR" ? "⚠️" : "🔒"}
+                    </div>
+
+                    <h2 className="mb-3 text-xl font-bold text-white">
+                        {playerError === "AUTH_REQUIRED"
+                            ? "برای تماشای پخش زنده وارد حساب شوید"
+                            : playerError === "SUBSCRIPTION_REQUIRED"
+                                ? "اشتراک فعال ندارید"
+                                : "مشکلی در پخش شبکه به وجود آمده است"}
+                    </h2>
+
+                    <p className="mb-5 text-sm leading-7 text-gray-400">
+                        {playerError === "AUTH_REQUIRED"
+                            ? "برای تماشای این شبکه ابتدا وارد حساب کاربری خود شوید."
+                            : playerError === "SUBSCRIPTION_REQUIRED"
+                                ? "برای تماشای شبکه‌های زنده، ابتدا اشتراک AlanBin تهیه کنید."
+                                : "لطفاً چند لحظه دیگر دوباره تلاش کنید."}
+                    </p>
+
+                    {playerError === "SUBSCRIPTION_REQUIRED" && (
+                        <a
+                            href="/"
+                            className="inline-flex rounded-lg bg-[#14c78b] px-6 py-3 font-bold text-[#0B0F14] transition hover:bg-[#10b981]"
+                        >
+                            تهیه اشتراک
+                        </a>
+                    )}
+
+                    {playerError === "AUTH_REQUIRED" && (
+                        <a
+                            href="/"
+                            className="inline-flex rounded-lg bg-[#14c78b] px-6 py-3 font-bold text-[#0B0F14] transition hover:bg-[#10b981]"
+                        >
+                            ورود به حساب
+                        </a>
+                    )}
+
+                </div>
+            </div>
+        ) : (
+            <video
+                ref={videoRef}
+                controls
+                playsInline
+                className="aspect-video w-full rounded-xl bg-black"
+            />
+        )}
+
+    </div>
+);
 }
 
