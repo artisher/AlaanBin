@@ -121,9 +121,51 @@ export default function SeriesPage() {
     if (error) {
         return (
             <main className="flex min-h-screen items-center justify-center bg-[#0B0F14] px-4 text-white">
-                <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-6 py-5 text-red-400">
-                    {error}
+
+                <div className="absolute inset-0 flex items-center justify-center bg-[#0B0F14] px-5 text-center">
+                    <div className="max-w-md">
+
+                        <div className="mb-4 text-4xl">
+                            {error === "PLAYBACK_ERROR" ? "⚠️" : "🔒"}
+                        </div>
+
+                        <h2 className="mb-3 text-xl font-bold text-white">
+                            {error === "AUTH_REQUIRED"
+                                ? "برای تماشای پخش زنده وارد حساب شوید"
+                                : error === "SUBSCRIPTION_REQUIRED"
+                                    ? "اشتراک فعال ندارید"
+                                    : "مشکلی در پخش شبکه به وجود آمده است"}
+                        </h2>
+
+                        <p className="mb-5 text-sm leading-7 text-gray-400">
+                            {error === "AUTH_REQUIRED"
+                                ? "برای تماشای این شبکه ابتدا وارد حساب کاربری خود شوید."
+                                : error === "SUBSCRIPTION_REQUIRED"
+                                    ? "برای تماشای شبکه‌های زنده، ابتدا اشتراک AlanBin تهیه کنید."
+                                    : "لطفاً چند لحظه دیگر دوباره تلاش کنید."}
+                        </p>
+
+                        {error === "SUBSCRIPTION_REQUIRED" && (
+                            <a
+                                href="/"
+                                className="inline-flex rounded-lg bg-[#14c78b] px-6 py-3 font-bold text-[#0B0F14] transition hover:bg-[#10b981]"
+                            >
+                                تهیه اشتراک
+                            </a>
+                        )}
+
+                        {error === "AUTH_REQUIRED" && (
+                            <a
+                                href="/login"
+                                className="inline-flex rounded-lg bg-[#14c78b] px-6 py-3 font-bold text-[#0B0F14] transition hover:bg-[#10b981]"
+                            >
+                                ورود به حساب
+                            </a>
+                        )}
+
+                    </div>
                 </div>
+
             </main>
         );
     }
