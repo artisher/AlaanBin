@@ -117,6 +117,7 @@ export default function SeriesPage() {
             </main>
         );
     }
+    console.log(error);
 
     if (error) {
         return (
