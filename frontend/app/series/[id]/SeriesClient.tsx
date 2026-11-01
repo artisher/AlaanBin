@@ -133,20 +133,20 @@ export default function SeriesPage() {
                         <h2 className="mb-3 text-xl font-bold text-white">
                             {error === "AUTH_REQUIRED"
                                 ? "برای تماشای پخش زنده وارد حساب شوید"
-                                : error === "SUBSCRIPTION_REQUIRED"
-                                    ? "اشتراک فعال ندارید"
+                                : error === "اشتراک شما منقضی شده است"
+                                    ? "ابتدا وارد حساب شوید"
                                     : "مشکلی در پخش شبکه به وجود آمده است"}
                         </h2>
 
                         <p className="mb-5 text-sm leading-7 text-gray-400">
-                            {error === "AUTH_REQUIRED"
+                            {error === "ابتدا وارد حساب شوید"
                                 ? "برای تماشای این شبکه ابتدا وارد حساب کاربری خود شوید."
-                                : error === "SUBSCRIPTION_REQUIRED"
+                                : error === "اشتراک شما منقضی شده است"
                                     ? "برای تماشای شبکه‌های زنده، ابتدا اشتراک AlanBin تهیه کنید."
                                     : "لطفاً چند لحظه دیگر دوباره تلاش کنید."}
                         </p>
 
-                        {error === "SUBSCRIPTION_REQUIRED" && (
+                        {error === "اشتراک شما منقضی شده است" && (
                             <a
                                 href="/"
                                 className="inline-flex rounded-lg bg-[#14c78b] px-6 py-3 font-bold text-[#0B0F14] transition hover:bg-[#10b981]"
@@ -155,7 +155,7 @@ export default function SeriesPage() {
                             </a>
                         )}
 
-                        {error === "AUTH_REQUIRED" && (
+                        {error === "ابتدا وارد حساب شوید" && (
                             <a
                                 href="/login"
                                 className="inline-flex rounded-lg bg-[#14c78b] px-6 py-3 font-bold text-[#0B0F14] transition hover:bg-[#10b981]"
