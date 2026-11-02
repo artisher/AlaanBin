@@ -47,16 +47,49 @@ export default async function MoviePage({
     if (!res.ok) {
         return (
             <div className="min-h-screen flex items-center justify-center px-4">
-                <div className="text-center max-w-md">
-                    <h1 className="text-2xl font-bold mb-3 text-white">
-                        {data?.message || "خطایی رخ داد"}
-                    </h1>
+              
+                <div className="absolute inset-0 flex items-center justify-center bg-[#0B0F14] px-5 text-center">
+                    <div className="max-w-md">
 
-                    <p className="text-gray-400">
-                        {data?.code === "SUBSCRIPTION_REQUIRED"
-                            ? "برای تماشای این فیلم باید اشتراک فعال داشته باشید."
-                            : "متأسفانه در دریافت اطلاعات فیلم مشکلی پیش آمد."}
-                    </p>
+                        <div className="mb-4 text-4xl">
+                            {data?.code === "PLAYBACK_ERROR" ? "⚠️" : "🔒"}
+                        </div>
+
+                        <h2 className="mb-3 text-xl font-bold text-white">
+                            {data?.code === "ابتدا وارد حساب شوید"
+                                ? "برای تماشای فیلم وارد حساب شوید"
+                                : data?.code === "اشتراک شما منقضی شده است"
+                                    ? "حساب شما اشتراک ندارد"
+                                    : "مشکلی در پخش فیلم به وجود آمده است"}
+                        </h2>
+
+                        <p className="mb-5 text-sm leading-7 text-gray-400">
+                            {data?.code === "ابتدا وارد حساب شوید"
+                                ? "برای تماشای این فیلم ابتدا وارد حساب کاربری خود شوید."
+                                : data?.code === "اشتراک شما منقضی شده است"
+                                    ? "برای تماشای سریال، ابتدا اشتراک AlanBin تهیه کنید."
+                                    : "لطفاً چند لحظه دیگر دوباره تلاش کنید."}
+                        </p>
+
+                        {data?.code === "اشتراک شما منقضی شده است" && (
+                            <a
+                                href="/"
+                                className="inline-flex rounded-lg bg-[#14c78b] px-6 py-3 font-bold text-[#0B0F14] transition hover:bg-[#10b981]"
+                            >
+                                تهیه اشتراک
+                            </a>
+                        )}
+
+                        {data?.code === "ابتدا وارد حساب شوید" && (
+                            <a
+                                href="/login"
+                                className="inline-flex rounded-lg bg-[#14c78b] px-6 py-3 font-bold text-[#0B0F14] transition hover:bg-[#10b981]"
+                            >
+                                ورود به حساب
+                            </a>
+                        )}
+
+                    </div>
                 </div>
             </div>
         );
