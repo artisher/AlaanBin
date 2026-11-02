@@ -65,13 +65,13 @@ export default function ForgetPasswordPage() {
                     </p>
 
                         <a
-                            href="https://wa.me/436764479470"
+                            href="https://wa.me/4367761821284"
                             target="_blank"
                             rel="noopener noreferrer"
                             dir="ltr"
                             className="block text-center text-3xl font-bold text-[#14c78b]"
                         >
-                            +43 676 4479470
+                            +43 677 618 21284
                         </a>
                 </div>
 

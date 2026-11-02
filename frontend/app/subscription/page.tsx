@@ -211,7 +211,7 @@ export default function SubscriptionPage() {
                                 dir="ltr"
                                 className="inline-block text-3xl md:text-4xl font-black tracking-widest text-[#14c78b]"
                             >
-                                +43 676 4479470
+                                +43 677 618 21284
                             </span>
 
                         </div>

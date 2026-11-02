@@ -117,8 +117,7 @@ export default function SeriesPage() {
             </main>
         );
     }
-    console.log(error);
-
+ 
     if (error) {
         return (
             <main className="flex min-h-screen items-center justify-center bg-[#0B0F14] px-4 text-white">
@@ -131,7 +130,7 @@ export default function SeriesPage() {
                         </div>
 
                         <h2 className="mb-3 text-xl font-bold text-white">
-                            {error === "AUTH_REQUIRED"
+                            {error === "ابتدا وارد حساب شوید"
                                 ? "برای تماشای پخش زنده وارد حساب شوید"
                                 : error === "اشتراک شما منقضی شده است"
                                     ? "ابتدا وارد حساب شوید"
@@ -142,7 +141,7 @@ export default function SeriesPage() {
                             {error === "ابتدا وارد حساب شوید"
                                 ? "برای تماشای این شبکه ابتدا وارد حساب کاربری خود شوید."
                                 : error === "اشتراک شما منقضی شده است"
-                                    ? "برای تماشای شبکه‌های زنده، ابتدا اشتراک AlanBin تهیه کنید."
+                                    ? "برای تماشای سریال، ابتدا اشتراک AlanBin تهیه کنید."
                                     : "لطفاً چند لحظه دیگر دوباره تلاش کنید."}
                         </p>
 
