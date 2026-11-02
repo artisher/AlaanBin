@@ -43,11 +43,14 @@ export default async function MoviePage({
     }
 
     const data = await res.json();
+    console.log(data);
+    console.log(data?.code);
+
 
     if (!res.ok) {
         return (
             <div className="min-h-screen flex items-center justify-center px-4">
-              
+
                 <div className="absolute inset-0 flex items-center justify-center bg-[#0B0F14] px-5 text-center">
                     <div className="max-w-md">
 
