@@ -117,7 +117,7 @@ export default function SeriesPage() {
             </main>
         );
     }
- 
+
     if (error) {
         return (
             <main className="flex min-h-screen items-center justify-center bg-[#0B0F14] px-4 text-white">
@@ -131,9 +131,9 @@ export default function SeriesPage() {
 
                         <h2 className="mb-3 text-xl font-bold text-white">
                             {error === "ابتدا وارد حساب شوید"
-                                ? "برای تماشای پخش زنده وارد حساب شوید"
+                                ? "برای تماشای سریال وارد حساب شوید"
                                 : error === "اشتراک شما منقضی شده است"
-                                    ? "ابتدا وارد حساب شوید"
+                                    ? "برای تماشای سریال، ابتدا اشتراک AlanBin تهیه کنید."
                                     : "مشکلی در پخش شبکه به وجود آمده است"}
                         </h2>
 

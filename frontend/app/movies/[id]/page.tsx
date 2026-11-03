@@ -72,13 +72,13 @@ export default async function MoviePage({
                             {data?.code === "AUTH_REQUIRED"
                                 ? "برای تماشای این فیلم ابتدا وارد حساب کاربری خود شوید."
                                 : data?.code === "SUBSCRIPTION_REQUIRED"
-                                    ? "برای تماشای سریال، ابتدا اشتراک AlanBin تهیه کنید."
+                                    ? "برای تماشای فیلم ابتدا اشتراک AlanBin تهیه کنید."
                                     : "لطفاً چند لحظه دیگر دوباره تلاش کنید."}
                         </p>
 
                         {data?.code === "SUBSCRIPTION_REQUIRED" && (
                             <a
-                                href="/"
+                                href="/subscription"
                                 className="inline-flex rounded-lg bg-[#14c78b] px-6 py-3 font-bold text-[#0B0F14] transition hover:bg-[#10b981]"
                             >
                                 تهیه اشتراک
