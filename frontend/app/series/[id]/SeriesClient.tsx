@@ -139,7 +139,7 @@ export default function SeriesPage() {
 
                         <p className="mb-5 text-sm leading-7 text-gray-400">
                             {error === "ابتدا وارد حساب شوید"
-                                ? "برای تماشای این شبکه ابتدا وارد حساب کاربری خود شوید."
+                                ? "برای تماشای این سریال ابتدا وارد حساب کاربری خود شوید."
                                 : error === "اشتراک شما منقضی شده است"
                                     ? "برای تماشای سریال، ابتدا اشتراک AlanBin تهیه کنید."
                                     : "لطفاً چند لحظه دیگر دوباره تلاش کنید."}
@@ -147,7 +147,7 @@ export default function SeriesPage() {
 
                         {error === "اشتراک شما منقضی شده است" && (
                             <a
-                                href="/"
+                                    href="/subscription"
                                 className="inline-flex rounded-lg bg-[#14c78b] px-6 py-3 font-bold text-[#0B0F14] transition hover:bg-[#10b981]"
                             >
                                 تهیه اشتراک
