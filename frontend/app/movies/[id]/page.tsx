@@ -43,13 +43,9 @@ export default async function MoviePage({
     }
 
     const data = await res.json();
-    console.log(data);
-    console.log(data?.code);
-
 
     if (!res.ok) {
-        console.log(data);
-        console.log(data?.code);
+    
         return (
             <div className="min-h-screen flex items-center justify-center px-4">
 
