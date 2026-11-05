@@ -26,7 +26,7 @@ const plans = [
     },
 ];
 
-const whatsappLink = "https://wa.me/436764479470";
+const whatsappLink = "https://wa.me/4367761821284";
 
 export default function SubscriptionPage() {
     return (

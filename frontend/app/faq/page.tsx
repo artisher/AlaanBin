@@ -299,7 +299,7 @@ export default function FAQ() {
                         <div className="flex justify-center mt-12">
 
                             <a
-                                href="https://wa.me/436764479470"
+                                href="https://wa.me/4367761821284"
                                 className="
                 rounded-2xl
                 bg-[#14c78b]

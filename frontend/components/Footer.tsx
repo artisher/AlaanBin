@@ -109,9 +109,9 @@ export const Footer = () => {
             <p>
               واتساپ
               <br />
-              <span className="text-white" dir="ltr">
+              <Link href="https://wa.me/4367761821284" className="text-white" dir="ltr">
                 +43 677 618 21284
-              </span>
+              </Link>
             </p>
 
             <p>
@@ -129,6 +129,9 @@ export const Footer = () => {
 
               <Link href="#" className="hover:text-[#10B981] transition">
                 Telegram
+              </Link>
+              <Link href="https://wa.me/4367761821284" className="hover:text-[#10B981] transition">
+                Whatsapp
               </Link>
             </div>
 

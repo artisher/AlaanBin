@@ -76,7 +76,7 @@ export default function ForgetPasswordPage() {
                 </div>
 
                 <a
-                    href="https://wa.me/436764479470"
+                    href="https://wa.me/4367761821284"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="
