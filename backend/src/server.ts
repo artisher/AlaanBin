@@ -3796,7 +3796,7 @@ app.get("/api/movies/top", async (req, res) => {
 });
 //فیلم مورد علاقه اضافه کردن یا حذف کردن
 
-type ContentType = "movies" | "series";
+type ContentType = "movie" | "series";
 
 // افزودن یا حذف فیلم و سریال از یک لیست مشترک
 
@@ -3814,8 +3814,12 @@ app.post(
 
             const { contentType, contentId } = req.params;
 
+            // تبدیل movies به movie
+            const type =
+                contentType === "movies" ? "movie" : contentType;
+
             if (
-                !["movies", "series"].includes(contentType) ||
+                !["movie", "series"].includes(type) ||
                 !mongoose.isValidObjectId(contentId)
             ) {
                 return res.status(400).json({
@@ -3836,33 +3840,35 @@ app.post(
                 });
             }
 
-            const type = contentType as ContentType;
+            const contentTypeValue = type as ContentType;
             const id = new mongoose.Types.ObjectId(contentId);
 
-            // بررسی وجود محتوا در لیست جدید
+            // بررسی علاقه‌مندی جدید
             const favoriteIndex = user.favorites.findIndex(
                 (item: any) =>
-                    item.contentType === type &&
+                    item.contentType === contentTypeValue &&
                     item.contentId.toString() === contentId
             );
 
-            // پشتیبانی از فیلم‌های ذخیره‌شده در ساختار قدیمی
+            // بررسی علاقه‌مندی قدیمی فیلم‌ها
             const legacyMovieExists =
-                type === "movies" &&
+                contentTypeValue === "movie" &&
                 user.favoriteTitle.some(
-                    (movieId: any) => movieId.toString() === contentId
+                    (movieId: any) =>
+                        movieId.toString() === contentId
                 );
 
             if (favoriteIndex !== -1) {
                 user.favorites.splice(favoriteIndex, 1);
             } else if (legacyMovieExists) {
                 user.favoriteTitle = user.favoriteTitle.filter(
-                    (movieId: any) => movieId.toString() !== contentId
+                    (movieId: any) =>
+                        movieId.toString() !== contentId
                 ) as typeof user.favoriteTitle;
             } else {
                 user.favorites.push({
                     contentId: id,
-                    contentType: type,
+                    contentType: contentTypeValue,
                 });
             }
 
@@ -3872,6 +3878,7 @@ app.post(
                 success: true,
                 message: "علاقه‌مندی به‌روزرسانی شد",
             });
+
         } catch (error) {
             console.error("TOGGLE FAVORITE ERROR:", error);
 
