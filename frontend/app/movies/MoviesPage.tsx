@@ -341,7 +341,7 @@ export default function MoviesPage() {
             const data: {
                 message?: string;
                 success?: boolean;
-                favoriteTitle?: string[];
+                isFavorite?: boolean;
             } = await res.json();
 
             if (!res.ok || !data.success) {
@@ -350,18 +350,14 @@ export default function MoviesPage() {
                 );
             }
 
-            if (!Array.isArray(data.favoriteTitle)) {
-                throw new Error("پاسخ نامعتبر از سرور دریافت شد.");
-            }
-
-            const updatedIds = data.favoriteTitle.map(String);
-
-            setFavoriteIds(updatedIds);
-
-            const isFavoriteNow = updatedIds.includes(id);
+            setFavoriteIds((prev) =>
+                data.isFavorite
+                    ? prev.includes(id) ? prev : [...prev, id]
+                    : prev.filter((favoriteId) => favoriteId !== id)
+            );
 
             toast.success(
-                isFavoriteNow
+                data.isFavorite
                     ? "به علاقه‌مندی‌ها اضافه شد."
                     : "از علاقه‌مندی‌ها حذف شد."
             );
