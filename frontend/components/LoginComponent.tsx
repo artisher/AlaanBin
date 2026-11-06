@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useAuth } from "@/app/providers/AuthProvider";
+import { Eye, EyeOff } from "lucide-react";
 export const LoginComponent = () => {
-
+    const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -133,28 +134,44 @@ export const LoginComponent = () => {
                             رمز عبور
                         </label>
 
-                        <input
-                            type="password"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••"
-                            className="
-                            w-full
-                            rounded-xl
-                            border
-                            border-[#14c78b]/20
-                            bg-[#0B0F14]
-                            px-4
-                            py-3
-                            text-white
-                            placeholder:text-gray-500
-                            outline-none
-                            transition
-                            focus:border-[#14c78b]
-                            focus:shadow-[0_0_20px_rgba(20,199,139,.2)]
-                        "
-                        />
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••"
+                                className="
+                w-full
+                rounded-xl
+                border
+                border-[#14c78b]/20
+                bg-[#0B0F14]
+                px-4
+                py-3
+                
+                text-white
+                placeholder:text-gray-500
+                outline-none
+                transition
+                focus:border-[#14c78b]
+                focus:shadow-[0_0_20px_rgba(20,199,139,.2)]
+            "
+                            />
+
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#14c78b] transition"
+                                aria-label={showPassword ? "مخفی کردن رمز عبور" : "نمایش رمز عبور"}
+                            >
+                                {showPassword ? (
+                                    <EyeOff size={20} />
+                                ) : (
+                                    <Eye size={20} />
+                                )}
+                            </button>
+                        </div>
                     </div>
 
                     <div className="text-center">

@@ -325,10 +325,13 @@ export default function MoviesPage() {
     };
 
 
-    const favoriteHandler = async (id: string) => {
+    const favoriteHandler = async (
+        id: string,
+        contentType: "movies" | "series"
+    ) => {
         try {
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${id}`,
+                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${contentType}/${id}`,
                 {
                     method: "POST",
                     credentials: "include",
@@ -352,9 +355,11 @@ export default function MoviesPage() {
             }
 
             const updatedIds = data.favoriteTitle.map(String);
-
-            setFavoriteIds(updatedIds);
-
+            setFavoriteIds((prev) =>
+                prev.includes(id)
+                    ? prev.filter((favoriteId) => favoriteId !== id)
+                    : [...prev, id]
+            );
             const isFavoriteNow = updatedIds.includes(id);
 
             toast.success(
@@ -1152,7 +1157,7 @@ export default function MoviesPage() {
                         setIsMoviesModalOpen(false);
                         setSelectedMovies(null);
                     }}
-                    favoriteHandler={favoriteHandler}
+                    favoriteHandler={(id) => favoriteHandler(id, "movies")}
                     isFavorite={favoriteIds.includes(selectedMovies._id)}
                 />
             )}

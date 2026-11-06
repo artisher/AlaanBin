@@ -201,7 +201,7 @@ export const WhyAlanbin = () => {
 
                 {/* Cards */}
 
-                <div className="grid gap-6 md:grid-cols-3">
+                <div className="grid gap-6 md:grid-cols-4">
 
                     {features.map((feature, index) => {
 

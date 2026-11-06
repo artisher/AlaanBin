@@ -1,5 +1,5 @@
 "use client";
-import { UserPlus } from "lucide-react";
+import { Eye, EyeOff, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -13,81 +13,81 @@ export const RegisterComponent = () => {
     const [country, setCountry] = useState("")
     const [city, setCity] = useState("")
     const [role, setRole] = useState("user")
+    const [showPassword, setShowPassword] = useState(false);
+
+    const handleRegister = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (fullName.trim().length < 2) {
+            toast.error("نام و نام خانوادگی باید حداقل ۲ کاراکتر باشد.");
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!emailRegex.test(email.trim())) {
+            toast.error("لطفاً یک ایمیل معتبر وارد کنید.");
+            return;
+        }
+
+        if (password.length < 8) {
+            toast.error("رمز عبور باید حداقل ۸ کاراکتر باشد.");
+            return;
+        }
+
+        const phoneRegex = /^\+?[0-9]{8,15}$/;
+
+        if (!phoneRegex.test(phoneNumber.trim())) {
+            toast.error("لطفاً یک شماره موبایل معتبر وارد کنید.");
+            return;
+        }
+
+        try {
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        fullName: fullName.trim(),
+                        phoneNumber: phoneNumber.trim(),
+                        email: email.trim(),
+                        password,
+                        country: country.trim(),
+                        city: city.trim(),
+                    }),
+                }
+            );
+
+            const contentType = res.headers.get("content-type");
+
+            if (!contentType?.includes("application/json")) {
+                const text = await res.text();
 
 
-const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
 
-    if (fullName.trim().length < 2) {
-        toast.error("نام و نام خانوادگی باید حداقل ۲ کاراکتر باشد.");
-        return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(email.trim())) {
-        toast.error("لطفاً یک ایمیل معتبر وارد کنید.");
-        return;
-    }
-
-    if (password.length < 8) {
-        toast.error("رمز عبور باید حداقل ۸ کاراکتر باشد.");
-        return;
-    }
-
-    const phoneRegex = /^\+?[0-9]{8,15}$/;
-
-    if (!phoneRegex.test(phoneNumber.trim())) {
-        toast.error("لطفاً یک شماره موبایل معتبر وارد کنید.");
-        return;
-    }
-
-    try {
-        const res = await fetch(
-            `${ process.env.NEXT_PUBLIC_API_URL }/api/auth/register`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    fullName: fullName.trim(),
-                    phoneNumber: phoneNumber.trim(),
-                    email: email.trim(),
-                    password,
-                    country: country.trim(),
-                    city: city.trim(),
-                }),
+                toast.error("سرور پاسخ نامعتبر ارسال کرد.");
+                return;
             }
-        );
 
-        const contentType = res.headers.get("content-type");
+            const data = await res.json();
 
-        if (!contentType?.includes("application/json")) {
-            const text = await res.text();
+            if (!res.ok) {
+                toast.error(data.message || "ثبت‌نام انجام نشد.");
+                console.error("REGISTER ERROR:", data);
+                return;
+            }
 
-          
+            toast.success("حساب کاربری با موفقیت ساخته شد.");
+            router.push("/home");
 
-            toast.error("سرور پاسخ نامعتبر ارسال کرد.");
-            return;
+        } catch (err) {
+            console.error("REGISTER ERROR:", err);
+            toast.error("خطایی در اتصال به سرور رخ داد.");
         }
-
-        const data = await res.json();
-
-        if (!res.ok) {
-            toast.error(data.message || "ثبت‌نام انجام نشد.");
-            console.error("REGISTER ERROR:", data);
-            return;
-        }
-
-        toast.success("حساب کاربری با موفقیت ساخته شد.");
-        router.push("/home");
-
-    } catch (err) {
-        console.error("REGISTER ERROR:", err);
-        toast.error("خطایی در اتصال به سرور رخ داد.");
-    }
-};
+    };
 
 
 
@@ -230,32 +230,48 @@ const handleRegister = async (e: React.FormEvent) => {
                     </div>
 
                     <div>
-                        <label className="block mb-2 text-sm text-gray-300">
+                        <label className="mb-2 block text-sm text-gray-300">
                             رمز عبور
                         </label>
 
-                        <input
-                            type="password"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••"
-                            className="
-                            w-full
-                            rounded-xl
-                            border
-                            border-[#14c78b]/20
-                            bg-[#0B0F14]
-                            px-4
-                            py-3
-                            text-white
-                            placeholder:text-gray-500
-                            outline-none
-                            transition
-                            focus:border-[#14c78b]
-                            focus:shadow-[0_0_20px_rgba(20,199,139,.2)]
-                        "
-                        />
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••"
+                                className="
+                w-full
+                rounded-xl
+                border
+                border-[#14c78b]/20
+                bg-[#0B0F14]
+                px-4
+                py-3
+               
+                text-white
+                placeholder:text-gray-500
+                outline-none
+                transition
+                focus:border-[#14c78b]
+                focus:shadow-[0_0_20px_rgba(20,199,139,.2)]
+            "
+                            />
+
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#14c78b] transition"
+                                aria-label={showPassword ? "مخفی کردن رمز عبور" : "نمایش رمز عبور"}
+                            >
+                                {showPassword ? (
+                                    <EyeOff size={20} />
+                                ) : (
+                                    <Eye size={20} />
+                                )}
+                            </button>
+                        </div>
                     </div>
 
                     <div>
