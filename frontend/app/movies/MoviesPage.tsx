@@ -344,22 +344,20 @@ export default function MoviesPage() {
                 favoriteTitle?: string[];
             } = await res.json();
 
-            if (!res.ok) {
+            if (!res.ok || !data.success) {
                 throw new Error(
                     data.message || "خطا در تغییر وضعیت علاقه‌مندی."
                 );
             }
 
-            if (!data.success || !Array.isArray(data.favoriteTitle)) {
+            if (!Array.isArray(data.favoriteTitle)) {
                 throw new Error("پاسخ نامعتبر از سرور دریافت شد.");
             }
 
             const updatedIds = data.favoriteTitle.map(String);
-            setFavoriteIds((prev) =>
-                prev.includes(id)
-                    ? prev.filter((favoriteId) => favoriteId !== id)
-                    : [...prev, id]
-            );
+
+            setFavoriteIds(updatedIds);
+
             const isFavoriteNow = updatedIds.includes(id);
 
             toast.success(
@@ -367,6 +365,7 @@ export default function MoviesPage() {
                     ? "به علاقه‌مندی‌ها اضافه شد."
                     : "از علاقه‌مندی‌ها حذف شد."
             );
+
         } catch (error) {
             console.error("FAVORITE ERROR:", error);
 
@@ -376,8 +375,6 @@ export default function MoviesPage() {
                     : "خطا در تغییر علاقه‌مندی."
             );
         }
-
-
     };
     const handleMoviesClick = (series: Movie) => {
         setSelectedMovies(series);

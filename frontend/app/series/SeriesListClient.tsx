@@ -183,7 +183,7 @@ export default function SeriesPage() {
     };
     const favoriteHandler = async (
         id: string,
-        contentType: "movie" | "series"
+        contentType: "movies" | "series"
     ) => {
         try {
             const res = await fetch(
@@ -194,26 +194,34 @@ export default function SeriesPage() {
                 }
             );
 
-            const data = await res.json();
+            const data: {
+                message?: string;
+                success?: boolean;
+                favoriteTitle?: string[];
+            } = await res.json();
 
-            if (!res.ok) {
+            if (!res.ok || !data.success) {
                 throw new Error(
                     data.message || "خطا در تغییر وضعیت علاقه‌مندی."
                 );
             }
 
-            if (!data.success) {
-                throw new Error("تغییر علاقه‌مندی انجام نشد.");
+            if (!Array.isArray(data.favoriteTitle)) {
+                throw new Error("پاسخ نامعتبر از سرور دریافت شد.");
             }
 
-            // به‌روزرسانی لیست شناسه‌های علاقه‌مندی
-            setFavoriteIds((prev) =>
-                prev.includes(id)
-                    ? prev.filter((favoriteId) => favoriteId !== id)
-                    : [...prev, id]
+            const updatedIds = data.favoriteTitle.map(String);
+
+            setFavoriteIds(updatedIds);
+
+            const isFavoriteNow = updatedIds.includes(id);
+
+            toast.success(
+                isFavoriteNow
+                    ? "به علاقه‌مندی‌ها اضافه شد."
+                    : "از علاقه‌مندی‌ها حذف شد."
             );
 
-            toast.success("وضعیت علاقه‌مندی تغییر کرد.");
         } catch (error) {
             console.error("FAVORITE ERROR:", error);
 

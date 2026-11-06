@@ -3873,10 +3873,17 @@ app.post(
             }
 
             await user.save();
+            const favoriteTitle = [
+                ...user.favoriteTitle.map((id: any) => id.toString()),
+                ...user.favorites
+                    .filter((item: any) => item.contentType === "movie")
+                    .map((item: any) => item.contentId.toString()),
+            ];
 
             return res.json({
                 success: true,
                 message: "علاقه‌مندی به‌روزرسانی شد",
+                favoriteTitle,
             });
 
         } catch (error) {
