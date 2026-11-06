@@ -40,16 +40,11 @@ export const HeroSlider = ({
                     <SwiperSlide key={movie._id}>
                         <div
                             className="
-    relative isolate
-    h-[620px]
-    sm:h-[680px]
-    md:h-[min(760px,90svh)]
-    lg:h-[min(820px,92svh)]
-    xl:h-[min(900px,92svh)]
-    2xl:h-[min(1000px,95svh)]
-    min-h-[560px]
-    w-full overflow-hidden
-"
+            relative isolate
+            h-[clamp(620px,85svh,1800px)]
+            min-h-[620px]
+            w-full overflow-hidden
+        "
                         >
                             {/* Hero Image */}
                             <img
