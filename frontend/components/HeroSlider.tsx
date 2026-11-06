@@ -40,29 +40,33 @@ export const HeroSlider = ({
                     <SwiperSlide key={movie._id}>
                         <div
                             className="
-                                relative isolate
-                                h-[620px]
-                                sm:h-[680px]
-                                md:h-[min(760px,90svh)]
-                                lg:h-[min(820px,92svh)]
-                                xl:h-[min(900px,92svh)]
-                                2xl:h-[min(1000px,95svh)]
-                                min-h-[560px]
-                                w-full overflow-hidden
-                            "
+    relative isolate
+    h-[620px]
+    sm:h-[680px]
+    md:h-[min(760px,90svh)]
+    lg:h-[min(820px,92svh)]
+    xl:h-[min(900px,92svh)]
+    2xl:h-[min(1000px,95svh)]
+    min-h-[560px]
+    w-full overflow-hidden
+"
                         >
                             {/* Hero Image */}
                             <img
                                 src={movie.heroImage || movie.poster}
                                 alt={movie.title}
                                 className="
-                                    absolute inset-0
-                                    h-full w-full
-                                    object-cover
-                                    object-[50%_35%]
-                                    sm:object-[50%_35%]
-                                    lg:object-center
-                                "
+                                absolute inset-0
+                                h-full w-full
+                                object-cover
+
+                                object-[50%_45%]
+                                sm:object-[50%_42%]
+                                md:object-[50%_40%]
+                                lg:object-[50%_35%]
+                                xl:object-[50%_30%]
+                                2xl:object-[50%_28%]
+                                  "
                             />
 
                             {/* Main Gradient */}
