@@ -3796,9 +3796,10 @@ app.get("/api/movies/top", async (req, res) => {
 });
 //فیلم مورد علاقه اضافه کردن یا حذف کردن
 
-type ContentType = "movie" | "series";
+type ContentType = "movies" | "series";
 
 // افزودن یا حذف فیلم و سریال از یک لیست مشترک
+
 app.post(
     "/api/favorites/:contentType/:contentId",
     async (req, res) => {
@@ -3814,7 +3815,7 @@ app.post(
             const { contentType, contentId } = req.params;
 
             if (
-                !["movie", "series"].includes(contentType) ||
+                !["movies", "series"].includes(contentType) ||
                 !mongoose.isValidObjectId(contentId)
             ) {
                 return res.status(400).json({
@@ -3847,7 +3848,7 @@ app.post(
 
             // پشتیبانی از فیلم‌های ذخیره‌شده در ساختار قدیمی
             const legacyMovieExists =
-                type === "movie" &&
+                type === "movies" &&
                 user.favoriteTitle.some(
                     (movieId: any) => movieId.toString() === contentId
                 );
@@ -3982,42 +3983,7 @@ app.get("/api/favorites", async (req, res) => {
 });
 
 //دریافت فیلم مورد علاقه
-app.get("/api/favorites", async (req, res) => {
-    try {
-        const token = req.cookies.token;
 
-        if (!token) {
-            return res.status(401).json({
-                message: "احراز هویت نشده"
-            });
-        }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
-            id: string;
-        };
-
-        const user = await User.findById(decoded.id);
-
-        if (!user) {
-            return res.status(404).json({
-                message: "کاربر پیدا نشد"
-            });
-        }
-
-        const favoriteMovies = await Movie.find({
-            _id: { $in: user.favoriteTitle }
-        });
-
-        res.json({
-            favoriteMovies
-        });
-
-    } catch (err) {
-        res.status(500).json({
-            message: "خطا"
-        });
-    }
-});
 //auth 
 app.post('/api/auth/register', async (req, res) => {
     try {
