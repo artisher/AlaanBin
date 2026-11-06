@@ -40,28 +40,33 @@ export const HeroSlider = ({
                     <SwiperSlide key={movie._id}>
                         <div
                             className="
-            relative isolate
-            h-[clamp(620px,85svh,1800px)]
-            min-h-[620px]
-            w-full overflow-hidden
-        "
+                           relative isolate
+                           h-[clamp(580px,78svh,760px)]
+
+                           sm:h-[80svh]
+                           sm:min-h-[620px]
+                           sm:max-h-[850px]
+
+                           lg:h-[clamp(760px,85svh,1800px)]
+                           lg:max-h-none
+
+                           w-full overflow-hidden
+                          "
                         >
                             {/* Hero Image */}
                             <img
                                 src={movie.heroImage || movie.poster}
                                 alt={movie.title}
                                 className="
-                                absolute inset-0
-                                h-full w-full
-                                object-cover
+        absolute inset-0
+        h-full w-full
+        object-cover
 
-                                object-[50%_45%]
-                                sm:object-[50%_42%]
-                                md:object-[50%_40%]
-                                lg:object-[50%_35%]
-                                xl:object-[50%_30%]
-                                2xl:object-[50%_28%]
-                                  "
+        object-[15%_center]
+        sm:object-[35%_35%]
+        md:object-[40%_35%]
+        lg:object-center
+    "
                             />
 
                             {/* Main Gradient */}
@@ -91,32 +96,36 @@ export const HeroSlider = ({
                             {/* Extra Mobile Gradient */}
                             <div
                                 className="
-                                    pointer-events-none
-                                    absolute inset-x-0 bottom-0
-                                    h-[60%]
-                                    bg-gradient-to-t
-                                    from-[#0B0F14]
-                                    via-[#0B0F14]/65
-                                    to-transparent
-                                    md:hidden
-                                "
+    pointer-events-none
+    absolute inset-x-0 bottom-0
+    h-[65%]
+    bg-gradient-to-t
+    from-[#0B0F14]
+    via-[#0B0F14]/75
+    to-transparent
+    md:hidden
+"
                             />
 
                             {/* Movie Content */}
                             <div
                                 className="
-                                    absolute z-10
-                                    inset-x-5 bottom-36
-                                    flex flex-col items-end gap-4
-                                    sm:inset-x-8 sm:bottom-36
-                                    md:inset-x-auto
-                                    md:right-12 md:bottom-44
-                                    md:max-w-[48%]
-                                    lg:right-16 lg:bottom-44
-                                    lg:max-w-[45%]
-                                    xl:right-24 xl:max-w-[42%]
-                                    2xl:right-32 2xl:max-w-[40%]
-                                "
+    absolute z-10
+    inset-x-4 bottom-24
+    flex flex-col items-end gap-3
+
+    sm:inset-x-8 sm:bottom-32
+
+    md:inset-x-auto
+    md:right-12 md:bottom-44
+    md:max-w-[48%]
+
+    lg:right-16 lg:bottom-44
+    lg:max-w-[45%]
+
+    xl:right-24 xl:max-w-[42%]
+    2xl:right-32 2xl:max-w-[40%]
+"
                             >
                                 {/* Title */}
                                 <h1
