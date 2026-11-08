@@ -209,7 +209,21 @@ export default function MoviesPage() {
                 }
 
                 const data = await res.json();
+                const ids = data.movies.map((movie: Movie) => movie._id);
 
+                console.log("PAGE:", page);
+                console.log("TOTAL MOVIES:", data.totalMovies);
+                console.log("TOTAL PAGES:", data.totalPages);
+                console.log("MOVIES IN PAGE:", data.movies.length);
+                console.log("UNIQUE IDS:", new Set(ids).size);
+
+                console.table(
+                    data.movies.map((movie: Movie) => ({
+                        id: movie._id,
+                        title: movie.title,
+                        year: movie.year,
+                    }))
+                );
                 setMovies(data.movies || []);
                 setTotalPages(data.totalPages || 1);
             } catch (error) {
