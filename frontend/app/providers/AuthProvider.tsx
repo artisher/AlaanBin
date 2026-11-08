@@ -40,7 +40,7 @@ export function AuthProvider({
     const refreshUser = useCallback(async () => {
         try {
             const res = await fetch(
-                `${ API_URL } /api/auth / me`,
+                `${API_URL}/api/auth/me`,
                 {
                     credentials: "include",
                     cache: "no-store",
@@ -92,7 +92,7 @@ export function AuthProvider({
     const logout = useCallback(async () => {
         try {
             const res = await fetch(
-                `${ API_URL } /api/auth / logout`,
+                `${API_URL}/api/auth/logout`,
                 {
                     method: "POST",
                     credentials: "include",
