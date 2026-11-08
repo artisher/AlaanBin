@@ -4149,11 +4149,21 @@ app.get("/api/auth/me", async (req, res) => {
         const user = await User.findById(decoded.id)
 
         if (!user) {
+            res.clearCookie("token", {
+                httpOnly: true,
+                sameSite: "lax",
+                secure: isProduction,
+                ...(isProduction && {
+                    domain: ".alanbin.com",
+                }),
+                path: "/",
+            });
+
             return res.status(401).json({
                 success: false,
                 isAuthenticated: false,
                 code: "ACCOUNT_DELETED",
-                message: "حساب کاربری حذف شده است",
+                message: "حساب کاربری شما حذف شده است"
             });
         }
 

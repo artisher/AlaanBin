@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { User } from "../models/User";
-
+const isProduction = process.env.APP_ENV === "production";
 const checkSubscription = async (
     req: Request,
     res: Response,
@@ -28,10 +28,20 @@ const checkSubscription = async (
         const user = await User.findById(decoded.id);
 
         if (!user) {
+            res.clearCookie("token", {
+                httpOnly: true,
+                sameSite: "lax",
+                secure: isProduction,
+                ...(isProduction && {
+                    domain: ".alanbin.com",
+                }),
+                path: "/",
+            });
+
             return res.status(401).json({
                 success: false,
                 code: "ACCOUNT_DELETED",
-                message: "حساب کاربری شما حذف شده است",
+                message: "حساب کاربری حذف شده است",
             });
         }
 
