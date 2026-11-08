@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -5,6 +6,7 @@ import {
     useContext,
     useEffect,
     useState,
+    useCallback,
 } from "react";
 import toast from "react-hot-toast";
 
@@ -25,6 +27,8 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export function AuthProvider({
     children,
 }: {
@@ -33,13 +37,13 @@ export function AuthProvider({
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
-
-    async function refreshUser() {
+    const refreshUser = useCallback(async () => {
         try {
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`,
+                `${ API_URL } /api/auth / me`,
                 {
                     credentials: "include",
+                    cache: "no-store",
                 }
             );
 
@@ -49,7 +53,6 @@ export function AuthProvider({
             }
 
             if (!res.ok) {
-                setUser(null);
                 console.error(
                     "خطا در دریافت اطلاعات کاربر:",
                     res.status
@@ -59,18 +62,23 @@ export function AuthProvider({
 
             const data = await res.json();
 
-            setUser(data.user ?? null);
+            if (!data.isAuthenticated || !data.user) {
+                setUser(null);
+                return;
+            }
+
+            setUser(data.user);
 
         } catch (error) {
-            setUser(null);
             console.error(
                 "خطا در ارتباط با سرور:",
                 error
             );
         }
-    }
+    }, []);
+
     useEffect(() => {
-        async function getInitialUser() {
+        async function initialize() {
             try {
                 await refreshUser();
             } finally {
@@ -78,26 +86,33 @@ export function AuthProvider({
             }
         }
 
-        getInitialUser();
+        initialize();
+    }, [refreshUser]);
+
+    const logout = useCallback(async () => {
+        try {
+            const res = await fetch(
+                `${ API_URL } /api/auth / logout`,
+                {
+                    method: "POST",
+                    credentials: "include",
+                }
+            );
+
+            if (!res.ok) {
+                throw new Error("خطا در خروج از حساب");
+            }
+
+            setUser(null);
+
+            toast.success("با موفقیت از حساب خارج شدید.");
+
+        } catch (error) {
+            console.error("LOGOUT ERROR:", error);
+            throw error;
+        }
     }, []);
 
-    async function logout() {
-        const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`,
-            {
-                method: "POST",
-                credentials: "include",
-            }
-        );
-
-        if (!res.ok) {
-            throw new Error("خطا در خروج از حساب");
-        }
-
-        setUser(null);
-
-        toast.success("با موفقیت از حساب خارج شدید.");
-    }
     return (
         <AuthContext.Provider
             value={{

@@ -3883,7 +3883,7 @@ app.post(
                         (movieId: any) => movieId.toString() === contentId
                     )
                 );
-          
+
 
             return res.json({
                 success: true,
@@ -4148,11 +4148,12 @@ app.get("/api/auth/me", async (req, res) => {
 
         const user = await User.findById(decoded.id)
 
-
         if (!user) {
-            return res.status(404).json({
+            return res.status(401).json({
+                success: false,
                 isAuthenticated: false,
-                message: "کاربر پیدا نشد"
+                code: "ACCOUNT_DELETED",
+                message: "حساب کاربری حذف شده است",
             });
         }
 

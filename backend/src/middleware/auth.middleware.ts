@@ -28,10 +28,10 @@ const checkSubscription = async (
         const user = await User.findById(decoded.id);
 
         if (!user) {
-            return res.status(404).json({
+            return res.status(401).json({
                 success: false,
-                code: "USER_NOT_FOUND",
-                message: "کاربر پیدا نشد",
+                code: "ACCOUNT_DELETED",
+                message: "حساب کاربری شما حذف شده است",
             });
         }
 
