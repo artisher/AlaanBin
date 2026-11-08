@@ -3027,9 +3027,21 @@ app.get('/api/movies', async (req, res) => {
 
         const totalPages = Math.max(1, Math.ceil(totalMovies / limit));
         const movies = await Movie.find(query)
-            .sort(sort)
+            .sort({
+                ...sort,
+                _id: -1
+            })
             .skip((page - 1) * limit)
             .limit(limit);
+
+        console.log(
+            "PAGINATION DEBUG:",
+            movies.map(m => ({
+                title: m.title,
+                year: m.year,
+                id: m._id.toString()
+            }))
+        ); it(limit);
 
         res.json({
             movies,
