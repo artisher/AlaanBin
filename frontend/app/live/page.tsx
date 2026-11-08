@@ -26,6 +26,30 @@ const CHANNELS = [
         description: "پخش زنده شبکه خبر",
         icon: "/logos/khabar.png",
     },
+    {
+        id: "nasim",
+        title: "شبکه نسیم",
+        description: "پخش زنده شبکه نسیم",
+        icon: "/logos/nasim.png",
+    },
+    {
+        id: "ifilm",
+        title: "شبکه آی فیلم",
+        description: "پخش زنده شبکه آی فیلم",
+        icon: "/logos/ifilm.png",
+    },
+    {
+        id: "namayesh",
+        title: "شبکه نمایش ",
+        description: "پخش زنده شبکه  نمایش",
+        icon: "/logos/namayesh.png",
+    },
+    {
+        id: "pooya",
+        title: "شبکه پویا ",
+        description: "پخش زنده شبکه  پویا",
+        icon: "/logos/pooya1.png",
+    },
 ];
 
 export default function LivePage() {
