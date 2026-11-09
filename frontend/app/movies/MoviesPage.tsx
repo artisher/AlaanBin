@@ -396,7 +396,15 @@ export default function MoviesPage() {
         product ||
         rating ||
         sort !== "newest";
-
+    {
+        console.log(
+            "RENDERED MOVIES:",
+            movies.map(m => ({
+                id: m._id,
+                title: m.title
+            }))
+        )
+    }
     return (
         <main
             dir="rtl"
@@ -1037,7 +1045,9 @@ export default function MoviesPage() {
                             md:gap-y-12
                         "
                     >
+
                         {movies.map((movie) => (
+
                             <div
                                 key={movie._id}
                                 className="
