@@ -3041,7 +3041,8 @@ app.get('/api/movies', async (req, res) => {
                 year: m.year,
                 id: m._id.toString()
             }))
-        ); it(limit);
+        );
+
 
         res.json({
             movies,
