@@ -328,54 +328,71 @@ export const HomeContent = () => {
 
 
     return (<>
+
         <section className="relative">
-            {/* Hero */}
             <HeroSlider
                 movies={topWeekMovies.slice(0, 8)}
                 onMovieClick={handleMovieClick}
             />
 
-            {/* برتر هفته */}
             {topWeekMovies.length > 0 && (
-                <div className="relative z-20 -mt-[155px]">
-                    <div className="mx-auto max-w-[1650px] px-5">
-                        <div className="mb-4 flex items-center justify-between">
-                            <h2 className="text-2xl font-bold text-white">
+                <div className="
+            relative z-20
+            -mt-16
+            sm:-mt-24
+            lg:-mt-[155px]
+        ">
+                    <div className="mx-auto max-w-[1650px] px-3 sm:px-5">
+
+                        <div className="mb-3 sm:mb-4 flex items-center justify-between">
+                            <h2 className="text-xl sm:text-2xl font-bold text-white">
                                 برتر هفته
                             </h2>
 
                             <Link
                                 href="/movies?topWeek=true"
-                                className="
-                            text-sm
-                            text-gray-400
-                            transition
-                            hover:text-[#14c78b]
-                        "
+                                className="text-xs sm:text-sm text-gray-400 transition hover:text-[#14c78b]"
                             >
                                 مشاهده همه
                             </Link>
                         </div>
 
-                        <div className="flex gap-5 overflow-hidden">
+                        <div className="
+                    flex gap-3 sm:gap-5
+                    overflow-x-auto overflow-y-hidden
+                    pb-4
+                    snap-x snap-mandatory
+                    touch-pan-x
+                    overscroll-x-contain
+                    [&::-webkit-scrollbar]:hidden
+                    [scrollbar-width:none]
+                ">
                             {topWeekMovies.map((movie) => (
                                 <div
                                     key={movie._id}
-                                    className="shrink-0"
+                                    className="
+                                w-[155px]
+                                sm:w-[170px]
+                                md:w-[185px]
+                                lg:w-[205px]
+                                xl:w-[215px]
+                                shrink-0
+                                snap-start
+                            "
                                 >
                                     <MovieCard
                                         movie={movie}
-                                        onClick={() =>
-                                            handleMovieClick(movie)
-                                        }
+                                        onClick={() => handleMovieClick(movie)}
                                     />
                                 </div>
                             ))}
                         </div>
+
                     </div>
                 </div>
             )}
         </section>
+
 
         <div className="space-y-12 px-4 pt-8 sm:space-y-14 sm:px-6 md:px-8 lg:px-10">
 

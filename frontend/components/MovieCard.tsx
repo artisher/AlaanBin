@@ -20,7 +20,7 @@ export function MovieCard({
         : `https://alanbin.com${movie.poster}`;
 
     return (
-        <div className="group w-[155px] sm:w-[170px] md:w-[185px] lg:w-[205px] xl:w-[215px]">
+        <div className="group w-full min-w-0">
 
             {/* ================= Poster Card ================= */}
 
