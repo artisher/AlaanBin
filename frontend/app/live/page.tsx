@@ -31,24 +31,28 @@ const CHANNELS = [
         title: "شبکه نسیم",
         description: "پخش زنده شبکه نسیم",
         icon: "/logos/nasim.png",
+        comingSoon: true,
     },
     {
         id: "ifilm",
         title: "شبکه آی فیلم",
         description: "پخش زنده شبکه آی فیلم",
         icon: "/logos/ifilm.png",
+        comingSoon: true,
     },
     {
         id: "namayesh",
-        title: "شبکه نمایش ",
-        description: "پخش زنده شبکه  نمایش",
+        title: "شبکه نمایش",
+        description: "پخش زنده شبکه نمایش",
         icon: "/logos/namayesh.png",
+        comingSoon: true,
     },
     {
         id: "pooya",
-        title: "شبکه پویا ",
-        description: "پخش زنده شبکه  پویا",
+        title: "شبکه پویا",
+        description: "پخش زنده شبکه پویا",
         icon: "/logos/pooya1.png",
+        comingSoon: true,
     },
 ];
 
@@ -84,7 +88,11 @@ export default function LivePage() {
                     {CHANNELS.map((channel) => (
                         <Link
                             key={channel.id}
-                            href={`/live/${channel.id}`}
+                            href={
+                                channel.comingSoon
+                                    ? `/live/${channel.id}?comingSoon=true`
+                                    : `/live/${channel.id}`
+                            }
                             className="
                                 group
                                 relative
