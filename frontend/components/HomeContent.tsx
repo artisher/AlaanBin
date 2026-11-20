@@ -83,7 +83,7 @@ export const HomeContent = () => {
                     ),
 
                     fetch(
-                        `${process.env.NEXT_PUBLIC_API_URL}/api/movies?page=1&limit=8&topWeek=true&sort=highRating`
+                        `${process.env.NEXT_PUBLIC_API_URL}/api/movies?page=1&limit=50&topWeek=true&sort=highRating`
                     ),
 
                     fetch(
@@ -218,30 +218,31 @@ export const HomeContent = () => {
         const STORAGE_KEY = "alanbin_hero_movies";
         const EXPIRE_TIME = 6 * 60 * 60 * 1000;
 
-        const saved = localStorage.getItem(STORAGE_KEY);
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
 
-        if (saved) {
-            try {
+            if (saved) {
                 const parsed = JSON.parse(saved);
 
-                const isValid =
-                    Date.now() - parsed.timestamp < EXPIRE_TIME;
+                const isExpired =
+                    !parsed.timestamp ||
+                    Date.now() - parsed.timestamp >= EXPIRE_TIME;
 
-                if (isValid && Array.isArray(parsed.ids)) {
+                if (!isExpired && Array.isArray(parsed.ids)) {
                     const selected = parsed.ids
                         .map((id: string) =>
                             topWeekMovies.find(movie => movie._id === id)
                         )
                         .filter(Boolean) as Movie[];
 
-                    if (selected.length === parsed.ids.length) {
+                    if (selected.length > 0) {
                         setHeroMovies(selected);
                         return;
                     }
                 }
-            } catch {
-                localStorage.removeItem(STORAGE_KEY);
             }
+        } catch {
+            localStorage.removeItem(STORAGE_KEY);
         }
 
         const selected = getRandomMovies(topWeekMovies, 8);
