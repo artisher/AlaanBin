@@ -48,7 +48,13 @@ export const HomeContent = () => {
 
 
     const getRandomMovies = (movies: Movie[], count = 8) => {
-        const shuffled = [...movies];
+        const eligibleMovies = movies.filter(
+            movie =>
+                typeof movie.heroImage === "string" &&
+                movie.heroImage.trim().length > 0
+        );
+
+        const shuffled = [...eligibleMovies];
 
         for (let i = shuffled.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -235,7 +241,10 @@ export const HomeContent = () => {
                         )
                         .filter(Boolean) as Movie[];
 
-                    if (selected.length > 0) {
+                    if (
+                        selected.length > 0 &&
+                        selected.every(movie => movie.heroImage?.trim())
+                    ) {
                         setHeroMovies(selected);
                         return;
                     }
