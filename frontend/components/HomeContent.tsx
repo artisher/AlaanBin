@@ -32,7 +32,7 @@ export const HomeContent = () => {
 
     const [loading, setLoading] = useState(true);
 
-
+    const [heroMovies, setHeroMovies] = useState<Movie[]>([]);
     const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -47,7 +47,20 @@ export const HomeContent = () => {
     const [loadingFavorites, setLoadingFavorites] = useState(false);
 
 
+    const getRandomMovies = (movies: Movie[], count = 8) => {
+        const shuffled = [...movies];
 
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+
+            [shuffled[i], shuffled[j]] = [
+                shuffled[j],
+                shuffled[i],
+            ];
+        }
+
+        return shuffled.slice(0, count);
+    };
     useEffect(() => {
         const fetchHomeContent = async () => {
             try {
@@ -199,7 +212,51 @@ export const HomeContent = () => {
             setLoadingFavorites(false);
         }
     };
+    useEffect(() => {
+        if (topWeekMovies.length === 0) return;
 
+        const STORAGE_KEY = "alanbin_hero_movies";
+        const EXPIRE_TIME = 6 * 60 * 60 * 1000;
+
+        const saved = localStorage.getItem(STORAGE_KEY);
+
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+
+                const isValid =
+                    Date.now() - parsed.timestamp < EXPIRE_TIME;
+
+                if (isValid && Array.isArray(parsed.ids)) {
+                    const selected = parsed.ids
+                        .map((id: string) =>
+                            topWeekMovies.find(movie => movie._id === id)
+                        )
+                        .filter(Boolean) as Movie[];
+
+                    if (selected.length === parsed.ids.length) {
+                        setHeroMovies(selected);
+                        return;
+                    }
+                }
+            } catch {
+                localStorage.removeItem(STORAGE_KEY);
+            }
+        }
+
+        const selected = getRandomMovies(topWeekMovies, 8);
+
+        setHeroMovies(selected);
+
+        localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({
+                ids: selected.map(movie => movie._id),
+                timestamp: Date.now(),
+            })
+        );
+
+    }, [topWeekMovies]);
     const favoriteHandler = async (
         id: string,
         contentType: "movie" | "series"
@@ -331,7 +388,7 @@ export const HomeContent = () => {
 
         <section className="relative">
             <HeroSlider
-                movies={topWeekMovies.slice(0, 8)}
+                movies={heroMovies}
                 onMovieClick={handleMovieClick}
             />
 
