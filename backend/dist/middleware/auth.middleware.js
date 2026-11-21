@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const User_1 = require("../models/User");
+const isProduction = process.env.APP_ENV === "production";
 const checkSubscription = async (req, res, next) => {
     try {
         const token = req.cookies.token;
@@ -18,10 +19,19 @@ const checkSubscription = async (req, res, next) => {
         const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
         const user = await User_1.User.findById(decoded.id);
         if (!user) {
-            return res.status(404).json({
+            res.clearCookie("token", {
+                httpOnly: true,
+                sameSite: "lax",
+                secure: isProduction,
+                ...(isProduction && {
+                    domain: ".alanbin.com",
+                }),
+                path: "/",
+            });
+            return res.status(401).json({
                 success: false,
-                code: "USER_NOT_FOUND",
-                message: "کاربر پیدا نشد",
+                code: "ACCOUNT_DELETED",
+                message: "حساب کاربری حذف شده است",
             });
         }
         if (!user.subscriptionExpireDate ||

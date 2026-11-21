@@ -24,6 +24,61 @@ const CHANNELS = {
         streamUrl: "https://alanbin.com/live/irinn/index.m3u8",
         comingSoon: false,
     },
+    fifa: {
+        title: "FIFA+",
+        streamUrl: "https://alanbin.com/api/live/fifa/index.m3u8",
+        comingSoon: false,
+    },
+    euronews: {
+        title: "Euronews",
+        streamUrl: "https://alanbin.com/api/live/euronews/index.m3u8",
+        comingSoon: false,
+    },
+    "persiana-music": {
+        title: "Persiana Music",
+        streamUrl: "https://alanbin.com/api/live/persiana-music/index.m3u8",
+        comingSoon: false,
+    },
+    "redbull-tv": {
+        title: "Red Bull TV",
+        streamUrl: "https://alanbin.com/api/live/redbull-tv/index.m3u8",
+        comingSoon: false,
+    },
+    fars: {
+        title: "استان فارس",
+        streamUrl: "https://alanbin.com/api/live/fars/index.m3u8",
+        comingSoon: false,
+    },
+    "super-tennis": {
+        title: "سوپر تنیس",
+        streamUrl: "https://alanbin.com/api/live/super-tennis/index.m3u8",
+        comingSoon: false,
+    },
+    gem: {
+        title: "GEM",
+        streamUrl: "https://alanbin.com/api/live/gem/index.m3u8",
+        comingSoon: false,
+    },
+    "bbc-persian": {
+        title: "BBC فارسی",
+        streamUrl: "https://alanbin.com/api/live/bbc-persian/index.m3u8",
+        comingSoon: false,
+    },
+    "project-leon": {
+        title: "Project Leon",
+        streamUrl: "https://alanbin.com/api/live/project-leon/index.m3u8",
+        comingSoon: false,
+    },
+    voa: {
+        title: "صدای آمریکا",
+        streamUrl: "https://alanbin.com/api/live/voa/index.m3u8",
+        comingSoon: false,
+    },
+    "iran-international": {
+        title: "ایران اینترنشنال",
+        streamUrl: "https://alanbin.com/api/live/iran-international/index.m3u8",
+        comingSoon: false,
+    },
     nasim: {
         title: "شبکه نسیم",
         comingSoon: true,

@@ -61,6 +61,17 @@ const crypto_1 = require("crypto");
 const stream_1 = require("stream");
 const crypto_2 = __importDefault(require("crypto"));
 const monitoring_routes_1 = __importDefault(require("./monitoring/monitoring.routes"));
+const fifa_routes_1 = __importDefault(require("./live/international/fifa.routes"));
+const euronews_routes_1 = __importDefault(require("./live/international/euronews.routes"));
+const persiana_music_routes_1 = __importDefault(require("./live/international/persiana-music.routes"));
+const redbull_tv_routes_1 = __importDefault(require("./live/international/redbull-tv.routes"));
+const fars_routes_1 = __importDefault(require("./live/international/fars.routes"));
+const super_tennis_routes_1 = __importDefault(require("./live/international/super-tennis.routes"));
+const gem_routes_1 = __importDefault(require("./live/international/gem.routes"));
+const bbc_persian_routes_1 = __importDefault(require("./live/international/bbc-persian.routes"));
+const project_leon_routes_1 = __importDefault(require("./live/international/project-leon.routes"));
+const voa_routes_1 = __importDefault(require("./live/international/voa.routes"));
+const iran_international_routes_1 = __importDefault(require("./live/international/iran-international.routes"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
@@ -78,6 +89,17 @@ app.use((0, cors_1.default)({
 app.use(express_1.default.json()); // خواندن داده‌های JSON
 app.use((0, cookie_parser_1.default)());
 app.use("/api/admin/monitoring", monitoring_routes_1.default);
+app.use("/api/live/fifa", fifa_routes_1.default);
+app.use("/api/live/euronews", euronews_routes_1.default);
+app.use("/api/live/persiana-music", persiana_music_routes_1.default);
+app.use("/api/live/redbull-tv", redbull_tv_routes_1.default);
+app.use("/api/live/fars", fars_routes_1.default);
+app.use("/api/live/super-tennis", super_tennis_routes_1.default);
+app.use("/api/live/gem", gem_routes_1.default);
+app.use("/api/live/bbc-persian", bbc_persian_routes_1.default);
+app.use("/api/live/project-leon", project_leon_routes_1.default);
+app.use("/api/live/voa", voa_routes_1.default);
+app.use("/api/live/iran-international", iran_international_routes_1.default);
 const storage = multer_1.default.diskStorage({
     destination: (req, file, cb) => {
         cb(null, "/mnt/alanbin/movies");
@@ -791,7 +813,7 @@ async function buildTv3Playlist() {
 // ===============================
 // PLAYLIST
 // ===============================
-app.get("/api/live/tv3/index.m3u8", async (req, res) => {
+app.get("/api/live/tv3/index.m3u8", auth_middleware_1.default, async (req, res) => {
     try {
         const playlist = await buildTv3Playlist();
         res.setHeader("Content-Type", "application/vnd.apple.mpegurl");
@@ -929,7 +951,7 @@ async function buildIrinnPlaylist() {
 // ===============================
 // PLAYLIST
 // ===============================
-app.get("/api/live/irinn/index.m3u8", async (req, res) => {
+app.get("/api/live/irinn/index.m3u8", auth_middleware_1.default, async (req, res) => {
     try {
         const playlist = await buildIrinnPlaylist();
         res.setHeader("Content-Type", "application/vnd.apple.mpegurl");
@@ -1712,9 +1734,17 @@ app.get('/api/movies', async (req, res) => {
         const totalMovies = await Movie_1.Movie.countDocuments(query);
         const totalPages = Math.max(1, Math.ceil(totalMovies / limit));
         const movies = await Movie_1.Movie.find(query)
-            .sort(sort)
+            .sort({
+            ...sort,
+            _id: -1
+        })
             .skip((page - 1) * limit)
             .limit(limit);
+        console.log("PAGINATION DEBUG:", movies.map(m => ({
+            title: m.title,
+            year: m.year,
+            id: m._id.toString()
+        })));
         res.json({
             movies,
             currentPage: page,
@@ -2283,7 +2313,9 @@ app.post("/api/favorites/:contentType/:contentId", async (req, res) => {
             });
         }
         const { contentType, contentId } = req.params;
-        if (!["movie", "series"].includes(contentType) ||
+        // تبدیل movies به movie
+        const type = contentType === "movies" ? "movie" : contentType;
+        if (!["movie", "series"].includes(type) ||
             !mongoose_1.default.isValidObjectId(contentId)) {
             return res.status(400).json({
                 message: "نوع محتوا یا شناسه نامعتبر است",
@@ -2296,13 +2328,13 @@ app.post("/api/favorites/:contentType/:contentId", async (req, res) => {
                 message: "کاربر پیدا نشد",
             });
         }
-        const type = contentType;
+        const contentTypeValue = type;
         const id = new mongoose_1.default.Types.ObjectId(contentId);
-        // بررسی وجود محتوا در لیست جدید
-        const favoriteIndex = user.favorites.findIndex((item) => item.contentType === type &&
+        // بررسی علاقه‌مندی جدید
+        const favoriteIndex = user.favorites.findIndex((item) => item.contentType === contentTypeValue &&
             item.contentId.toString() === contentId);
-        // پشتیبانی از فیلم‌های ذخیره‌شده در ساختار قدیمی
-        const legacyMovieExists = type === "movie" &&
+        // بررسی علاقه‌مندی قدیمی فیلم‌ها
+        const legacyMovieExists = contentTypeValue === "movie" &&
             user.favoriteTitle.some((movieId) => movieId.toString() === contentId);
         if (favoriteIndex !== -1) {
             user.favorites.splice(favoriteIndex, 1);
@@ -2313,12 +2345,16 @@ app.post("/api/favorites/:contentType/:contentId", async (req, res) => {
         else {
             user.favorites.push({
                 contentId: id,
-                contentType: type,
+                contentType: contentTypeValue,
             });
         }
         await user.save();
+        const isFavorite = user.favorites.some((item) => item.contentType === contentTypeValue &&
+            item.contentId.toString() === contentId) || (contentTypeValue === "movie" &&
+            user.favoriteTitle.some((movieId) => movieId.toString() === contentId));
         return res.json({
             success: true,
+            isFavorite,
             message: "علاقه‌مندی به‌روزرسانی شد",
         });
     }
@@ -2399,34 +2435,6 @@ app.get("/api/favorites", async (req, res) => {
     }
 });
 //دریافت فیلم مورد علاقه
-app.get("/api/favorites", async (req, res) => {
-    try {
-        const token = req.cookies.token;
-        if (!token) {
-            return res.status(401).json({
-                message: "احراز هویت نشده"
-            });
-        }
-        const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
-        const user = await User_1.User.findById(decoded.id);
-        if (!user) {
-            return res.status(404).json({
-                message: "کاربر پیدا نشد"
-            });
-        }
-        const favoriteMovies = await Movie_1.Movie.find({
-            _id: { $in: user.favoriteTitle }
-        });
-        res.json({
-            favoriteMovies
-        });
-    }
-    catch (err) {
-        res.status(500).json({
-            message: "خطا"
-        });
-    }
-});
 //auth 
 app.post('/api/auth/register', async (req, res) => {
     try {
@@ -2532,9 +2540,20 @@ app.get("/api/auth/me", async (req, res) => {
         const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
         const user = await User_1.User.findById(decoded.id);
         if (!user) {
-            return res.status(404).json({
+            res.clearCookie("token", {
+                httpOnly: true,
+                sameSite: "lax",
+                secure: isProduction,
+                ...(isProduction && {
+                    domain: ".alanbin.com",
+                }),
+                path: "/",
+            });
+            return res.status(401).json({
+                success: false,
                 isAuthenticated: false,
-                message: "کاربر پیدا نشد"
+                code: "ACCOUNT_DELETED",
+                message: "حساب کاربری شما حذف شده است"
             });
         }
         res.status(200).json({

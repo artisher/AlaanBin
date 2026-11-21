@@ -24,6 +24,17 @@ import { Readable } from "stream";
 import crypto from "crypto";
 
 import monitoringRoutes from "./monitoring/monitoring.routes";
+import fifaLiveRoutes from "./live/international/fifa.routes";
+import euronewsLiveRoutes from "./live/international/euronews.routes";
+import persianaMusicLiveRoutes from "./live/international/persiana-music.routes";
+import redBullTvLiveRoutes from "./live/international/redbull-tv.routes";
+import farsLiveRoutes from "./live/international/fars.routes";
+import superTennisLiveRoutes from "./live/international/super-tennis.routes";
+import gemLiveRoutes from "./live/international/gem.routes";
+import bbcPersianLiveRoutes from "./live/international/bbc-persian.routes";
+import projectLeonLiveRoutes from "./live/international/project-leon.routes";
+import voaLiveRoutes from "./live/international/voa.routes";
+import iranInternationalLiveRoutes from "./live/international/iran-international.routes";
 
 dotenv.config();
 const app = express();
@@ -47,6 +58,18 @@ app.use(
     "/api/admin/monitoring",
     monitoringRoutes
 );
+
+app.use("/api/live/fifa", fifaLiveRoutes);
+app.use("/api/live/euronews", euronewsLiveRoutes);
+app.use("/api/live/persiana-music", persianaMusicLiveRoutes);
+app.use("/api/live/redbull-tv", redBullTvLiveRoutes);
+app.use("/api/live/fars", farsLiveRoutes);
+app.use("/api/live/super-tennis", superTennisLiveRoutes);
+app.use("/api/live/gem", gemLiveRoutes);
+app.use("/api/live/bbc-persian", bbcPersianLiveRoutes);
+app.use("/api/live/project-leon", projectLeonLiveRoutes);
+app.use("/api/live/voa", voaLiveRoutes);
+app.use("/api/live/iran-international", iranInternationalLiveRoutes);
 
 
 const storage = multer.diskStorage({

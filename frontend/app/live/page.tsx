@@ -1,33 +1,107 @@
 
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 
 const CHANNELS = [
     {
         id: "tv1",
+        category: "iran",
         title: "شبکه ۱",
         description: "پخش زنده شبکه یک سیما",
         icon: "/logos/1.png",
     },
     {
         id: "tv3",
+        category: "iran",
         title: "شبکه ۳",
         description: "پخش زنده شبکه سه سیما",
         icon: "/logos/3.png",
     },
     {
         id: "varzesh",
+        category: "sports",
         title: "شبکه ورزش",
         description: "پخش زنده شبکه ورزش",
         icon: "/logos/varzesh.png",
     },
     {
         id: "irinn",
+        category: "iran",
         title: "شبکه خبر",
         description: "پخش زنده شبکه خبر",
         icon: "/logos/khabar.png",
     },
     {
+        id: "fifa",
+        category: "sports",
+        title: "FIFA+",
+        description: "پخش زنده شبکه FIFA",
+    },
+    {
+        id: "euronews",
+        category: "news",
+        title: "Euronews",
+        description: "پخش زنده شبکه یورونیوز",
+    },
+    {
+        id: "persiana-music",
+        category: "music",
+        title: "Persiana Music",
+        description: "پخش زنده شبکه پرشیانا موزیک",
+    },
+    {
+        id: "redbull-tv",
+        category: "sports",
+        title: "Red Bull TV",
+        description: "پخش زنده شبکه Red Bull TV",
+    },
+    {
+        id: "fars",
+        category: "iran",
+        title: "استان فارس",
+        description: "پخش زنده شبکه استانی فارس",
+    },
+    {
+        id: "super-tennis",
+        category: "sports",
+        title: "سوپر تنیس",
+        description: "پخش زنده شبکه سوپر تنیس",
+    },
+    {
+        id: "gem",
+        category: "entertainment",
+        title: "GEM",
+        description: "پخش زنده شبکه GEM",
+    },
+    {
+        id: "bbc-persian",
+        category: "news",
+        title: "BBC فارسی",
+        description: "پخش زنده بی‌بی‌سی فارسی",
+    },
+    {
+        id: "project-leon",
+        category: "news",
+        title: "Project Leon",
+        description: "پخش زنده Project Leon",
+    },
+    {
+        id: "voa",
+        category: "news",
+        title: "صدای آمریکا",
+        description: "پخش زنده صدای آمریکا فارسی",
+    },
+    {
+        id: "iran-international",
+        category: "news",
+        title: "ایران اینترنشنال",
+        description: "پخش زنده ایران اینترنشنال",
+    },
+    {
         id: "nasim",
+        category: "iran",
         title: "شبکه نسیم",
         description: "پخش زنده شبکه نسیم",
         icon: "/logos/nasim.png",
@@ -35,6 +109,7 @@ const CHANNELS = [
     },
     {
         id: "ifilm",
+        category: "iran",
         title: "شبکه آی فیلم",
         description: "پخش زنده شبکه آی فیلم",
         icon: "/logos/ifilm.png",
@@ -42,6 +117,7 @@ const CHANNELS = [
     },
     {
         id: "namayesh",
+        category: "iran",
         title: "شبکه نمایش",
         description: "پخش زنده شبکه نمایش",
         icon: "/logos/namayesh.png",
@@ -49,6 +125,7 @@ const CHANNELS = [
     },
     {
         id: "pooya",
+        category: "iran",
         title: "شبکه پویا",
         description: "پخش زنده شبکه پویا",
         icon: "/logos/pooya1.png",
@@ -56,7 +133,25 @@ const CHANNELS = [
     },
 ];
 
+
+const CATEGORIES = [
+    { id: "all", label: "همه شبکه‌ها" },
+    { id: "iran", label: "داخلی ایران" },
+    { id: "sports", label: "ورزشی" },
+    { id: "news", label: "خبری و بین‌المللی" },
+    { id: "music", label: "موسیقی" },
+    { id: "entertainment", label: "سرگرمی" },
+];
+
 export default function LivePage() {
+    const [activeCategory, setActiveCategory] = useState("all");
+
+    const visibleCategories = CATEGORIES.filter(
+        (category) =>
+            category.id !== "all" &&
+            (activeCategory === "all" || category.id === activeCategory)
+    );
+
     return (
         <main className="min-h-screen bg-[#0B0F14] px-4 py-8 md:px-8 md:py-12">
             <div className="mx-auto max-w-6xl">
@@ -83,9 +178,52 @@ export default function LivePage() {
                     </p>
                 </div>
 
-                {/* Channels */}
-                <div className="grid gap-5 sm:grid-cols-2">
-                    {CHANNELS.map((channel) => (
+                {/* Category Filters */}
+                <div className="mb-8 flex flex-wrap gap-3">
+                    {CATEGORIES.map((category) => (
+                        <button
+                            key={category.id}
+                            onClick={() => setActiveCategory(category.id)}
+                            className={`rounded-full border px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                                activeCategory === category.id
+                                    ? "border-[#14c78b] bg-[#14c78b] text-[#0B0F14]"
+                                    : "border-white/10 bg-[#111827] text-gray-300 hover:border-[#14c78b]/50 hover:text-white"
+                            }`}
+                        >
+                            {category.label}
+                            <span className="mr-2 opacity-70">
+                                {category.id === "all"
+                                    ? CHANNELS.length
+                                    : CHANNELS.filter(
+                                          (channel) => channel.category === category.id
+                                      ).length}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+
+                {/* Channels grouped by category */}
+                <div className="space-y-10">
+                    {visibleCategories.map((category) => {
+                        const categoryChannels = CHANNELS.filter(
+                            (channel) => channel.category === category.id
+                        );
+
+                        if (categoryChannels.length === 0) return null;
+
+                        return (
+                            <section key={category.id}>
+                                <div className="mb-5 flex items-center justify-between border-b border-white/10 pb-3">
+                                    <h2 className="text-xl font-bold text-white md:text-2xl">
+                                        {category.label}
+                                    </h2>
+                                    <span className="rounded-full bg-[#14c78b]/10 px-3 py-1 text-xs font-medium text-[#14c78b]">
+                                        {categoryChannels.length} شبکه
+                                    </span>
+                                </div>
+
+                                <div className="grid gap-5 sm:grid-cols-2">
+                                    {categoryChannels.map((channel) => (
                         <Link
                             key={channel.id}
                             href={
@@ -146,11 +284,17 @@ export default function LivePage() {
                                               group-hover:bg-[#14c78b]/20
                                                 "
                                 >
-                                    <img
-                                        src={channel.icon}
-                                        alt={channel.title}
-                                        className="h-11 w-11 object-contain"
-                                    />
+                                    {channel.icon ? (
+                                        <img
+                                            src={channel.icon}
+                                            alt={channel.title}
+                                            className="h-11 w-11 object-contain"
+                                        />
+                                    ) : (
+                                        <span className="text-2xl font-black text-[#14c78b]">
+                                            TV
+                                        </span>
+                                    )}
                                 </div>
 
                                 <h2 className="text-xl font-bold text-white">
@@ -172,7 +316,11 @@ export default function LivePage() {
                                 </div>
                             </div>
                         </Link>
-                    ))}
+                                    ))}
+                                </div>
+                            </section>
+                        );
+                    })}
                 </div>
             </div>
         </main>
