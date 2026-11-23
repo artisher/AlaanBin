@@ -334,7 +334,7 @@ app.get(
 
 const VARZESH_RELAY_URL =
     process.env.VARZESH_RELAY_URL ||
-    "http://10.79.0.1:8787";
+    "http://10.78.0.1:3001";
 
 type VarzeshSession = {
     createdAt: number;
@@ -416,7 +416,7 @@ async function buildVarzeshPlaylist(
 ) {
 
     const playlistUrl =
-        `${VARZESH_RELAY_URL}/varzesh/index.m3u8`;
+        `${VARZESH_RELAY_URL}/live/varzesh`;
 
     const response =
         await fetch(
@@ -540,24 +540,20 @@ async function buildVarzeshPlaylist(
                  * /varzesh/segment/xxxx.ts
                  */
 
-                if (
-                    !trimmed.startsWith(
-                        "/varzesh/segment/"
-                    )
-                ) {
-                    return line;
-                }
+                const relayUrl =
+                    new URL(trimmed, VARZESH_RELAY_URL);
 
-                const segment =
-                    trimmed.replace(
-                        "/varzesh/segment/",
-                        ""
-                    );
+                const target =
+                    relayUrl.searchParams.get("url");
+
+                if (!target) {
+                    throw new Error("Invalid relay segment URL");
+                }
 
                 return (
                     `/api/live/varzesh/segment/` +
                     `${sessionId}/` +
-                    `${encodeURIComponent(segment)}`
+                    `${encodeURIComponent(target)}`
                 );
             })
             .join("\n");
@@ -728,26 +724,29 @@ app.get(
              * را decode می‌کند.
              */
 
-            if (
-                segment.includes("/") ||
-                segment.includes("\\") ||
-                segment.includes("..") ||
-                !segment.endsWith(".ts")
-            ) {
+            let targetUrl: URL;
 
-                return res
-                    .status(400)
-                    .json({
-                        message:
-                            "Segment نامعتبر است"
-                    });
+            try {
+                targetUrl = new URL(segment);
+            } catch {
+                return res.status(400).json({
+                    message: "Segment نامعتبر است"
+                });
             }
 
+            if (
+                targetUrl.protocol !== "https:" ||
+                !/\.telewebion\.(net|ir)$/i.test(targetUrl.hostname)
+            ) {
+                return res.status(400).json({
+                    message: "Segment نامعتبر است"
+                });
+            }
 
             const relaySegmentUrl =
                 `${VARZESH_RELAY_URL}` +
-                `/varzesh/segment/` +
-                `${encodeURIComponent(segment)}`;
+                `/live/varzesh/segment?url=` +
+                `${encodeURIComponent(targetUrl.toString())}`;
 
 
             console.log(

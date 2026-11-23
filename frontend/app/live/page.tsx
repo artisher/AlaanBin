@@ -13,6 +13,13 @@ const CHANNELS = [
         icon: "/logos/1.png",
     },
     {
+        id: "tv2",
+        category: "iran",
+        title: "شبکه ۲",
+        description: "پخش زنده شبکه دو سیما",
+        icon: "/logos/2.png",
+    },
+    {
         id: "tv3",
         category: "iran",
         title: "شبکه ۳",

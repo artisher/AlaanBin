@@ -6,7 +6,7 @@ import Hls from "hls.js";
 
 type LivePlayerProps = {
     streamUrl: string;
-    sessionType?: "tv1" | "varzesh" | "tv3" | "irinn";
+    sessionType?: "tv1" | "tv2" | "varzesh" | "tv3" | "irinn";
 };
 type PlayerError =
     | "AUTH_REQUIRED"
@@ -268,47 +268,15 @@ export default function LivePlayer({
                  */
 
                 /*
-                 * ============================
-                 * TV3 & IRINN
-                 * ============================
+                 * External direct HLS sources:
+                 * TV1, TV2, TV3 and IRINN
                  */
                 if (
+                    sessionType === "tv1" ||
+                    sessionType === "tv2" ||
                     sessionType === "tv3" ||
                     sessionType === "irinn"
                 ) {
-                    const response = await fetch(streamUrl, {
-                        cache: "no-store",
-                        credentials: "include",
-                    });
-
-                    if (!response.ok) {
-                        let errorCode: PlayerError = "PLAYBACK_ERROR";
-
-                        try {
-                            const data = await response.clone().json();
-
-                            if (
-                                response.status === 401 &&
-                                data.code === "AUTH_REQUIRED"
-                            ) {
-                                errorCode = "AUTH_REQUIRED";
-                            } else if (
-                                response.status === 403 &&
-                                data.code === "SUBSCRIPTION_REQUIRED"
-                            ) {
-                                errorCode = "SUBSCRIPTION_REQUIRED";
-                            }
-                        } catch {
-                            // پاسخ JSON قابل خواندن نیست.
-                        }
-
-                        if (!cancelled) {
-                            setPlayerError(errorCode);
-                        }
-
-                        return;
-                    }
-
                     if (cancelled) return;
 
                     if (Hls.isSupported()) {
@@ -317,112 +285,12 @@ export default function LivePlayer({
                         video.canPlayType("application/vnd.apple.mpegurl")
                     ) {
                         video.src = streamUrl;
-                    }
-
-                    return;
-                }
-
-                /*
-                 * ============================
-                 * TV1
-                 * ============================
-                 *
-                 * TV1 session دارد، ولی recovery
-                 * مخصوص Varzesh ندارد.
-                 */
-                if (sessionType === "tv1") {
-
-                    const response =
-                        await fetch(
-                            streamUrl,
-                            {
-                                cache: "no-store",
-                            }
-                        );
-
-                    if (!response.ok) {
-                        let errorCode: PlayerError = "PLAYBACK_ERROR";
-
-                        try {
-                            const data = await response.clone().json();
-
-                            if (
-                                response.status === 401 &&
-                                data.code === "AUTH_REQUIRED"
-                            ) {
-                                errorCode = "AUTH_REQUIRED";
-                            } else if (
-                                response.status === 403 &&
-                                data.code === "SUBSCRIPTION_REQUIRED"
-                            ) {
-                                errorCode = "SUBSCRIPTION_REQUIRED";
-                            }
-                        } catch {
-                            // پاسخ JSON قابل خواندن نیست.
-                        }
-
-                        if (!cancelled) {
-                            setPlayerError(errorCode);
-                        }
-
-                        return;
-                    }
-
-
-                    sessionId =
-                        response.headers.get(
-                            "X-TV1-Session"
-                        );
-
-
-                    if (!sessionId) {
-
-                        throw new Error(
-                            "TV1 session ID not received"
-                        );
-                    }
-
-
-                    console.log(
-                        "🎬 TV1 session:",
-                        sessionId
-                    );
-
-
-                    if (cancelled) return;
-
-
-                    const sessionStreamUrl =
-                        `${streamUrl}?session=${encodeURIComponent(
-                            sessionId
-                        )}&t=${Date.now()}`;
-
-
-                    if (Hls.isSupported()) {
-
-                        await createPlayer(
-                            sessionStreamUrl
-                        );
-
-                    } else if (
-                        video.canPlayType(
-                            "application/vnd.apple.mpegurl"
-                        )
-                    ) {
-
-                        video.src =
-                            sessionStreamUrl;
-
                     } else {
-
-                        console.error(
-                            "HLS is not supported in this browser"
-                        );
+                        console.error("HLS is not supported in this browser");
                     }
 
                     return;
                 }
-
 
                 /*
                  * ============================
@@ -433,94 +301,24 @@ export default function LivePlayer({
                  */
                 if (sessionType === "varzesh") {
 
-                    const response =
-                        await fetch(
-                            streamUrl,
-                            {
-                                cache: "no-store",
-                            }
-                        );
-
-
-                    if (!response.ok) {
-                        let errorCode: PlayerError = "PLAYBACK_ERROR";
-
-                        try {
-                            const data = await response.clone().json();
-
-                            if (
-                                response.status === 401 &&
-                                data.code === "AUTH_REQUIRED"
-                            ) {
-                                errorCode = "AUTH_REQUIRED";
-                            } else if (
-                                response.status === 403 &&
-                                data.code === "SUBSCRIPTION_REQUIRED"
-                            ) {
-                                errorCode = "SUBSCRIPTION_REQUIRED";
-                            }
-                        } catch {
-                            // پاسخ JSON قابل خواندن نیست.
-                        }
-
-                        if (!cancelled) {
-                            setPlayerError(errorCode);
-                        }
-
-                        return;
-                    }
-
-                    sessionId =
-                        response.headers.get(
-                            "X-Varzesh-Session"
-                        );
-
-
-                    if (!sessionId) {
-
-                        throw new Error(
-                            "Varzesh session ID not received"
-                        );
-                    }
-
-
-                    console.log(
-                        "🎬 Varzesh session:",
-                        sessionId
-                    );
-
-
                     if (cancelled) return;
-
-
-                    const sessionStreamUrl =
-                        `${streamUrl}?session=${encodeURIComponent(
-                            sessionId
-                        )}&t=${Date.now()}`;
-
 
                     if (Hls.isSupported()) {
 
-                        await createPlayer(
-                            sessionStreamUrl
-                        );
+                        await createPlayer(streamUrl);
 
                     } else if (
-                        video.canPlayType(
-                            "application/vnd.apple.mpegurl"
-                        )
+                        video.canPlayType("application/vnd.apple.mpegurl")
                     ) {
 
-                        video.src =
-                            sessionStreamUrl;
+                        video.src = streamUrl;
 
                     } else {
 
-                        console.error(
-                            "HLS is not supported in this browser"
-                        );
+                        console.error("HLS is not supported in this browser");
                     }
 
+                    return;
                 }
                 if (!sessionType) {
 

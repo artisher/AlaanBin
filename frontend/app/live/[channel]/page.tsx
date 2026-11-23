@@ -6,22 +6,27 @@ import Link from "next/link";
 const CHANNELS = {
     tv1: {
         title: "شبکه ۱",
-        streamUrl: "https://alanbin.com/api/live/tv1/index.m3u8",
+        streamUrl: "https://corsply-v0s4.cfbanana.workers.dev/?url=https://live-aburayhan1111.telewebion.ir/ek/tv1/live/720p/index.m3u8",
+        comingSoon: false,
+    },
+    tv2: {
+        title: "شبکه ۲",
+        streamUrl: "https://corsply-v0s4.cfbanana.workers.dev/?url=https://live-aburayhan1107.telewebion.ir/ek/tv2/live/720p/index.m3u8",
         comingSoon: false,
     },
     tv3: {
         title: "شبکه ۳",
-        streamUrl: "https://alanbin.com/live/tv3/index.m3u8",
+        streamUrl: "https://cp11.adabmedia.com/hls2/tv3test.m3u8",
         comingSoon: false,
     },
     varzesh: {
         title: "شبکه ورزش",
-        streamUrl: "https://alanbin.com/api/live/varzesh/index.m3u8",
+        streamUrl: "https://cp11.adabmedia.com/hls2/varzeshtest.m3u8",
         comingSoon: false,
     },
     irinn: {
         title: "شبکه خبر",
-        streamUrl: "https://alanbin.com/live/irinn/index.m3u8",
+        streamUrl: "https://corsply-v0s4.cfbanana.workers.dev/?url=https://live-aburayhan1111.telewebion.ir/ek/irinn/live/720p/index.m3u8",
         comingSoon: false,
     },
     fifa: {
@@ -193,6 +198,7 @@ export default async function LiveChannelPage({
                         streamUrl={selectedChannel.streamUrl}
                         sessionType={
                             channel === "tv1" ||
+                                channel === "tv2" ||
                                 channel === "tv3" ||
                                 channel === "varzesh" ||
                                 channel === "irinn"

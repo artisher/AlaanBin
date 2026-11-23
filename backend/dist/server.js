@@ -271,7 +271,7 @@ app.get("/posters/:filename", auth_middleware_1.default, async (req, res) => {
 // LIVE VARZESH STREAM
 // ===============================
 const VARZESH_RELAY_URL = process.env.VARZESH_RELAY_URL ||
-    "http://10.79.0.1:8787";
+    "http://10.78.0.1:3001";
 const varzeshSessions = new Map();
 const VARZESH_SESSION_TTL = 10 * 60 * 1000;
 // ===============================
@@ -307,7 +307,7 @@ function getVarzeshSession(sessionId) {
 // BUILD PLAYLIST
 // ===============================
 async function buildVarzeshPlaylist(sessionId) {
-    const playlistUrl = `${VARZESH_RELAY_URL}/varzesh/index.m3u8`;
+    const playlistUrl = `${VARZESH_RELAY_URL}/live/varzesh`;
     const response = await fetch(playlistUrl, {
         cache: "no-store",
     });
@@ -367,13 +367,14 @@ async function buildVarzeshPlaylist(sessionId) {
              *
              * /varzesh/segment/xxxx.ts
              */
-            if (!trimmed.startsWith("/varzesh/segment/")) {
-                return line;
+            const relayUrl = new URL(trimmed, VARZESH_RELAY_URL);
+            const target = relayUrl.searchParams.get("url");
+            if (!target) {
+                throw new Error("Invalid relay segment URL");
             }
-            const segment = trimmed.replace("/varzesh/segment/", "");
             return (`/api/live/varzesh/segment/` +
                 `${sessionId}/` +
-                `${encodeURIComponent(segment)}`);
+                `${encodeURIComponent(target)}`);
         })
             .join("\n");
     return output;
@@ -447,19 +448,24 @@ app.get("/api/live/varzesh/segment/:sessionId/:segment", async (req, res) => {
          * Express مقدار route parameter
          * را decode می‌کند.
          */
-        if (segment.includes("/") ||
-            segment.includes("\\") ||
-            segment.includes("..") ||
-            !segment.endsWith(".ts")) {
-            return res
-                .status(400)
-                .json({
+        let targetUrl;
+        try {
+            targetUrl = new URL(segment);
+        }
+        catch {
+            return res.status(400).json({
+                message: "Segment نامعتبر است"
+            });
+        }
+        if (targetUrl.protocol !== "https:" ||
+            !/\.telewebion\.(net|ir)$/i.test(targetUrl.hostname)) {
+            return res.status(400).json({
                 message: "Segment نامعتبر است"
             });
         }
         const relaySegmentUrl = `${VARZESH_RELAY_URL}` +
-            `/varzesh/segment/` +
-            `${encodeURIComponent(segment)}`;
+            `/live/varzesh/segment?url=` +
+            `${encodeURIComponent(targetUrl.toString())}`;
         console.log("🎬 Varzesh relay segment:", segment.slice(0, 30));
         const response = await fetch(relaySegmentUrl, {
             cache: "no-store",
