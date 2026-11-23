@@ -135,24 +135,24 @@ export const LandingHero = () => {
 
                         </div>
 
-                        <div
-                            className="
-                                flex
-                                gap-5
-                                overflow-hidden
-                            "
-                        >
+                        <div className="flex items-start gap-5 overflow-hidden">
 
                             {topWeekMovies.map((movie) => (
                                 <div
                                     key={movie._id}
-                                    className="shrink-0"
+                                    className="
+                w-[135px]
+                shrink-0
+
+                sm:w-[150px]
+                md:w-[170px]
+                lg:w-[180px]
+                xl:w-[190px]
+            "
                                 >
                                     <MovieCard
                                         movie={movie}
-                                        onClick={() =>
-                                            handleMovieClick(movie)
-                                        }
+                                        onClick={() => handleMovieClick(movie)}
                                     />
                                 </div>
                             ))}
