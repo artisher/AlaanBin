@@ -6,7 +6,8 @@ import toast from "react-hot-toast";
 
 import type { Movie } from "@/types/movies";
 import type { Series } from "@/types/Series";
-import { ContentRow, rowItemClass } from "./ContentRow";
+import { ContentRow, rowItemClass, wideItemClass } from "./ContentRow";
+import { LandscapeCard } from "./LandscapeCard";
 import { MovieCard } from "./MovieCard";
 import { SeriesCard } from "./SeriesCard";
 import { MovieModal } from "./MovieMedal";
@@ -172,12 +173,24 @@ export const HomeContent = () => {
             )}
         </div>
     );
-
+    const renderWide = (item: ContentItem) => (
+        <div key={item._id} className={wideItemClass}>
+            <LandscapeCard
+                title={item.title}
+                image={"heroImage" in item ? item.heroImage : undefined}
+                fallback={item.poster}
+                year={item.year}
+                rating={item.rating}
+                badge={isMovie(item) ? undefined : "سریال"}
+                onClick={() => (isMovie(item) ? setSelectedMovie(item) : setSelectedSeries(item))}
+            />
+        </div>
+    );
     /* ---------- Loading ---------- */
     if (loading) {
         return (
             <div>
-                <div className="-mt-16 h-[70svh] min-h-[520px] max-h-[880px] w-full animate-pulse bg-white/[0.03]" />
+                <div className="-mt-16 h-[100svh] min-h-[560px] max-h-[1100px] w-full animate-pulse bg-white/[0.03]" />
                 <div className="space-y-10 px-4 pt-8 sm:px-6 md:px-8 lg:px-10">
                     {[1, 2, 3].map((row) => (
                         <div key={row}>
@@ -201,9 +214,9 @@ export const HomeContent = () => {
 
             <div className="relative z-10 mx-auto max-w-[1800px] space-y-8 px-4 pb-16 sm:space-y-10 sm:px-8 lg:px-14 xl:px-20 tv:max-w-none tv:px-[5vw]">
                 {topWeekMixed.length > 0 && (
-                    <div className="-mt-28 sm:-mt-32">
-                        <ContentRow title="برتر هفته" href="/movies?topWeek=true">
-                            {topWeekMixed.map(renderItem)}
+                    <div className="relative z-20 -mt-[30svh] sm:-mt-[28svh]">
+                        <ContentRow bare title="برتر هفته" href="/movies?topWeek=true">
+                            {topWeekMixed.map(renderWide)}
                         </ContentRow>
                     </div>
                 )}
