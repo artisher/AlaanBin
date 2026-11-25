@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Star } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import type { Movie } from "@/types/movies";
 
 interface HeroSliderProps {
@@ -9,33 +9,48 @@ interface HeroSliderProps {
     onMovieClick: (movie: Movie) => void;
 }
 
+const INTERVAL = 5000;
+
 export const HeroSlider = ({ movies, onMovieClick }: HeroSliderProps) => {
     const slides = movies.slice(0, 8);
+    const count = slides.length;
     const [index, setIndex] = useState(0);
-    const [paused, setPaused] = useState(false);
+    const [focused, setFocused] = useState(false);
+    const touchX = useRef<number | null>(null);
 
+    const go = (dir: 1 | -1) => setIndex((i) => (i + dir + count) % count);
+
+    // restarts every time the slide changes (manual or auto)
     useEffect(() => {
-        if (slides.length < 2 || paused) return;
-        const t = setInterval(() => setIndex((i) => (i + 1) % slides.length), 7000);
-        return () => clearInterval(t);
-    }, [slides.length, paused]);
+        if (count < 2 || focused) return;
+        const t = setTimeout(() => setIndex((i) => (i + 1) % count), INTERVAL);
+        return () => clearTimeout(t);
+    }, [index, count, focused]);
 
-    if (!slides.length) return null;
+    if (!count) return null;
 
     const movie = slides[index] ?? slides[0];
-    const nextIndex = (index + 1) % slides.length;
+    const nextIndex = (index + 1) % count;
+    const prevIndex = (index - 1 + count) % count;
 
     return (
         <section
-            className="relative -mt-16 h-[70svh] min-h-[520px] max-h-[880px] w-full overflow-hidden bg-[#0B0F14]"
-            onMouseEnter={() => setPaused(true)}
-            onMouseLeave={() => setPaused(false)}
-            onFocus={() => setPaused(true)}
-            onBlur={() => setPaused(false)}
+            className="group/hero relative -mt-16 h-[70svh] min-h-[520px] max-h-[880px] w-full overflow-hidden bg-[#0B0F14]"
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
+            onTouchEnd={(e) => {
+                if (touchX.current === null) return;
+                const dx = e.changedTouches[0].clientX - touchX.current;
+                touchX.current = null;
+                if (Math.abs(dx) < 50) return;
+                // RTL: swipe left → next
+                go(dx < 0 ? 1 : -1);
+            }}
         >
-            {/* Only current + next image are in the DOM */}
+            {/* Only current, next and previous images are in the DOM */}
             {slides.map((m, i) =>
-                i === index || i === nextIndex ? (
+                i === index || i === nextIndex || i === prevIndex ? (
                     <img
                         key={m._id}
                         src={m.heroImage || m.poster}
@@ -85,20 +100,47 @@ export const HeroSlider = ({ movies, onMovieClick }: HeroSliderProps) => {
                 </button>
             </div>
 
-            {slides.length > 1 && (
-                <div className="absolute bottom-[18%] right-5 z-10 flex gap-1.5 sm:right-10 lg:right-16 tv:right-[5vw]">
-                    {slides.map((m, i) => (
-                        <button
-                            key={m._id}
-                            type="button"
-                            tabIndex={-1}
-                            aria-label={`اسلاید ${i + 1}`}
-                            onClick={() => setIndex(i)}
-                            className={`h-1 rounded-full transition-[width,background-color] duration-300 ${i === index ? "w-8 bg-white" : "w-4 bg-white/25 hover:bg-white/50"
-                                }`}
-                        />
-                    ))}
-                </div>
+            {count > 1 && (
+                <>
+                    {/* Arrows (mouse) */}
+                    <button
+                        type="button"
+                        tabIndex={-1}
+                        aria-label="اسلاید قبلی"
+                        onClick={() => go(-1)}
+                        className="absolute right-4 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white opacity-0 ring-1 ring-white/10 transition-opacity duration-200 hover:bg-white hover:text-black group-hover/hero:opacity-100 md:flex"
+                    >
+                        <ChevronRight size={24} />
+                    </button>
+                    <button
+                        type="button"
+                        tabIndex={-1}
+                        aria-label="اسلاید بعدی"
+                        onClick={() => go(1)}
+                        className="absolute left-4 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white opacity-0 ring-1 ring-white/10 transition-opacity duration-200 hover:bg-white hover:text-black group-hover/hero:opacity-100 md:flex"
+                    >
+                        <ChevronLeft size={24} />
+                    </button>
+
+                    {/* Dots */}
+                    <div className="absolute bottom-[18%] right-5 z-20 flex gap-1.5 sm:right-10 lg:right-16 tv:right-[5vw]">
+                        {slides.map((m, i) => (
+                            <button
+                                key={m._id}
+                                type="button"
+                                tabIndex={-1}
+                                aria-label={`اسلاید ${i + 1}`}
+                                onClick={() => setIndex(i)}
+                                className="flex h-4 items-center"
+                            >
+                                <span
+                                    className={`block h-1 rounded-full transition-[width,background-color] duration-300 ${i === index ? "w-8 bg-white" : "w-4 bg-white/25 hover:bg-white/50"
+                                        }`}
+                                />
+                            </button>
+                        ))}
+                    </div>
+                </>
             )}
         </section>
     );

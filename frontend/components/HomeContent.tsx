@@ -199,7 +199,7 @@ export const HomeContent = () => {
         <>
             <HeroSlider movies={heroMovies} onMovieClick={setSelectedMovie} />
 
-            <div className="relative z-10 space-y-10 px-4 pb-16 sm:space-y-12 sm:px-6 md:px-8 lg:px-10 tv:px-[5vw]">
+            <div className="relative z-10 mx-auto max-w-[1800px] space-y-8 px-4 pb-16 sm:space-y-10 sm:px-8 lg:px-14 xl:px-20 tv:max-w-none tv:px-[5vw]">
                 {topWeekMixed.length > 0 && (
                     <div className="-mt-28 sm:-mt-32">
                         <ContentRow title="برتر هفته" href="/movies?topWeek=true">
