@@ -46,11 +46,11 @@ const CATEGORIES = [
 ];
 
 const CATEGORY_STYLE: Record<string, { from: string; to: string; tag: string }> = {
-    iran: { from: "#0f3d31", to: "#0a1512", tag: "#14c78b" },
-    sports: { from: "#123a2a", to: "#0b1410", tag: "#14c78b" },
-    news: { from: "#0e3338", to: "#0a1315", tag: "#14c78b" },
-    music: { from: "#163a33", to: "#0b1513", tag: "#14c78b" },
-    entertainment: { from: "#0f2f28", to: "#0a120f", tag: "#14c78b" },
+    iran: { from: "#161b22", to: "#0f1318", tag: "#14c78b" },
+    sports: { from: "#161b22", to: "#0f1318", tag: "#14c78b" },
+    news: { from: "#161b22", to: "#0f1318", tag: "#14c78b" },
+    music: { from: "#161b22", to: "#0f1318", tag: "#14c78b" },
+    entertainment: { from: "#161b22", to: "#0f1318", tag: "#14c78b" },
 };
 
 const FEATURED_IDS = ["tv3", "varzesh", "irinn"];

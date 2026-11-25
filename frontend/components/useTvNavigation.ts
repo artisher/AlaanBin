@@ -18,9 +18,9 @@ export function useTvNavigation() {
         const onKeyDown = (e: KeyboardEvent) => {
             const dir = KEYS[e.key];
             if (!dir) return;
-
+            const scope: ParentNode = document.querySelector("[data-tv-modal]") ?? document;
             const items = Array.from(
-                document.querySelectorAll<HTMLElement>("[data-tv-focus]")
+                scope.querySelectorAll<HTMLElement>("[data-tv-focus]")
             ).filter((el) => el.offsetParent !== null);
             if (items.length === 0) return;
 
