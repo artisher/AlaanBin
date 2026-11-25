@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant tv (@media (min-width: 1800px) and (hover: none));
 
 .text-primary {
     color: #14c78b;
@@ -73,4 +74,32 @@ body {
 .test-var {
     --test-color: red;
     background-color: var(--test-color);
+}
+
+.tv-focus:focus {
+    outline: none;
+}
+
+.tv-focus:focus-visible {
+    outline: 3px solid #14c78b;
+    outline-offset: 4px;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    scrollbar-width: none;
+}
+
+/* TVs / low-power devices: kill non-essential animation */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        transition-duration: 0ms !important;
+    }
 }
