@@ -46,11 +46,11 @@ const CATEGORIES = [
 ];
 
 const CATEGORY_STYLE: Record<string, { from: string; to: string; tag: string }> = {
-    iran: { from: "#0f3d33", to: "#0b1a1f", tag: "#14c78b" },
-    sports: { from: "#3d2a0f", to: "#1a140b", tag: "#f5a524" },
-    news: { from: "#0f2440", to: "#0b121f", tag: "#4ea8ff" },
-    music: { from: "#3a0f3d", to: "#180b1f", tag: "#e05ce6" },
-    entertainment: { from: "#3d0f1c", to: "#1f0b10", tag: "#ff5c7a" },
+    iran: { from: "#0f3d31", to: "#0a1512", tag: "#14c78b" },
+    sports: { from: "#123a2a", to: "#0b1410", tag: "#14c78b" },
+    news: { from: "#0e3338", to: "#0a1315", tag: "#14c78b" },
+    music: { from: "#163a33", to: "#0b1513", tag: "#14c78b" },
+    entertainment: { from: "#0f2f28", to: "#0a120f", tag: "#14c78b" },
 };
 
 const FEATURED_IDS = ["tv3", "varzesh", "irinn"];
@@ -83,9 +83,9 @@ export default function LivePage() {
 
             <div className="relative mx-auto max-w-[1600px] px-5 py-8 md:px-10 md:py-12 tv:px-[5vw] tv:py-[4vh]">
                 <header className="mb-10">
-                    <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-red-500/15 px-3 py-1.5">
-                        <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
-                        <span className="text-xs font-bold tracking-wider text-red-400">LIVE · پخش زنده</span>
+                    <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#14c78b]/15 px-3 py-1.5">
+                        <span className="h-2 w-2 animate-pulse rounded-full bg-[#14c78b]" />
+                        <span className="text-xs font-bold tracking-wider text-[#14c78b]">LIVE · پخش زنده</span>
                     </div>
                     <h1 className="text-4xl font-black leading-tight md:text-5xl tv:text-6xl">
                         شبکه‌های <span className="text-[#14c78b]">تلویزیونی</span>
@@ -116,8 +116,8 @@ export default function LivePage() {
                                     data-tv-focus
                                     onClick={() => setActiveCategory(cat.id)}
                                     className={`tv-focus flex shrink-0 items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition-[background-color,color] duration-200 md:text-base ${active
-                                            ? "bg-[#14c78b] text-[#07090D]"
-                                            : "bg-white/[0.06] text-gray-300 hover:bg-white/10 hover:text-white"
+                                        ? "bg-[#14c78b] text-[#07090D]"
+                                        : "bg-white/[0.06] text-gray-300 hover:bg-white/10 hover:text-white"
                                         }`}
                                 >
                                     <span>{cat.emoji}</span>
@@ -187,8 +187,8 @@ function ChannelCard({ channel }: { channel: Channel }) {
                 {channel.comingSoon ? (
                     <span className="rounded-md bg-white/10 px-2 py-1 text-[10px] font-bold text-gray-300">به‌زودی</span>
                 ) : (
-                    <span className="flex items-center gap-1.5 rounded-md bg-red-600 px-2 py-1 text-[10px] font-black tracking-wider">
-                        <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                    <span className="flex items-center gap-1.5 rounded-md bg-[#14c78b] text-[#07090D] px-2 py-1 text-[10px] font-black tracking-wider">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#07090D]" />
                         LIVE
                     </span>
                 )}
@@ -222,8 +222,8 @@ function FeaturedCard({ channel }: { channel: Channel }) {
         >
             <Logo channel={channel} size="lg" />
             <div className="min-w-0 flex-1">
-                <span className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold text-red-400">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
+                <span className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold text-[#14c78b]">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#14c78b]" />
                     در حال پخش
                 </span>
                 <h3 className="text-2xl font-black">{channel.title}</h3>

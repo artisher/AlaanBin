@@ -98,8 +98,8 @@ export default async function LiveChannelPage({ params }: PageProps) {
                             →
                         </Link>
                         <div>
-                            <div className="mb-1 inline-flex items-center gap-1.5 text-xs font-black tracking-wider text-red-400">
-                                <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
+                            <div className="mb-1 inline-flex items-center gap-1.5 text-xs font-black tracking-wider text-[#14c78b]">
+                                <span className="h-2 w-2 animate-pulse rounded-full bg-[#14c78b]" />
                                 LIVE
                             </div>
                             <h1 className="text-2xl font-black md:text-3xl tv:text-4xl">{selected.title}</h1>
