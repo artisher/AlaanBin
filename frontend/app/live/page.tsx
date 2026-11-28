@@ -37,9 +37,13 @@ const CHANNELS: Channel[] = [
     { id: "voa", category: "news", title: "صدای آمریکا", description: "پخش زنده صدای آمریکا فارسی" },
     { id: "iran-international", category: "news", title: "ایران اینترنشنال", description: "پخش زنده ایران اینترنشنال" },
     { id: "nasim", category: "iran", title: "شبکه نسیم", description: "پخش زنده شبکه نسیم", icon: "/logos/nasim.png" },
+    { id: "nasim-backup", category: "backup", title: "شبکه نسیم (پشتیبان)", description: "پخش زنده شبکه نسیم - سرور پشتیبان", icon: "/logos/nasim.png" },
     { id: "ifilm", category: "iran", title: "شبکه آی فیلم", description: "پخش زنده شبکه آی فیلم", icon: "/logos/ifilm.png" },
+    { id: "ifilm-backup", category: "backup", title: "شبکه آی فیلم (پشتیبان)", description: "پخش زنده شبکه آی فیلم - سرور پشتیبان", icon: "/logos/ifilm.png" },
     { id: "namayesh", category: "iran", title: "شبکه نمایش", description: "پخش زنده شبکه نمایش", icon: "/logos/namayesh.png" },
+    { id: "namayesh-backup", category: "backup", title: "شبکه نمایش (پشتیبان)", description: "پخش زنده شبکه نمایش - سرور پشتیبان", icon: "/logos/namayesh.png" },
     { id: "pooya", category: "iran", title: "شبکه پویا", description: "پخش زنده شبکه پویا", icon: "/logos/pooya1.png" },
+    { id: "pooya-backup", category: "backup", title: "شبکه پویا (پشتیبان)", description: "پخش زنده شبکه پویا - سرور پشتیبان", icon: "/logos/pooya1.png" },
     { id: "tehran", category: "iran", title: "شبکه تهران", description: "پخش زنده شبکه تهران" },
 ];
 

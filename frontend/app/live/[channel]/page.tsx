@@ -26,9 +26,13 @@ const CHANNELS = {
     voa: { title: "صدای آمریکا", streamUrl: "/api/live/voa/index.m3u8", comingSoon: false },
     "iran-international": { title: "ایران اینترنشنال", streamUrl: "/api/live/iran-international/index.m3u8", comingSoon: false },
     nasim: { title: "شبکه نسیم", streamUrl: "/live/nasim/index.m3u8", comingSoon: false },
+    "nasim-backup": { title: "شبکه نسیم (پشتیبان)", streamUrl: "/live/nasim-backup/index.m3u8", comingSoon: false },
     ifilm: { title: "شبکه آی فیلم", streamUrl: "/live/ifilm/index.m3u8", comingSoon: false },
+    "ifilm-backup": { title: "شبکه آی فیلم (پشتیبان)", streamUrl: "/live/ifilm-backup/index.m3u8", comingSoon: false },
     namayesh: { title: "شبکه نمایش", streamUrl: "/live/namayesh/index.m3u8", comingSoon: false },
+    "namayesh-backup": { title: "شبکه نمایش (پشتیبان)", streamUrl: "/live/namayesh-backup/index.m3u8", comingSoon: false },
     pooya: { title: "شبکه پویا", streamUrl: "/live/pooya/index.m3u8", comingSoon: false },
+    "pooya-backup": { title: "شبکه پویا (پشتیبان)", streamUrl: "/live/pooya-backup/index.m3u8", comingSoon: false },
     tehran: { title: "شبکه تهران", streamUrl: "/live/tehran/index.m3u8", comingSoon: false },
 } as const;
 
@@ -41,6 +45,10 @@ const BACKUP_OF: Record<string, string> = {
     "tv3-backup": "tv3",
     "irinn-backup": "irinn",
     "varzesh-backup": "varzesh",
+    "pooya-backup": "pooya",
+    "nasim-backup": "nasim",
+    "ifilm-backup": "ifilm",
+    "namayesh-backup": "namayesh",
 };
 
 const SESSION_CHANNELS = ["tv1", "tv2", "tv3", "varzesh", "irinn"] as const;
