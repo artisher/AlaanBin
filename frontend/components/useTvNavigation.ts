@@ -18,6 +18,13 @@ export function useTvNavigation() {
         const onKeyDown = (e: KeyboardEvent) => {
             const dir = KEYS[e.key];
             if (!dir) return;
+
+            // inside text fields, let left/right move the cursor
+            const el = document.activeElement as HTMLElement | null;
+            const typing = el?.tagName === "INPUT" || el?.tagName === "TEXTAREA";
+            if (typing && (e.key === "ArrowLeft" || e.key === "ArrowRight")) return;
+            // <select> handles up/down itself
+            if (el?.tagName === "SELECT" && (e.key === "ArrowUp" || e.key === "ArrowDown")) return;
             const scope: ParentNode = document.querySelector("[data-tv-modal]") ?? document;
             const items = Array.from(
                 scope.querySelectorAll<HTMLElement>("[data-tv-focus]")

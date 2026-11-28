@@ -1,24 +1,17 @@
-
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-    Search,
-    SlidersHorizontal,
-    X,
-    ChevronLeft,
-    ChevronRight,
-    Film,
-} from "lucide-react";
+import { Search, X, ChevronLeft, ChevronRight, ChevronDown, Film, SlidersHorizontal } from "lucide-react";
+import toast from "react-hot-toast";
 
 import type { Movie } from "@/types/movies";
 import { MovieCard } from "@/components/MovieCard";
 import { MovieModal } from "@/components/MovieMedal";
-import toast from "react-hot-toast";
+import { useTvNavigation } from "@/components/useTvNavigation";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
+const PAGE_SIZE = 24;
 
 const GENRES = [
     { label: "همه", value: "" },
@@ -49,7 +42,6 @@ const GENRES = [
     { label: "ملودرام", value: "Melodrama" },
 ];
 
-
 const PRODUCTS = [
     { label: "همه", value: "" },
     { label: "ایرانی", value: "ایرانی" },
@@ -58,9 +50,9 @@ const PRODUCTS = [
 
 const RATINGS = [
     { label: "همه امتیازها", value: "" },
-    { label: "7 به بالا", value: "7" },
-    { label: "8 به بالا", value: "8" },
-    { label: "9 به بالا", value: "9" },
+    { label: "۷ به بالا", value: "7" },
+    { label: "۸ به بالا", value: "8" },
+    { label: "۹ به بالا", value: "9" },
 ];
 
 const SORT_OPTIONS = [
@@ -70,1102 +62,433 @@ const SORT_OPTIONS = [
     { label: "کمترین امتیاز", value: "lowRating" },
 ];
 
+const fa = (n: number) => n.toLocaleString("fa-IR");
+
+/** 1 … 4 5 6 … 20 */
+function pageList(current: number, total: number): (number | "…")[] {
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pages: (number | "…")[] = [1];
+    const start = Math.max(2, current - 1);
+    const end = Math.min(total - 1, current + 1);
+    if (start > 2) pages.push("…");
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (end < total - 1) pages.push("…");
+    pages.push(total);
+    return pages;
+}
+
 export default function MoviesPage() {
+    useTvNavigation();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const topRef = useRef<HTMLDivElement>(null);
 
+    /* Filters come from the URL — single source of truth */
+    const search = searchParams.get("search") || "";
+    const genre = searchParams.get("genre") || "";
+    const product = searchParams.get("product") || "";
+    const rating = searchParams.get("rating") || "";
+    const sort = searchParams.get("sort") || "newest";
+
+    const [searchInput, setSearchInput] = useState(search);
     const [movies, setMovies] = useState<Movie[]>([]);
     const [loading, setLoading] = useState(true);
-
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-
-    const [search, setSearch] = useState(
-        searchParams.get("search") || ""
-    );
-
-    const [genre, setGenre] = useState(
-        searchParams.get("genre") || ""
-    );
-
-    const [product, setProduct] = useState(
-        searchParams.get("product") || ""
-    );
-
-    const [rating, setRating] = useState(
-        searchParams.get("rating") || ""
-    );
-
-    const [sort, setSort] = useState(
-        searchParams.get("sort") || "newest"
-    );
-
     const [filtersOpen, setFiltersOpen] = useState(false);
-
     const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
-    const [loadingFavorites, setLoadingFavorites] = useState(false);
+    const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
-
-    const [selectedMovies, setSelectedMovies] =
-        useState<Movie | null>(null);
-
-    const [isMoviesModalOpen, setIsMoviesModalOpen] =
-        useState(false);
-
-    // =========================
-    // Sync state with URL
-    // =========================
-
-    useEffect(() => {
-        setSearch(searchParams.get("search") || "");
-        setGenre(searchParams.get("genre") || "");
-        setProduct(searchParams.get("product") || "");
-        setRating(searchParams.get("rating") || "");
-        setSort(searchParams.get("sort") || "newest");
-        setPage(1);
-    }, [searchParams]);
-
-    // =========================
-    // Update URL
-    // =========================
-
-    const updateUrl = (
-        nextSearch: string,
-        nextGenre: string,
-        nextProduct: string,
-        nextRating: string,
-        nextSort: string
-    ) => {
-        const params = new URLSearchParams();
-
-        if (nextSearch.trim()) {
-            params.set("search", nextSearch.trim());
-        }
-
-        if (nextGenre) {
-            params.set("genre", nextGenre);
-        }
-
-        if (nextProduct) {
-            params.set("product", nextProduct);
-        }
-
-        if (nextRating) {
-            params.set("rating", nextRating);
-        }
-
-        if (nextSort !== "newest") {
-            params.set("sort", nextSort);
-        }
-
-        const query = params.toString();
-
-        router.replace(
-            query ? `/movies?${query}` : "/movies",
-            { scroll: false }
-        );
-    };
-
-    // =========================
-    // Fetch Movies
-    // =========================
-
-    useEffect(() => {
-        const fetchMovies = async () => {
-            try {
-                setLoading(true);
-
-                const params = new URLSearchParams({
-                    page: String(page),
-                    limit: "24",
-                    sort,
-                });
-
-                if (search.trim()) {
-                    params.set("search", search.trim());
-                }
-
-                if (genre) {
-                    params.set("genre", genre);
-                }
-
-                if (product) {
-                    params.set("product", product);
-                }
-
-                if (rating) {
-                    params.set("rating", rating);
-                }
-
-                const res = await fetch(
-                    `${API_URL}/api/movies?${params.toString()}`,
-                    {
-                        credentials: "include",
-                    }
-                );
-
-                if (!res.ok) {
-                    throw new Error("Failed to fetch movies");
-                }
-
-                const data = await res.json();
-                const ids = data.movies.map((movie: Movie) => movie._id);
-
-      
-                console.table(
-                    data.movies.map((movie: Movie) => ({
-                        id: movie._id,
-                        title: movie.title,
-                        year: movie.year,
-                    }))
-                );
-                setMovies(data.movies || []);
-                setTotalPages(data.totalPages || 1);
-            } catch (error) {
-                console.error("Error fetching movies:", error);
-
-                setMovies([]);
-                setTotalPages(1);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchMovies();
-    }, [
-        page,
-        search,
-        genre,
-        product,
-        rating,
-        sort,
-    ]);
-
-    // =========================
-    // Filter Handlers
-    // =========================
-
-    const handleSearchChange = (
-        value: string
-    ) => {
-        setSearch(value);
-        setPage(1);
-
-        updateUrl(
-            value,
-            genre,
-            product,
-            rating,
-            sort
-        );
-    };
-
-    const handleGenreChange = (
-        value: string
-    ) => {
-        setGenre(value);
-        setPage(1);
-
-        updateUrl(
-            search,
-            value,
-            product,
-            rating,
-            sort
-        );
-    };
-
-    const handleProductChange = (
-        value: string
-    ) => {
-        setProduct(value);
-        setPage(1);
-
-        updateUrl(
-            search,
-            genre,
-            value,
-            rating,
-            sort
-        );
-    };
-
-    const handleRatingChange = (
-        value: string
-    ) => {
-        setRating(value);
-        setPage(1);
-
-        updateUrl(
-            search,
-            genre,
-            product,
-            value,
-            sort
-        );
-    };
-
-    const handleSortChange = (
-        value: string
-    ) => {
-        setSort(value);
-        setPage(1);
-
-        updateUrl(
-            search,
-            genre,
-            product,
-            rating,
-            value
-        );
+    /* ---------- URL helpers ---------- */
+    const setParam = (key: string, value: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (value && !(key === "sort" && value === "newest")) params.set(key, value);
+        else params.delete(key);
+        const q = params.toString();
+        router.replace(q ? `/movies?${q}` : "/movies", { scroll: false });
     };
 
     const clearFilters = () => {
-        setSearch("");
-        setGenre("");
-        setProduct("");
-        setRating("");
-        setSort("newest");
-        setPage(1);
-
-        router.replace("/movies", {
-            scroll: false,
-        });
+        setSearchInput("");
+        router.replace("/movies", { scroll: false });
     };
 
+    /* Keep input in sync if URL changes from outside (back button, links) */
+    useEffect(() => {
+        setSearchInput(search);
+    }, [search]);
 
-    const favoriteHandler = async (
-        id: string,
-        contentType: "movies" | "series"
-    ) => {
-        try {
-            const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${contentType}/${id}`,
-                {
-                    method: "POST",
+    /* Debounced search → URL */
+    useEffect(() => {
+        if (searchInput.trim() === search) return;
+        const t = setTimeout(() => setParam("search", searchInput.trim()), 400);
+        return () => clearTimeout(t);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchInput]);
+
+    /* Reset to page 1 whenever filters change */
+    useEffect(() => {
+        setPage(1);
+    }, [search, genre, product, rating, sort]);
+
+    /* ---------- Fetch movies ---------- */
+    useEffect(() => {
+        const controller = new AbortController();
+
+        (async () => {
+            try {
+                setLoading(true);
+                const params = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE), sort });
+                if (search) params.set("search", search);
+                if (genre) params.set("genre", genre);
+                if (product) params.set("product", product);
+                if (rating) params.set("rating", rating);
+
+                const res = await fetch(`${API_URL}/api/movies?${params}`, {
                     credentials: "include",
-                }
-            );
+                    signal: controller.signal,
+                });
+                if (!res.ok) throw new Error("Failed to fetch movies");
 
-            const data: {
-                message?: string;
-                success?: boolean;
-                isFavorite?: boolean;
-            } = await res.json();
-
-            if (!res.ok || !data.success) {
-                throw new Error(
-                    data.message || "خطا در تغییر وضعیت علاقه‌مندی."
-                );
+                const data = await res.json();
+                setMovies(Array.isArray(data.movies) ? data.movies : []);
+                setTotalPages(data.totalPages || 1);
+            } catch (error) {
+                if ((error as Error).name === "AbortError") return;
+                console.error("Error fetching movies:", error);
+                setMovies([]);
+                setTotalPages(1);
+            } finally {
+                if (!controller.signal.aborted) setLoading(false);
             }
+        })();
 
-            setFavoriteIds((prev) =>
-                data.isFavorite
-                    ? prev.includes(id) ? prev : [...prev, id]
-                    : prev.filter((favoriteId) => favoriteId !== id)
-            );
+        return () => controller.abort();
+    }, [page, search, genre, product, rating, sort]);
 
-            toast.success(
-                data.isFavorite
-                    ? "به علاقه‌مندی‌ها اضافه شد."
-                    : "از علاقه‌مندی‌ها حذف شد."
-            );
+    /* ---------- Favorites ---------- */
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await fetch(`${API_URL}/api/favorites`, { credentials: "include", cache: "no-store" });
+                if (!res.ok) return;
+                const data = await res.json();
+                const list: { _id: string; contentType?: string }[] = Array.isArray(data.favorites)
+                    ? data.favorites
+                    : Array.isArray(data.favoriteMovies)
+                        ? data.favoriteMovies
+                        : [];
+                setFavoriteIds(list.filter((x) => !x.contentType || x.contentType === "movie").map((x) => x._id));
+            } catch {
+                /* not logged in or network error — ignore */
+            }
+        })();
+    }, []);
 
+    const favoriteHandler = async (id: string) => {
+        try {
+            const res = await fetch(`${API_URL}/api/favorites/movie/${id}`, {
+                method: "POST",
+                credentials: "include",
+            });
+            const data: { message?: string; success?: boolean; isFavorite?: boolean } = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.message || "خطا در تغییر وضعیت علاقه‌مندی.");
+
+            const nowFavorite = data.isFavorite ?? !favoriteIds.includes(id);
+            setFavoriteIds((prev) => (nowFavorite ? [...new Set([...prev, id])] : prev.filter((x) => x !== id)));
+            toast.success(nowFavorite ? "به علاقه‌مندی‌ها اضافه شد." : "از علاقه‌مندی‌ها حذف شد.");
         } catch (error) {
             console.error("FAVORITE ERROR:", error);
-
-            toast.error(
-                error instanceof Error
-                    ? error.message
-                    : "خطا در تغییر علاقه‌مندی."
-            );
+            toast.error(error instanceof Error ? error.message : "خطا در تغییر علاقه‌مندی.");
         }
     };
-    const handleMoviesClick = (series: Movie) => {
-        setSelectedMovies(series);
-        setIsMoviesModalOpen(true);
+
+    const goToPage = (p: number) => {
+        setPage(p);
+        topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     };
-    const hasFilters =
-        search.trim() ||
-        genre ||
-        product ||
-        rating ||
-        sort !== "newest";
-   
+
+    const activeFilterCount = [search, genre, product, rating, sort !== "newest" ? sort : ""].filter(Boolean).length;
+    const pages = useMemo(() => pageList(page, totalPages), [page, totalPages]);
+
     return (
-        <main
-            dir="rtl"
-            className="
-                relative
-                min-h-screen
-                overflow-hidden
-                bg-[#0B0F14]
-                text-white
-            "
-        >
-            {/* ================= Background Glow ================= */}
-
+        <main dir="rtl" className="relative min-h-screen overflow-hidden bg-[#0B0F14] text-white">
+            {/* Background: CSS only */}
             <div
-                className="
-                    pointer-events-none
-                    absolute
-                    -top-40
-                    right-1/4
-                    h-[420px]
-                    w-[420px]
-                    rounded-full
-                    bg-[#14c78b]/[0.035]
-                    blur-[120px]
-                "
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-0 h-[520px]"
+                style={{
+                    backgroundImage: "radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)",
+                    backgroundSize: "22px 22px",
+                    maskImage: "linear-gradient(to bottom, #000 0%, transparent 100%)",
+                    WebkitMaskImage: "linear-gradient(to bottom, #000 0%, transparent 100%)",
+                }}
+            />
+            <div
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-0 h-[480px]"
+                style={{ background: "radial-gradient(ellipse 55% 100% at 85% 0%, rgba(20,199,139,0.12), transparent 70%)" }}
             />
 
-            <div
-                className="
-                    pointer-events-none
-                    absolute
-                    top-[500px]
-                    -left-40
-                    h-[350px]
-                    w-[350px]
-                    rounded-full
-                    bg-[#14c78b]/[0.025]
-                    blur-[110px]
-                "
-            />
-
-            {/* ================= Header ================= */}
-
-            <section
-                className="
-                    relative
-                    mx-auto
-                    max-w-[1650px]
-                    px-5
-                    pb-8
-                    pt-10
-                    md:pb-10
-                    md:pt-14
-                "
-            >
-                <div className="flex items-end justify-between gap-6">
-                    <div>
-                        <div
-                            className="
-                                mb-4
-                                flex
-                                items-center
-                                gap-2
-                                text-xs
-                                font-bold
-                                tracking-widest
-                                text-[#14c78b]
-                            "
-                        >
-                            <span
-                                className="
-                                    h-1.5
-                                    w-1.5
-                                    rounded-full
-                                    bg-[#14c78b]
-                                    shadow-[0_0_10px_rgba(20,199,139,0.8)]
-                                "
-                            />
-
-                            ALANBIN
-                        </div>
-
-                        <h1
-                            className="
-                                text-4xl
-                                font-black
-                                tracking-tight
-                                text-white
-                                sm:text-5xl
-                                md:text-6xl
-                            "
-                        >
-                            فیلم‌ها
-                        </h1>
-
-                        <p
-                            className="
-                                mt-3
-                                max-w-xl
-                                text-sm
-                                leading-7
-                                text-gray-500
-                                md:text-base
-                            "
-                        >
-                            فیلم مورد علاقه‌ات رو پیدا کن و
-                            آماده تماشا شو.
-                        </p>
-                    </div>
-
-                    <div
-                        className="
-                            hidden
-                            h-16
-                            w-16
-                            items-center
-                            justify-center
-                            rounded-2xl
-                            border
-                            border-white/[0.06]
-                            bg-white/[0.025]
-                            text-white/20
-                            md:flex
-                        "
-                    >
-                        <Film size={28} />
-                    </div>
+            {/* ---------- Header ---------- */}
+            <header className="relative mx-auto max-w-[1650px] px-5 pb-8 pt-10 sm:px-8 md:pt-14 lg:px-14 tv:max-w-none tv:px-[5vw]">
+                <div className="mb-4 inline-flex items-center gap-2 rounded-md border border-white/[0.08] bg-white/[0.03] px-2.5 py-1">
+                    <Film size={13} className="text-[#14c78b]" />
+                    <span className="text-[11px] font-semibold tracking-[0.15em] text-white/60">MOVIES</span>
                 </div>
+                <h1 className="text-3xl font-bold tracking-tight md:text-4xl tv:text-5xl">فیلم‌ها</h1>
+                <p className="mt-2 text-sm text-white/45 md:text-base">فیلم مورد علاقه‌ات رو پیدا کن و آماده تماشا شو.</p>
+            </header>
 
-                <div
-                    className="
-                        mt-8
-                        h-px
-                        w-full
-                        bg-gradient-to-l
-                        from-[#14c78b]/40
-                        via-white/[0.06]
-                        to-transparent
-                    "
-                />
-            </section>
-
-            {/* ================= Filters ================= */}
-
-            <section
-                className="
-                    relative
-                    mx-auto
-                    max-w-[1650px]
-                    px-5
-                    pb-10
-                "
-            >
-                <div
-                    className="
-                        rounded-2xl
-                        border
-                        border-white/[0.07]
-                        bg-[#111820]/80
-                        p-3
-                        shadow-[0_20px_60px_rgba(0,0,0,0.2)]
-                        backdrop-blur-xl
-                        md:p-4
-                    "
-                >
-                    <div
-                        className="
-                            flex
-                            flex-col
-                            gap-3
-                            md:flex-row
-                        "
-                    >
-                        {/* Search */}
-
-                        <div
-                            className="
-                                group
-                                flex
-                                h-12
-                                flex-1
-                                items-center
-                                gap-3
-                                rounded-xl
-                                border
-                                border-white/[0.07]
-                                bg-[#0B0F14]/70
-                                px-4
-                                transition-all
-                                duration-300
-                                focus-within:border-[#14c78b]/40
-                                focus-within:shadow-[0_0_25px_rgba(20,199,139,0.06)]
-                            "
-                        >
-                            <Search
-                                size={19}
-                                className="
-                                    shrink-0
-                                    text-gray-500
-                                    transition
-                                    group-focus-within:text-[#14c78b]
-                                "
-                            />
-
+            {/* ---------- Filters (sticky) ---------- */}
+            <div ref={topRef} className="scroll-mt-4" />
+            <section className="sticky top-0 z-30 border-y border-white/[0.06] bg-[#0B0F14]/95">
+                <div className="mx-auto max-w-[1650px] px-5 py-3 sm:px-8 lg:px-14 tv:max-w-none tv:px-[5vw]">
+                    {/* Row 1: search + product + selects */}
+                    <div className="flex flex-col gap-2.5 md:flex-row md:items-center">
+                        <div className="flex h-11 flex-1 items-center gap-2.5 rounded-md border border-white/[0.08] bg-[#11151c] px-3.5 transition-colors focus-within:border-[#14c78b]/50">
+                            <Search size={17} className="shrink-0 text-white/35" />
                             <input
-                                value={search}
-                                onChange={(e) =>
-                                    handleSearchChange(
-                                        e.target.value
-                                    )
-                                }
+                                value={searchInput}
+                                onChange={(e) => setSearchInput(e.target.value)}
                                 placeholder="جستجوی فیلم..."
-                                className="
-                                    w-full
-                                    bg-transparent
-                                    text-sm
-                                    text-white
-                                    outline-none
-                                    placeholder:text-gray-600
-                                "
+                                data-tv-focus
+                                className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/30"
                             />
-
-                            {search && (
+                            {searchInput && (
                                 <button
                                     type="button"
-                                    onClick={() =>
-                                        handleSearchChange("")
-                                    }
-                                    className="
-                                        flex
-                                        h-7
-                                        w-7
-                                        shrink-0
-                                        items-center
-                                        justify-center
-                                        rounded-lg
-                                        text-gray-500
-                                        transition
-                                        hover:bg-white/5
-                                        hover:text-white
-                                    "
+                                    aria-label="پاک کردن جستجو"
+                                    onClick={() => setSearchInput("")}
+                                    className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white"
                                 >
-                                    <X size={16} />
+                                    <X size={15} />
                                 </button>
                             )}
                         </div>
 
-                        {/* Mobile filter button */}
-
-                        <button
-                            type="button"
-                            onClick={() =>
-                                setFiltersOpen(
-                                    (prev) => !prev
-                                )
-                            }
-                            className="
-                                flex
-                                h-12
-                                items-center
-                                justify-center
-                                gap-2
-                                rounded-xl
-                                border
-                                border-white/[0.07]
-                                bg-[#0B0F14]/70
-                                px-5
-                                text-sm
-                                font-medium
-                                text-gray-300
-                                transition-all
-                                hover:border-[#14c78b]/30
-                                hover:text-[#14c78b]
-                                md:hidden
-                            "
-                        >
-                            <SlidersHorizontal size={18} />
-
-                            فیلترها
-
-                            <span
-                                className="
-                                    h-1.5
-                                    w-1.5
-                                    rounded-full
-                                    bg-[#14c78b]
-                                "
-                            />
-                        </button>
-                    </div>
-
-                    {/* Filters */}
-
-                    <div
-                        className={`
-                                mt-3
-                                flex-wrap
-                                gap-2.5
-                                border-t
-                                border-white/[0.05]
-                                pt-3
-                                ${filtersOpen
-                                ? "flex"
-                                : "hidden md:flex"
-                            }
-                    `}
-                    >
-                        {/* Genre */}
-
-                        <select
-                            value={genre}
-                            onChange={(e) =>
-                                handleGenreChange(
-                                    e.target.value
-                                )
-                            }
-                            className="
-                                h-10
-                                min-w-[125px]
-                                cursor-pointer
-                                rounded-xl
-                                border
-                                border-white/[0.07]
-                                bg-[#0B0F14]
-                                px-3
-                                text-sm
-                                text-gray-300
-                                outline-none
-                                transition
-                                hover:border-white/15
-                                focus:border-[#14c78b]/40
-                            "
-                        >
-                            {GENRES.map((item) => (
-                                <option
-                                    key={item.value}
-                                    value={item.value}
-                                    className="bg-[#111820]"
-                                >
-                                    {item.label === "همه"
-                                        ? "همه ژانرها"
-                                        : item.label}
-                                </option>
-                            ))}
-                        </select>
-
-                        {/* Product */}
-
-                        <select
-                            value={product}
-                            onChange={(e) =>
-                                handleProductChange(
-                                    e.target.value
-                                )
-                            }
-                            className="
-                                h-10
-                                min-w-[110px]
-                                cursor-pointer
-                                rounded-xl
-                                border
-                                border-white/[0.07]
-                                bg-[#0B0F14]
-                                px-3
-                                text-sm
-                                text-gray-300
-                                outline-none
-                                transition
-                                hover:border-white/15
-                                focus:border-[#14c78b]/40
-                            "
-                        >
-                            {PRODUCTS.map((item) => (
-                                <option
-                                    key={item.value}
-                                    value={item.value}
-                                    className="bg-[#111820]"
-                                >
-                                    {item.label}
-                                </option>
-                            ))}
-                        </select>
-
-                        {/* Rating */}
-
-                        <select
-                            value={rating}
-                            onChange={(e) =>
-                                handleRatingChange(
-                                    e.target.value
-                                )
-                            }
-                            className="
-                                h-10
-                                min-w-[125px]
-                                cursor-pointer
-                                rounded-xl
-                                border
-                                border-white/[0.07]
-                                bg-[#0B0F14]
-                                px-3
-                                text-sm
-                                text-gray-300
-                                outline-none
-                                transition
-                                hover:border-white/15
-                                focus:border-[#14c78b]/40
-                            "
-                        >
-                            {RATINGS.map((item) => (
-                                <option
-                                    key={item.value}
-                                    value={item.value}
-                                    className="bg-[#111820]"
-                                >
-                                    {item.label}
-                                </option>
-                            ))}
-                        </select>
-
-                        {/* Sort */}
-
-                        <select
-                            value={sort}
-                            onChange={(e) =>
-                                handleSortChange(
-                                    e.target.value
-                                )
-                            }
-                            className="
-                                h-10
-                                min-w-[130px]
-                                cursor-pointer
-                                rounded-xl
-                                border
-                                border-white/[0.07]
-                                bg-[#0B0F14]
-                                px-3
-                                text-sm
-                                text-gray-300
-                                outline-none
-                                transition
-                                hover:border-white/15
-                                focus:border-[#14c78b]/40
-                            "
-                        >
-                            {SORT_OPTIONS.map((item) => (
-                                <option
-                                    key={item.value}
-                                    value={item.value}
-                                    className="bg-[#111820]"
-                                >
-                                    {item.label}
-                                </option>
-                            ))}
-                        </select>
-
-                        {/* Clear */}
-
-                        {hasFilters && (
+                        <div className="flex gap-2.5">
                             <button
                                 type="button"
+                                onClick={() => setFiltersOpen((v) => !v)}
+                                className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border border-white/[0.08] bg-[#11151c] px-4 text-sm text-white/70 md:hidden"
+                            >
+                                <SlidersHorizontal size={16} />
+                                فیلترها
+                                {activeFilterCount > 0 && (
+                                    <span className="rounded bg-[#14c78b] px-1.5 text-[11px] font-bold text-[#0B0F14]">
+                                        {fa(activeFilterCount)}
+                                    </span>
+                                )}
+                            </button>
+
+                            <div className={`${filtersOpen ? "flex" : "hidden"} gap-2.5 md:flex`}>
+                                {/* Product segmented */}
+                                <div className="flex h-11 rounded-md border border-white/[0.08] bg-[#11151c] p-1">
+                                    {PRODUCTS.map((p) => (
+                                        <button
+                                            key={p.value}
+                                            type="button"
+                                            data-tv-focus
+                                            onClick={() => setParam("product", p.value)}
+                                            className={`tv-focus cursor-pointer rounded px-3 text-sm transition-colors ${product === p.value ? "bg-white text-[#0B0F14]" : "text-white/55 hover:text-white"
+                                                }`}
+                                        >
+                                            {p.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className={`${filtersOpen ? "grid" : "hidden"} grid-cols-2 gap-2.5 md:flex`}>
+                            <Select value={rating} onChange={(v) => setParam("rating", v)} options={RATINGS} />
+                            <Select value={sort} onChange={(v) => setParam("sort", v)} options={SORT_OPTIONS} />
+                        </div>
+
+                        {activeFilterCount > 0 && (
+                            <button
+                                type="button"
+                                data-tv-focus
                                 onClick={clearFilters}
-                                className="
-                                    flex
-                                    h-10
-                                    items-center
-                                    gap-2
-                                    rounded-xl
-                                    border
-                                    border-red-400/10
-                                    px-4
-                                    text-sm
-                                    text-gray-500
-                                    transition-all
-                                    hover:border-red-400/25
-                                    hover:bg-red-400/[0.04]
-                                    hover:text-red-400
-                                "
+                                className={`tv-focus ${filtersOpen ? "flex" : "hidden"} h-11 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-white/[0.08] px-3.5 text-sm text-white/50 transition-colors hover:border-red-400/40 hover:text-red-400 md:flex`}
                             >
                                 <X size={15} />
                                 پاک کردن
                             </button>
                         )}
                     </div>
+
+                    {/* Row 2: genre chips */}
+                    <div className={`${filtersOpen ? "flex" : "hidden"} no-scrollbar -mx-1 mt-2.5 gap-1.5 overflow-x-auto px-1 md:flex`}>
+                        {GENRES.map((g) => {
+                            const active = genre === g.value;
+                            return (
+                                <button
+                                    key={g.value || "all"}
+                                    type="button"
+                                    data-tv-focus
+                                    onClick={() => setParam("genre", g.value)}
+                                    className={`tv-focus shrink-0 cursor-pointer rounded-md border px-3 py-1.5 text-[13px] transition-colors ${active
+                                            ? "border-[#14c78b]/50 bg-[#14c78b]/10 text-[#14c78b]"
+                                            : "border-white/[0.06] text-white/55 hover:border-white/20 hover:text-white"
+                                        }`}
+                                >
+                                    {g.value === "" ? "همه ژانرها" : g.label}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
             </section>
 
-            {/* ================= Movies ================= */}
-
-            <section
-                className="
-                    relative
-                    mx-auto
-                    max-w-[1650px]
-                    px-5
-                    pb-20
-                "
-            >
-                {loading ? (
-                    <div
-                        className="
-                            grid
-                            grid-cols-2
-                            justify-items-center
-                            gap-x-4
-                            gap-y-10
-                            sm:grid-cols-3
-                            md:grid-cols-4
-                            lg:grid-cols-5
-                            xl:grid-cols-6
-                            2xl:grid-cols-7
-                        "
-                    >
-                        {Array.from({ length: 14 }).map(
-                            (_, index) => (
-                                <div
-                                    key={index}
-                                    className="
-                                        w-full
-                                        max-w-[215px]
-                                    "
-                                >
-                                    <div
-                                        className="
-                                            aspect-[2/3]
-                                            w-full
-                                            animate-pulse
-                                            rounded-2xl
-                                            bg-gradient-to-br
-                                            from-[#151d26]
-                                            via-[#111820]
-                                            to-[#0d1319]
-                                        "
-                                    />
-
-                                    <div
-                                        className="
-                                            mt-3
-                                            h-4
-                                            w-2/3
-                                            animate-pulse
-                                            rounded-full
-                                            bg-[#111820]
-                                        "
-                                    />
-
-                                    <div
-                                        className="
-                                            mt-2
-                                            h-3
-                                            w-1/3
-                                            animate-pulse
-                                            rounded-full
-                                            bg-[#111820]
-                                        "
-                                    />
-                                </div>
-                            )
+            {/* ---------- Grid ---------- */}
+            <section className="relative mx-auto max-w-[1650px] px-5 pb-20 pt-8 sm:px-8 lg:px-14 tv:max-w-none tv:px-[5vw]">
+                {!loading && movies.length > 0 && (
+                    <div className="mb-5 flex items-center justify-between text-xs text-white/40">
+                        <span>
+                            صفحه {fa(page)} از {fa(totalPages)}
+                        </span>
+                        {search && (
+                            <span>
+                                نتایج برای «<span className="text-white/80">{search}</span>»
+                            </span>
                         )}
                     </div>
+                )}
+
+                {loading ? (
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+                        {Array.from({ length: 14 }).map((_, i) => (
+                            <div key={i}>
+                                <div className="aspect-[2/3] w-full animate-pulse rounded-md bg-white/[0.04]" />
+                                <div className="mt-2.5 h-3.5 w-2/3 animate-pulse rounded-sm bg-white/[0.05]" />
+                                <div className="mt-1.5 h-3 w-1/3 animate-pulse rounded-sm bg-white/[0.04]" />
+                            </div>
+                        ))}
+                    </div>
                 ) : movies.length === 0 ? (
-                    <div
-                        className="
-                            flex
-                            min-h-[420px]
-                            flex-col
-                            items-center
-                            justify-center
-                            rounded-3xl
-                            border
-                            border-white/[0.05]
-                            bg-[#111820]/30
-                            text-center
-                        "
-                    >
-                        <div
-                            className="
-                                mb-5
-                                flex
-                                h-20
-                                w-20
-                                items-center
-                                justify-center
-                                rounded-2xl
-                                border
-                                border-white/[0.06]
-                                bg-white/[0.025]
-                                text-gray-600
-                            "
-                        >
-                            <Film size={34} />
+                    <div className="flex min-h-[380px] flex-col items-center justify-center rounded-lg border border-dashed border-white/[0.1] text-center">
+                        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.03]">
+                            <Film size={20} className="text-white/40" />
                         </div>
-
-                        <p className="text-lg font-bold text-gray-300">
-                            فیلمی پیدا نشد
-                        </p>
-
-                        <p className="mt-2 text-sm text-gray-600">
-                            فیلترها یا عبارت جستجو را تغییر بده.
-                        </p>
-
-                        {hasFilters && (
+                        <p className="font-medium text-white/80">فیلمی پیدا نشد</p>
+                        <p className="mt-1.5 text-sm text-white/40">فیلترها یا عبارت جستجو رو تغییر بده.</p>
+                        {activeFilterCount > 0 && (
                             <button
                                 type="button"
+                                data-tv-focus
                                 onClick={clearFilters}
-                                className="
-                                    mt-6
-                                    rounded-xl
-                                    bg-[#14c78b]
-                                    px-5
-                                    py-2.5
-                                    text-sm
-                                    font-bold
-                                    text-[#06110d]
-                                    transition
-                                    hover:bg-[#18d995]
-                                "
+                                className="tv-focus mt-6 cursor-pointer rounded-md bg-white px-5 py-2.5 text-sm font-semibold text-[#0B0F14] transition-transform duration-200 hover:scale-[1.03]"
                             >
                                 حذف فیلترها
                             </button>
                         )}
                     </div>
                 ) : (
-                    <div
-                        className="
-                            grid
-                            grid-cols-2
-                            justify-items-center
-                            gap-x-4
-                            gap-y-10
-                            sm:grid-cols-3
-                            md:grid-cols-4
-                            lg:grid-cols-5
-                            xl:grid-cols-6
-                            2xl:grid-cols-7
-                            md:gap-x-5
-                            md:gap-y-12
-                        "
-                    >
-
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 md:gap-x-5 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 tv:gap-x-7 tv:gap-y-10">
                         {movies.map((movie) => (
-
-                            <div
-                                key={movie._id}
-                                className="
-                                    w-full
-                                    max-w-[215px]
-                                "
-                            >
-                                <MovieCard
-                                    movie={movie}
-                                    onClick={() => handleMoviesClick(movie)}
-                                />
-                            </div>
+                            <MovieCard key={movie._id} movie={movie} onClick={() => setSelectedMovie(movie)} />
                         ))}
                     </div>
                 )}
 
-                {/* ================= Pagination ================= */}
-
+                {/* ---------- Pagination ---------- */}
                 {!loading && totalPages > 1 && (
-                    <div
-                        className="
-                            mt-16
-                            flex
-                            items-center
-                            justify-center
-                            gap-2
-                        "
-                    >
-                        <button
-                            disabled={page === 1}
-                            onClick={() =>
-                                setPage(
-                                    (prev) => prev - 1
-                                )
-                            }
-                            className="
-                                flex
-                                h-11
-                                w-11
-                                items-center
-                                justify-center
-                                rounded-xl
-                                border
-                                border-white/[0.07]
-                                bg-[#111820]
-                                text-gray-400
-                                transition-all
-                                hover:border-[#14c78b]/30
-                                hover:bg-[#14c78b]/[0.05]
-                                hover:text-[#14c78b]
-                                disabled:cursor-not-allowed
-                                disabled:opacity-25
-                            "
-                            aria-label="صفحه قبلی"
-                        >
-                            <ChevronRight size={19} />
-                        </button>
+                    <nav className="mt-14 flex items-center justify-center gap-1.5" aria-label="صفحه‌بندی">
+                        <PageButton disabled={page === 1} onClick={() => goToPage(page - 1)} label="صفحه قبلی">
+                            <ChevronRight size={17} />
+                        </PageButton>
 
-                        <div
-                            className="
-                                flex
-                                h-11
-                                min-w-[100px]
-                                items-center
-                                justify-center
-                                rounded-xl
-                                border
-                                border-[#14c78b]/20
-                                bg-[#14c78b]/[0.05]
-                                px-4
-                                text-sm
-                                font-bold
-                                text-[#14c78b]
-                            "
-                        >
-                            {page}
+                        {pages.map((p, i) =>
+                            p === "…" ? (
+                                <span key={`gap-${i}`} className="px-1.5 text-sm text-white/30">
+                                    …
+                                </span>
+                            ) : (
+                                <PageButton key={p} active={p === page} onClick={() => goToPage(p)} label={`صفحه ${p}`}>
+                                    {fa(p)}
+                                </PageButton>
+                            )
+                        )}
 
-                            <span className="mx-2 text-gray-600">
-                                /
-                            </span>
-
-                            <span className="text-gray-400">
-                                {totalPages}
-                            </span>
-                        </div>
-
-                        <button
-                            disabled={page === totalPages}
-                            onClick={() =>
-                                setPage(
-                                    (prev) => prev + 1
-                                )
-                            }
-                            className="
-                                flex
-                                h-11
-                                w-11
-                                items-center
-                                justify-center
-                                rounded-xl
-                                border
-                                border-white/[0.07]
-                                bg-[#111820]
-                                text-gray-400
-                                transition-all
-                                hover:border-[#14c78b]/30
-                                hover:bg-[#14c78b]/[0.05]
-                                hover:text-[#14c78b]
-                                disabled:cursor-not-allowed
-                                disabled:opacity-25
-                            "
-                            aria-label="صفحه بعدی"
-                        >
-                            <ChevronLeft size={19} />
-                        </button>
-                    </div>
+                        <PageButton disabled={page === totalPages} onClick={() => goToPage(page + 1)} label="صفحه بعدی">
+                            <ChevronLeft size={17} />
+                        </PageButton>
+                    </nav>
                 )}
             </section>
-            {selectedMovies && (
+
+            {selectedMovie && (
                 <MovieModal
-                    movie={selectedMovies}
-                    isOpen={isMoviesModalOpen}
-                    onClose={() => {
-                        setIsMoviesModalOpen(false);
-                        setSelectedMovies(null);
-                    }}
-                    favoriteHandler={(id) => favoriteHandler(id, "movies")}
-                    isFavorite={favoriteIds.includes(selectedMovies._id)}
+                    movie={selectedMovie}
+                    isOpen
+                    onClose={() => setSelectedMovie(null)}
+                    favoriteHandler={(id) => favoriteHandler(id)}
+                    isFavorite={favoriteIds.includes(selectedMovie._id)}
                 />
             )}
         </main>
     );
 }
 
+/* ---------- Small pieces ---------- */
+
+function Select({
+    value,
+    onChange,
+    options,
+}: {
+    value: string;
+    onChange: (v: string) => void;
+    options: { label: string; value: string }[];
+}) {
+    return (
+        <div className="relative">
+            <select
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                data-tv-focus
+                className="tv-focus h-11 w-full min-w-[140px] cursor-pointer appearance-none rounded-md border border-white/[0.08] bg-[#11151c] pl-9 pr-3.5 text-sm text-white/80 outline-none transition-colors hover:border-white/20 focus:border-[#14c78b]/50"
+            >
+                {options.map((o) => (
+                    <option key={o.value} value={o.value} className="bg-[#11151c]">
+                        {o.label}
+                    </option>
+                ))}
+            </select>
+            <ChevronDown size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/35" />
+        </div>
+    );
+}
+
+function PageButton({
+    children,
+    onClick,
+    disabled,
+    active,
+    label,
+}: {
+    children: React.ReactNode;
+    onClick: () => void;
+    disabled?: boolean;
+    active?: boolean;
+    label: string;
+}) {
+    return (
+        <button
+            type="button"
+            data-tv-focus
+            aria-label={label}
+            aria-current={active ? "page" : undefined}
+            disabled={disabled}
+            onClick={onClick}
+            className={`tv-focus flex h-10 min-w-10 cursor-pointer items-center justify-center rounded-md border px-2 text-sm tabular-nums transition-colors disabled:cursor-not-allowed disabled:opacity-25 ${active
+                    ? "border-white bg-white font-semibold text-[#0B0F14]"
+                    : "border-white/[0.08] bg-[#11151c] text-white/60 hover:border-white/25 hover:text-white"
+                }`}
+        >
+            {children}
+        </button>
+    );
+}
