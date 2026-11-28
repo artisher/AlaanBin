@@ -15,15 +15,15 @@ type Channel = {
 
 const CHANNELS: Channel[] = [
     { id: "tv1", category: "iran", title: "شبکه ۱", description: "پخش زنده شبکه یک سیما", icon: "/logos/1.png" },
-    { id: "tv1-backup", category: "iran", title: "شبکه ۱ (پشتیبان)", description: "پخش زنده شبکه یک سیما - سرور پشتیبان", icon: "/logos/1.png" },
+    { id: "tv1-backup", category: "backup", title: "شبکه ۱ (پشتیبان)", description: "پخش زنده شبکه یک سیما - سرور پشتیبان", icon: "/logos/1.png" },
     { id: "tv2", category: "iran", title: "شبکه ۲", description: "پخش زنده شبکه دو سیما", icon: "/logos/2.png" },
-    { id: "tv2-backup", category: "iran", title: "شبکه ۲ (پشتیبان)", description: "پخش زنده شبکه دو سیما - سرور پشتیبان", icon: "/logos/2.png" },
+    { id: "tv2-backup", category: "backup", title: "شبکه ۲ (پشتیبان)", description: "پخش زنده شبکه دو سیما - سرور پشتیبان", icon: "/logos/2.png" },
     { id: "tv3", category: "iran", title: "شبکه ۳", description: "پخش زنده شبکه سه سیما", icon: "/logos/3.png" },
-    { id: "tv3-backup", category: "iran", title: "شبکه ۳ (پشتیبان)", description: "پخش زنده شبکه سه سیما - سرور پشتیبان", icon: "/logos/3.png" },
+    { id: "tv3-backup", category: "backup", title: "شبکه ۳ (پشتیبان)", description: "پخش زنده شبکه سه سیما - سرور پشتیبان", icon: "/logos/3.png" },
     { id: "varzesh", category: "sports", title: "شبکه ورزش", description: "پخش زنده شبکه ورزش", icon: "/logos/varzesh.png" },
-    { id: "varzesh-backup", category: "sports", title: "شبکه ورزش (پشتیبان)", description: "پخش زنده شبکه ورزش - سرور پشتیبان", icon: "/logos/varzesh.png" },
+    { id: "varzesh-backup", category: "backup", title: "شبکه ورزش (پشتیبان)", description: "پخش زنده شبکه ورزش - سرور پشتیبان", icon: "/logos/varzesh.png" },
     { id: "irinn", category: "iran", title: "شبکه خبر", description: "پخش زنده شبکه خبر", icon: "/logos/khabar.png" },
-    { id: "irinn-backup", category: "iran", title: "شبکه خبر (پشتیبان)", description: "پخش زنده شبکه خبر - سرور پشتیبان", icon: "/logos/khabar.png" },
+    { id: "irinn-backup", category: "backup", title: "شبکه خبر (پشتیبان)", description: "پخش زنده شبکه خبر - سرور پشتیبان", icon: "/logos/khabar.png" },
     { id: "fifa", category: "sports", title: "FIFA+", description: "پخش زنده شبکه FIFA" },
     { id: "euronews", category: "news", title: "Euronews", description: "پخش زنده شبکه یورونیوز" },
     { id: "persiana-music", category: "music", title: "Persiana Music", description: "پخش زنده شبکه پرشیانا موزیک" },
@@ -48,6 +48,7 @@ const CATEGORIES = [
     { id: "news", label: "خبری و بین‌المللی", emoji: "🌍" },
     { id: "music", label: "موسیقی", emoji: "🎵" },
     { id: "entertainment", label: "سرگرمی", emoji: "🎬" },
+    { id: "backup", label: "سرورهای پشتیبان", emoji: "🛟" },
 ];
 
 const CATEGORY_STYLE: Record<string, { from: string; to: string; tag: string }> = {
@@ -56,6 +57,7 @@ const CATEGORY_STYLE: Record<string, { from: string; to: string; tag: string }> 
     news: { from: "#161b22", to: "#0f1318", tag: "#14c78b" },
     music: { from: "#161b22", to: "#0f1318", tag: "#14c78b" },
     entertainment: { from: "#161b22", to: "#0f1318", tag: "#14c78b" },
+    backup: { from: "#161b22", to: "#0f1318", tag: "#14c78b" },
 };
 
 const FEATURED_IDS = ["tv3", "varzesh", "irinn"];
