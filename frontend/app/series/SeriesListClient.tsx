@@ -1,54 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import {
-    Search,
-    SlidersHorizontal,
-    X,
-    ChevronDown,
-    Sparkles,
-    ChevronLeft,
-    ChevronRight,
-} from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Search, X, ChevronLeft, ChevronRight, ChevronDown, Tv, SlidersHorizontal } from "lucide-react";
+import toast from "react-hot-toast";
 
 import type { Series } from "@/types/Series";
 import { SeriesCard } from "@/components/SeriesCard";
 import { SeriesModal } from "@/components/SeriesModal";
-import toast from "react-hot-toast";
+import { useTvNavigation } from "@/components/useTvNavigation";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
+const PAGE_SIZE = 24;
 
 const GENRES = [
-    "همه",
-    "اکشن",
-    "کمدی",
-    "درام",
-    "عاشقانه",
-    "ترسناک",
-    "جنایی",
-    "هیجان‌انگیز",
-    "معمایی",
-    "اجتماعی",
-    "روان‌شناختی",
-    "علمی تخیلی",
-    "ماجراجویی",
-    "فانتزی",
-    "تاریخی",
-    "جنگی",
-    "خانوادگی",
-    "کودک و نوجوان",
-    "انیمیشن",
-    "مستند",
-    "موزیکال",
-    "ورزشی",
-    "سیاسی",
-    "زندگی‌نامه‌ای",
-    "فاجعه",
-    "ملودرام",
+    "همه", "اکشن", "کمدی", "درام", "عاشقانه", "ترسناک", "جنایی", "هیجان‌انگیز", "معمایی",
+    "اجتماعی", "روان‌شناختی", "علمی تخیلی", "ماجراجویی", "فانتزی", "تاریخی", "جنگی",
+    "خانوادگی", "کودک و نوجوان", "انیمیشن", "مستند", "موزیکال", "ورزشی", "سیاسی",
+    "زندگی‌نامه‌ای", "فاجعه", "ملودرام",
 ];
-
 
 const PRODUCTS = [
     { label: "همه", value: "" },
@@ -58,9 +27,9 @@ const PRODUCTS = [
 
 const RATINGS = [
     { label: "همه امتیازها", value: "" },
-    { label: "7 به بالا", value: "7" },
-    { label: "8 به بالا", value: "8" },
-    { label: "9 به بالا", value: "9" },
+    { label: "۷ به بالا", value: "7" },
+    { label: "۸ به بالا", value: "8" },
+    { label: "۹ به بالا", value: "9" },
 ];
 
 const SORT_OPTIONS = [
@@ -70,766 +39,407 @@ const SORT_OPTIONS = [
     { label: "کمترین امتیاز", value: "lowRating" },
 ];
 
+const fa = (n: number) => n.toLocaleString("fa-IR");
+
+function pageList(current: number, total: number): (number | "…")[] {
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pages: (number | "…")[] = [1];
+    const start = Math.max(2, current - 1);
+    const end = Math.min(total - 1, current + 1);
+    if (start > 2) pages.push("…");
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (end < total - 1) pages.push("…");
+    pages.push(total);
+    return pages;
+}
+
 export default function SeriesPage() {
-    const router = useRouter();
+    useTvNavigation();
+    const topRef = useRef<HTMLDivElement>(null);
 
     const [series, setSeries] = useState<Series[]>([]);
     const [loading, setLoading] = useState(true);
-
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
+    const [searchInput, setSearchInput] = useState("");
     const [search, setSearch] = useState("");
     const [genre, setGenre] = useState("همه");
     const [product, setProduct] = useState("");
     const [rating, setRating] = useState("");
     const [sort, setSort] = useState("newest");
-
     const [filtersOpen, setFiltersOpen] = useState(false);
 
     const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
-    const [loadingFavorites, setLoadingFavorites] = useState(false);
+    const [selectedSeries, setSelectedSeries] = useState<Series | null>(null);
 
-
-
-
+    /* Debounced search */
     useEffect(() => {
-        const fetchSeries = async () => {
-            try {
-                setLoading(true);
+        const t = setTimeout(() => setSearch(searchInput.trim()), 400);
+        return () => clearTimeout(t);
+    }, [searchInput]);
 
-                const params = new URLSearchParams({
-                    page: String(page),
-                    limit: "24",
-                    sort,
-                });
-
-                if (search.trim()) {
-                    params.set("search", search.trim());
-                }
-
-                if (genre !== "همه") {
-                    params.set("genre", genre);
-                }
-
-                if (product) {
-                    params.set("product", product);
-                }
-
-                if (rating) {
-                    params.set("rating", rating);
-                }
-
-                const res = await fetch(
-                    `${API_URL}/api/series?${params.toString()}`,
-                    {
-                        credentials: "include",
-                    }
-                );
-
-                if (!res.ok) {
-                    throw new Error("Failed to fetch series");
-                }
-
-                const data = await res.json();
-
-                setSeries(data.series || []);
-                setTotalPages(data.totalPages || 1);
-            } catch (error) {
-                console.error("Error fetching series:", error);
-
-                setSeries([]);
-                setTotalPages(1);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchSeries();
-    }, [page, search, genre, product, rating, sort]);
-
-    // وقتی فیلتر تغییر کرد، برگرد صفحه اول
+    /* Back to page 1 when filters change */
     useEffect(() => {
         setPage(1);
     }, [search, genre, product, rating, sort]);
 
+    /* Fetch */
+    useEffect(() => {
+        const controller = new AbortController();
+
+        (async () => {
+            try {
+                setLoading(true);
+                const params = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE), sort });
+                if (search) params.set("search", search);
+                if (genre !== "همه") params.set("genre", genre);
+                if (product) params.set("product", product);
+                if (rating) params.set("rating", rating);
+
+                const res = await fetch(`${API_URL}/api/series?${params}`, {
+                    credentials: "include",
+                    signal: controller.signal,
+                });
+                if (!res.ok) throw new Error("Failed to fetch series");
+
+                const data = await res.json();
+                setSeries(Array.isArray(data.series) ? data.series : []);
+                setTotalPages(data.totalPages || 1);
+            } catch (error) {
+                if ((error as Error).name === "AbortError") return;
+                console.error("Error fetching series:", error);
+                setSeries([]);
+                setTotalPages(1);
+            } finally {
+                if (!controller.signal.aborted) setLoading(false);
+            }
+        })();
+
+        return () => controller.abort();
+    }, [page, search, genre, product, rating, sort]);
+
+    /* Favorites */
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await fetch(`${API_URL}/api/favorites`, { credentials: "include", cache: "no-store" });
+                if (!res.ok) return;
+                const data = await res.json();
+                const list: { _id: string; contentType?: string }[] = Array.isArray(data.favorites)
+                    ? data.favorites
+                    : Array.isArray(data.favoriteSeries)
+                        ? data.favoriteSeries
+                        : [];
+                setFavoriteIds(list.filter((x) => !x.contentType || x.contentType === "series").map((x) => x._id));
+            } catch {
+                /* ignore */
+            }
+        })();
+    }, []);
+
+    const favoriteHandler = async (id: string) => {
+        try {
+            const res = await fetch(`${API_URL}/api/favorites/series/${id}`, {
+                method: "POST",
+                credentials: "include",
+            });
+            const data: { message?: string; success?: boolean; isFavorite?: boolean } = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.message || "خطا در تغییر وضعیت علاقه‌مندی.");
+
+            const nowFavorite = data.isFavorite ?? !favoriteIds.includes(id);
+            setFavoriteIds((prev) => (nowFavorite ? [...new Set([...prev, id])] : prev.filter((x) => x !== id)));
+            toast.success(nowFavorite ? "به علاقه‌مندی‌ها اضافه شد." : "از علاقه‌مندی‌ها حذف شد.");
+        } catch (error) {
+            console.error("FAVORITE ERROR:", error);
+            toast.error(error instanceof Error ? error.message : "خطا در تغییر علاقه‌مندی.");
+        }
+    };
+
     const clearFilters = () => {
+        setSearchInput("");
         setSearch("");
         setGenre("همه");
         setProduct("");
         setRating("");
         setSort("newest");
-        setPage(1);
     };
 
-    const hasFilters =
-        search.trim() ||
-        genre !== "همه" ||
-        product ||
-        rating ||
-        sort !== "newest";
-
-    const [selectedSeries, setSelectedSeries] =
-        useState<Series | null>(null);
-
-    const [isSeriesModalOpen, setIsSeriesModalOpen] =
-        useState(false);
-
-
-
-    const handleSeriesClick = (series: Series) => {
-        setSelectedSeries(series);
-        setIsSeriesModalOpen(true);
+    const goToPage = (p: number) => {
+        setPage(p);
+        topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     };
-  const favoriteHandler = async (
-    id: string,
-    contentType: "movies" | "series"
-) => {
-    try {
-        const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${contentType}/${id}`,
-            {
-                method: "POST",
-                credentials: "include",
-            }
-        );
 
-        const data: {
-            message?: string;
-            success?: boolean;
-            isFavorite?: boolean;
-        } = await res.json();
+    const activeFilterCount = [search, genre !== "همه" ? genre : "", product, rating, sort !== "newest" ? sort : ""].filter(Boolean).length;
+    const pages = useMemo(() => pageList(page, totalPages), [page, totalPages]);
 
-        if (!res.ok || !data.success) {
-            throw new Error(
-                data.message || "خطا در تغییر وضعیت علاقه‌مندی."
-            );
-        }
-
-        setFavoriteIds((prev) =>
-            data.isFavorite
-                ? prev.includes(id) ? prev : [...prev, id]
-                : prev.filter((favoriteId) => favoriteId !== id)
-        );
-
-        toast.success(
-            data.isFavorite
-                ? "به علاقه‌مندی‌ها اضافه شد."
-                : "از علاقه‌مندی‌ها حذف شد."
-        );
-
-    } catch (error) {
-        console.error("FAVORITE ERROR:", error);
-
-        toast.error(
-            error instanceof Error
-                ? error.message
-                : "خطا در تغییر علاقه‌مندی."
-        );
-    }
-};
     return (
-        <main className="min-h-screen overflow-hidden bg-[#0B0F14] text-white">
-            {/* =====================================================
-                Cinematic Background
-            ====================================================== */}
+        <main dir="rtl" className="relative min-h-screen overflow-hidden bg-[#0B0F14] text-white">
+            <div
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-0 h-[520px]"
+                style={{
+                    backgroundImage: "radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)",
+                    backgroundSize: "22px 22px",
+                    maskImage: "linear-gradient(to bottom, #000 0%, transparent 100%)",
+                    WebkitMaskImage: "linear-gradient(to bottom, #000 0%, transparent 100%)",
+                }}
+            />
+            <div
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-0 h-[480px]"
+                style={{ background: "radial-gradient(ellipse 55% 100% at 85% 0%, rgba(20,199,139,0.12), transparent 70%)" }}
+            />
 
-            <div className="pointer-events-none fixed inset-0 -z-0 overflow-hidden">
-                <div className="absolute right-[-250px] top-[-250px] h-[600px] w-[600px] rounded-full bg-[#14C78B]/[0.055] blur-[140px]" />
-
-                <div className="absolute left-[-300px] top-[550px] h-[600px] w-[600px] rounded-full bg-[#14C78B]/[0.035] blur-[150px]" />
-
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(20,199,139,0.035),transparent_35%)]" />
-            </div>
-
-            {/* =====================================================
-                Header
-            ====================================================== */}
-
-            <section className="relative z-10">
-                <div className="mx-auto max-w-[1650px] px-5 pb-8 pt-12 md:pb-10 md:pt-16">
-                    <div className="relative overflow-hidden rounded-[28px] border border-white/[0.07] bg-gradient-to-br from-[#111820] via-[#0E141B] to-[#0B0F14] px-6 py-8 shadow-2xl shadow-black/20 md:px-10 md:py-10">
-                        {/* decorative glow */}
-                        <div className="pointer-events-none absolute -right-24 -top-32 h-72 w-72 rounded-full bg-[#14C78B]/10 blur-[100px]" />
-
-                        <div className="relative z-10">
-                            <div className="mb-4 flex items-center gap-2 text-[#14C78B]">
-                                <Sparkles size={17} />
-                                <span className="text-xs font-bold tracking-wide">
-                                    ALANBIN SERIES
-                                </span>
-                            </div>
-
-                            <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl md:text-5xl">
-                                سریال‌ها
-                            </h1>
-
-                            <p className="mt-3 max-w-xl text-sm leading-7 text-gray-400 md:text-base">
-                                سریال مورد علاقه‌ات رو پیدا کن و وارد دنیای
-                                داستان‌های AlanBin شو.
-                            </p>
-                        </div>
-                    </div>
+            {/* Header */}
+            <header className="relative mx-auto max-w-[1650px] px-5 pb-8 pt-10 sm:px-8 md:pt-14 lg:px-14 tv:max-w-none tv:px-[5vw]">
+                <div className="mb-4 inline-flex items-center gap-2 rounded-md border border-white/[0.08] bg-white/[0.03] px-2.5 py-1">
+                    <Tv size={13} className="text-[#14c78b]" />
+                    <span className="text-[11px] font-semibold tracking-[0.15em] text-white/60">SERIES</span>
                 </div>
-            </section>
+                <h1 className="text-3xl font-bold tracking-tight md:text-4xl tv:text-5xl">سریال‌ها</h1>
+                <p className="mt-2 text-sm text-white/45 md:text-base">سریال مورد علاقه‌ات رو پیدا کن و قسمت به قسمت دنبالش کن.</p>
+            </header>
 
-            {/* =====================================================
-                Filters
-            ====================================================== */}
-
-            <section className="relative z-10 mx-auto max-w-[1650px] px-5 pb-9">
-                <div className="rounded-[24px] border border-white/[0.07] bg-[#0F151C]/80 p-3 shadow-xl shadow-black/10 backdrop-blur-xl md:p-4">
-                    {/* Search + mobile filter */}
-
-                    <div className="flex flex-col gap-3 md:flex-row">
-                        {/* Search */}
-
-                        <div
-                            className="
-                                group
-                                flex
-                                h-12
-                                flex-1
-                                items-center
-                                gap-3
-                                rounded-xl
-                                border
-                                border-white/[0.08]
-                                bg-[#111820]
-                                px-4
-                                transition-all
-                                duration-300
-                                focus-within:border-[#14C78B]/40
-                                focus-within:bg-[#131C24]
-                                focus-within:shadow-[0_0_30px_rgba(20,199,139,0.05)]
-                            "
-                        >
-                            <Search
-                                size={19}
-                                className="shrink-0 text-gray-500 transition-colors group-focus-within:text-[#14C78B]"
-                            />
-
+            {/* Filters */}
+            <div ref={topRef} className="scroll-mt-4" />
+            <section className="sticky top-0 z-30 border-y border-white/[0.06] bg-[#0B0F14]/95">
+                <div className="mx-auto max-w-[1650px] px-5 py-3 sm:px-8 lg:px-14 tv:max-w-none tv:px-[5vw]">
+                    <div className="flex flex-col gap-2.5 md:flex-row md:items-center">
+                        <div className="flex h-11 flex-1 items-center gap-2.5 rounded-md border border-white/[0.08] bg-[#11151c] px-3.5 transition-colors focus-within:border-[#14c78b]/50">
+                            <Search size={17} className="shrink-0 text-white/35" />
                             <input
-                                value={search}
-                                onChange={(e) =>
-                                    setSearch(e.target.value)
-                                }
+                                value={searchInput}
+                                onChange={(e) => setSearchInput(e.target.value)}
                                 placeholder="جستجوی سریال..."
-                                className="
-                                    w-full
-                                    bg-transparent
-                                    text-sm
-                                    text-white
-                                    outline-none
-                                    placeholder:text-gray-600
-                                "
+                                data-tv-focus
+                                className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/30"
                             />
-
-                            {search && (
+                            {searchInput && (
                                 <button
-                                    onClick={() => setSearch("")}
-                                    className="cursor-pointer text-gray-500 transition hover:text-white"
+                                    type="button"
+                                    aria-label="پاک کردن جستجو"
+                                    onClick={() => setSearchInput("")}
+                                    className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white"
                                 >
-                                    <X size={17} />
+                                    <X size={15} />
                                 </button>
                             )}
                         </div>
 
-                        {/* Mobile filters */}
-
-                        <button
-                            onClick={() =>
-                                setFiltersOpen((prev) => !prev)
-                            }
-                            className="
-                                flex
-                                h-12
-                                items-center
-                                justify-center
-                                gap-2
-                                rounded-xl
-                                border
-                                border-white/[0.08]
-                                bg-[#111820]
-                                px-5
-                                text-sm
-                                font-medium
-                                text-gray-300
-                                transition
-                                hover:border-[#14C78B]/30
-                                hover:text-[#14C78B]
-                                md:hidden
-                            "
-                        >
-                            <SlidersHorizontal size={18} />
-                            فیلترها
-                            <ChevronDown
-                                size={16}
-                                className={`transition-transform ${filtersOpen ? "rotate-180" : ""
-                                    }`}
-                            />
-                        </button>
-                    </div>
-
-                    {/* Filters */}
-
-                    <div
-                        className={`
-                            mt-3
-                            flex-wrap
-                            gap-2
-                            ${filtersOpen
-                                ? "flex"
-                                : "hidden md:flex"
-                            }
-                        `}
-                    >
-                        {/* Genre */}
-
-                        <div className="relative">
-                            <select
-                                value={genre}
-                                onChange={(e) =>
-                                    setGenre(e.target.value)
-                                }
-                                className="
-                                    h-10
-                                    min-w-[130px]
-                                    appearance-none
-                                    cursor-pointer
-                                    rounded-xl
-                                    border
-                                    border-white/[0.07]
-                                    bg-[#111820]
-                                    pl-9
-                                    pr-3
-                                    text-sm
-                                    text-gray-300
-                                    outline-none
-                                    transition
-                                    hover:border-white/15
-                                    focus:border-[#14C78B]/40
-                                "
-                            >
-                                {GENRES.map((item) => (
-                                    <option
-                                        key={item}
-                                        value={item}
-                                        className="bg-[#111820]"
-                                    >
-                                        {item === "همه"
-                                            ? "همه ژانرها"
-                                            : item}
-                                    </option>
-                                ))}
-                            </select>
-
-                            <ChevronDown
-                                size={15}
-                                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-                            />
-                        </div>
-
-                        {/* Product */}
-
-                        <div className="relative">
-                            <select
-                                value={product}
-                                onChange={(e) =>
-                                    setProduct(e.target.value)
-                                }
-                                className="
-                                    h-10
-                                    min-w-[110px]
-                                    appearance-none
-                                    cursor-pointer
-                                    rounded-xl
-                                    border
-                                    border-white/[0.07]
-                                    bg-[#111820]
-                                    pl-9
-                                    pr-3
-                                    text-sm
-                                    text-gray-300
-                                    outline-none
-                                    transition
-                                    hover:border-white/15
-                                    focus:border-[#14C78B]/40
-                                "
-                            >
-                                {PRODUCTS.map((item) => (
-                                    <option
-                                        key={item.value}
-                                        value={item.value}
-                                        className="bg-[#111820]"
-                                    >
-                                        {item.label}
-                                    </option>
-                                ))}
-                            </select>
-
-                            <ChevronDown
-                                size={15}
-                                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-                            />
-                        </div>
-
-                        {/* Rating */}
-
-                        <div className="relative">
-                            <select
-                                value={rating}
-                                onChange={(e) =>
-                                    setRating(e.target.value)
-                                }
-                                className="
-                                    h-10
-                                    min-w-[125px]
-                                    appearance-none
-                                    cursor-pointer
-                                    rounded-xl
-                                    border
-                                    border-white/[0.07]
-                                    bg-[#111820]
-                                    pl-9
-                                    pr-3
-                                    text-sm
-                                    text-gray-300
-                                    outline-none
-                                    transition
-                                    hover:border-white/15
-                                    focus:border-[#14C78B]/40
-                                "
-                            >
-                                {RATINGS.map((item) => (
-                                    <option
-                                        key={item.value}
-                                        value={item.value}
-                                        className="bg-[#111820]"
-                                    >
-                                        {item.label}
-                                    </option>
-                                ))}
-                            </select>
-
-                            <ChevronDown
-                                size={15}
-                                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-                            />
-                        </div>
-
-                        {/* Sort */}
-
-                        <div className="relative">
-                            <select
-                                value={sort}
-                                onChange={(e) =>
-                                    setSort(e.target.value)
-                                }
-                                className="
-                                    h-10
-                                    min-w-[125px]
-                                    appearance-none
-                                    cursor-pointer
-                                    rounded-xl
-                                    border
-                                    border-white/[0.07]
-                                    bg-[#111820]
-                                    pl-9
-                                    pr-3
-                                    text-sm
-                                    text-gray-300
-                                    outline-none
-                                    transition
-                                    hover:border-white/15
-                                    focus:border-[#14C78B]/40
-                                "
-                            >
-                                {SORT_OPTIONS.map((item) => (
-                                    <option
-                                        key={item.value}
-                                        value={item.value}
-                                        className="bg-[#111820]"
-                                    >
-                                        {item.label}
-                                    </option>
-                                ))}
-                            </select>
-
-                            <ChevronDown
-                                size={15}
-                                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-                            />
-                        </div>
-
-                        {/* Clear */}
-
-                        {hasFilters && (
+                        <div className="flex gap-2.5">
                             <button
-                                onClick={clearFilters}
-                                className="
-                                    h-10
-                                    rounded-xl
-                                    border
-                                    border-red-400/10
-                                    bg-red-400/[0.03]
-                                    px-4
-                                    text-sm
-                                    text-gray-400
-                                    transition
-                                    hover:border-red-400/25
-                                    hover:bg-red-400/[0.06]
-                                    hover:text-red-400
-                                "
+                                type="button"
+                                onClick={() => setFiltersOpen((v) => !v)}
+                                className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border border-white/[0.08] bg-[#11151c] px-4 text-sm text-white/70 md:hidden"
                             >
-                                پاک کردن فیلترها
+                                <SlidersHorizontal size={16} />
+                                فیلترها
+                                {activeFilterCount > 0 && (
+                                    <span className="rounded bg-[#14c78b] px-1.5 text-[11px] font-bold text-[#0B0F14]">
+                                        {fa(activeFilterCount)}
+                                    </span>
+                                )}
+                            </button>
+
+                            <div className={`${filtersOpen ? "flex" : "hidden"} md:flex`}>
+                                <div className="flex h-11 rounded-md border border-white/[0.08] bg-[#11151c] p-1">
+                                    {PRODUCTS.map((p) => (
+                                        <button
+                                            key={p.value}
+                                            type="button"
+                                            data-tv-focus
+                                            onClick={() => setProduct(p.value)}
+                                            className={`tv-focus cursor-pointer rounded px-3 text-sm transition-colors ${product === p.value ? "bg-white text-[#0B0F14]" : "text-white/55 hover:text-white"
+                                                }`}
+                                        >
+                                            {p.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className={`${filtersOpen ? "grid" : "hidden"} grid-cols-2 gap-2.5 md:flex`}>
+                            <Select value={rating} onChange={setRating} options={RATINGS} />
+                            <Select value={sort} onChange={setSort} options={SORT_OPTIONS} />
+                        </div>
+
+                        {activeFilterCount > 0 && (
+                            <button
+                                type="button"
+                                data-tv-focus
+                                onClick={clearFilters}
+                                className={`tv-focus ${filtersOpen ? "flex" : "hidden"} h-11 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-white/[0.08] px-3.5 text-sm text-white/50 transition-colors hover:border-red-400/40 hover:text-red-400 md:flex`}
+                            >
+                                <X size={15} />
+                                پاک کردن
                             </button>
                         )}
                     </div>
+
+                    <div className={`${filtersOpen ? "flex" : "hidden"} no-scrollbar -mx-1 mt-2.5 gap-1.5 overflow-x-auto px-1 md:flex`}>
+                        {GENRES.map((g) => {
+                            const active = genre === g;
+                            return (
+                                <button
+                                    key={g}
+                                    type="button"
+                                    data-tv-focus
+                                    onClick={() => setGenre(g)}
+                                    className={`tv-focus shrink-0 cursor-pointer rounded-md border px-3 py-1.5 text-[13px] transition-colors ${active
+                                            ? "border-[#14c78b]/50 bg-[#14c78b]/10 text-[#14c78b]"
+                                            : "border-white/[0.06] text-white/55 hover:border-white/20 hover:text-white"
+                                        }`}
+                                >
+                                    {g === "همه" ? "همه ژانرها" : g}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
             </section>
 
-            {/* =====================================================
-                Content
-            ====================================================== */}
-
-            <section className="relative z-10 mx-auto max-w-[1650px] px-5 pb-20">
-                {/* Section heading */}
-
+            {/* Grid */}
+            <section className="relative mx-auto max-w-[1650px] px-5 pb-20 pt-8 sm:px-8 lg:px-14 tv:max-w-none tv:px-[5vw]">
                 {!loading && series.length > 0 && (
-                    <div className="mb-7 flex items-end justify-between border-b border-white/[0.06] pb-5">
-                        <div>
-                            <div className="flex items-center gap-3">
-                                <div className="h-7 w-1 rounded-full bg-[#14C78B]" />
-
-                                <h2 className="text-xl font-bold text-white md:text-2xl">
-                                    سریال‌ها
-                                </h2>
-                            </div>
-
-                            <p className="mt-2 pr-4 text-xs text-gray-500 md:text-sm">
-                                مجموعه سریال‌های موجود در AlanBin
-                            </p>
-                        </div>
-
-                        <div className="hidden rounded-full border border-white/[0.07] bg-[#111820] px-4 py-2 text-xs text-gray-400 sm:block">
-                            صفحه{" "}
-                            <span className="font-bold text-white">
-                                {page}
-                            </span>{" "}
-                            از{" "}
-                            <span className="font-bold text-[#14C78B]">
-                                {totalPages}
+                    <div className="mb-5 flex items-center justify-between text-xs text-white/40">
+                        <span>
+                            صفحه {fa(page)} از {fa(totalPages)}
+                        </span>
+                        {search && (
+                            <span>
+                                نتایج برای «<span className="text-white/80">{search}</span>»
                             </span>
-                        </div>
+                        )}
                     </div>
                 )}
 
-                {/* Loading */}
-
                 {loading ? (
-                    <div
-                        className="
-                            grid
-                            grid-cols-2
-                            gap-x-4
-                            gap-y-9
-                            sm:grid-cols-3
-                            md:grid-cols-4
-                            lg:grid-cols-5
-                            xl:grid-cols-6
-                        "
-                    >
-                        {Array.from({ length: 12 }).map(
-                            (_, index) => (
-                                <div
-                                    key={index}
-                                    className="
-                                        mx-auto
-                                        w-full
-                                        max-w-[215px]
-                                        overflow-hidden
-                                        rounded-2xl
-                                        border
-                                        border-white/[0.04]
-                                        bg-[#111820]
-                                    "
-                                >
-                                    <div className="aspect-[2/3] animate-pulse bg-white/[0.035]" />
-
-                                    <div className="space-y-2 p-3">
-                                        <div className="h-3 w-3/4 animate-pulse rounded bg-white/[0.05]" />
-                                        <div className="h-2.5 w-1/2 animate-pulse rounded bg-white/[0.04]" />
-                                    </div>
-                                </div>
-                            )
-                        )}
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+                        {Array.from({ length: 14 }).map((_, i) => (
+                            <div key={i}>
+                                <div className="aspect-[2/3] w-full animate-pulse rounded-md bg-white/[0.04]" />
+                                <div className="mt-2.5 h-3.5 w-2/3 animate-pulse rounded-sm bg-white/[0.05]" />
+                                <div className="mt-1.5 h-3 w-1/3 animate-pulse rounded-sm bg-white/[0.04]" />
+                            </div>
+                        ))}
                     </div>
                 ) : series.length === 0 ? (
-                    <div className="relative flex min-h-[430px] items-center justify-center overflow-hidden rounded-[28px] border border-white/[0.06] bg-gradient-to-b from-[#111820] to-[#0D1218]">
-                        <div className="pointer-events-none absolute h-64 w-64 rounded-full bg-[#14C78B]/[0.035] blur-[100px]" />
-
-                        <div className="relative z-10 px-5 text-center">
-                            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.03]">
-                                <Search
-                                    size={26}
-                                    className="text-gray-500"
-                                />
-                            </div>
-
-                            <p className="text-lg font-bold text-gray-200">
-                                سریالی پیدا نشد
-                            </p>
-
-                            <p className="mt-2 text-sm text-gray-500">
-                                فیلترها یا عبارت جستجو را تغییر بده.
-                            </p>
-
-                            {hasFilters && (
-                                <button
-                                    onClick={clearFilters}
-                                    className="
-                                        mt-6
-                                        rounded-xl
-                                        bg-[#14C78B]
-                                        px-5
-                                        py-2.5
-                                        text-sm
-                                        font-bold
-                                        text-black
-                                        transition
-                                        hover:bg-[#18d995]
-                                    "
-                                >
-                                    پاک کردن فیلترها
-                                </button>
-                            )}
+                    <div className="flex min-h-[380px] flex-col items-center justify-center rounded-lg border border-dashed border-white/[0.1] text-center">
+                        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.03]">
+                            <Tv size={20} className="text-white/40" />
                         </div>
+                        <p className="font-medium text-white/80">سریالی پیدا نشد</p>
+                        <p className="mt-1.5 text-sm text-white/40">فیلترها یا عبارت جستجو رو تغییر بده.</p>
+                        {activeFilterCount > 0 && (
+                            <button
+                                type="button"
+                                data-tv-focus
+                                onClick={clearFilters}
+                                className="tv-focus mt-6 cursor-pointer rounded-md bg-white px-5 py-2.5 text-sm font-semibold text-[#0B0F14] transition-transform duration-200 hover:scale-[1.03]"
+                            >
+                                حذف فیلترها
+                            </button>
+                        )}
                     </div>
                 ) : (
-                    <div
-                        className="
-                            grid
-                            grid-cols-2
-                            gap-x-4
-                            gap-y-10
-                            sm:grid-cols-3
-                            md:grid-cols-4
-                            lg:grid-cols-5
-                            xl:grid-cols-6
-                            2xl:gap-x-5
-                        "
-                    >
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 md:gap-x-5 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 tv:gap-x-7 tv:gap-y-10">
                         {series.map((item) => (
-                            <div
-                                key={item._id}
-                                className="
-                                    min-w-0
-                                    transition-transform
-                                    duration-300
-                                    hover:-translate-y-1
-                                "
-                            >
-                                <SeriesCard
-                                    series={item}
-                                    onClick={() => handleSeriesClick(item)}
-                                />
-                            </div>
+                            <SeriesCard key={item._id} series={item} onClick={() => setSelectedSeries(item)} />
                         ))}
                     </div>
                 )}
 
-                {/* =====================================================
-                    Pagination
-                ====================================================== */}
-
                 {!loading && totalPages > 1 && (
-                    <div className="mt-16 flex items-center justify-center">
-                        <div className="flex items-center gap-2 rounded-2xl border border-white/[0.07] bg-[#111820]/80 p-2 shadow-xl shadow-black/20 backdrop-blur-xl">
-                            <button
-                                disabled={page === 1}
-                                onClick={() =>
-                                    setPage((prev) => prev - 1)
-                                }
-                                className="
-                                    flex
-                                    h-10
-                                    items-center
-                                    gap-1.5
-                                    rounded-xl
-                                    px-3
-                                    text-sm
-                                    text-gray-400
-                                    transition
-                                    hover:bg-white/[0.04]
-                                    hover:text-[#14C78B]
-                                    disabled:cursor-not-allowed
-                                    disabled:opacity-25
-                                "
-                            >
-                                <ChevronRight size={17} />
-                                <span className="hidden sm:inline">
-                                    قبلی
-                                </span>
-                            </button>
-
-                            <div className="flex h-10 min-w-[90px] items-center justify-center rounded-xl bg-white/[0.04] px-4 text-sm">
-                                <span className="font-bold text-white">
-                                    {page}
-                                </span>
-
-                                <span className="mx-2 text-gray-600">
-                                    /
-                                </span>
-
-                                <span className="text-gray-500">
-                                    {totalPages}
-                                </span>
-                            </div>
-
-                            <button
-                                disabled={page === totalPages}
-                                onClick={() =>
-                                    setPage((prev) => prev + 1)
-                                }
-                                className="
-                                    flex
-                                    h-10
-                                    items-center
-                                    gap-1.5
-                                    rounded-xl
-                                    px-3
-                                    text-sm
-                                    text-gray-400
-                                    transition
-                                    hover:bg-white/[0.04]
-                                    hover:text-[#14C78B]
-                                    disabled:cursor-not-allowed
-                                    disabled:opacity-25
-                                "
-                            >
-                                <span className="hidden sm:inline">
-                                    بعدی
-                                </span>
-                                <ChevronLeft size={17} />
-                            </button>
-                        </div>
-                    </div>
-                )}
-                {selectedSeries && (
-                    <SeriesModal
-                        series={selectedSeries}
-                        isOpen={isSeriesModalOpen}
-                        onClose={() => {
-                            setIsSeriesModalOpen(false);
-                            setSelectedSeries(null);
-                        }}
-                        favoriteHandler={(id) => favoriteHandler(id, "series")}
-                        isFavorite={favoriteIds.includes(selectedSeries._id)}
-                    />
+                    <nav className="mt-14 flex items-center justify-center gap-1.5" aria-label="صفحه‌بندی">
+                        <PageButton disabled={page === 1} onClick={() => goToPage(page - 1)} label="صفحه قبلی">
+                            <ChevronRight size={17} />
+                        </PageButton>
+                        {pages.map((p, i) =>
+                            p === "…" ? (
+                                <span key={`gap-${i}`} className="px-1.5 text-sm text-white/30">…</span>
+                            ) : (
+                                <PageButton key={p} active={p === page} onClick={() => goToPage(p)} label={`صفحه ${p}`}>
+                                    {fa(p)}
+                                </PageButton>
+                            )
+                        )}
+                        <PageButton disabled={page === totalPages} onClick={() => goToPage(page + 1)} label="صفحه بعدی">
+                            <ChevronLeft size={17} />
+                        </PageButton>
+                    </nav>
                 )}
             </section>
 
+            {selectedSeries && (
+                <SeriesModal
+                    series={selectedSeries}
+                    isOpen
+                    onClose={() => setSelectedSeries(null)}
+                    favoriteHandler={(id) => favoriteHandler(id)}
+                    isFavorite={favoriteIds.includes(selectedSeries._id)}
+                />
+            )}
         </main>
+    );
+}
+
+function Select({
+    value,
+    onChange,
+    options,
+}: {
+    value: string;
+    onChange: (v: string) => void;
+    options: { label: string; value: string }[];
+}) {
+    return (
+        <div className="relative">
+            <select
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                data-tv-focus
+                className="tv-focus h-11 w-full min-w-[140px] cursor-pointer appearance-none rounded-md border border-white/[0.08] bg-[#11151c] pl-9 pr-3.5 text-sm text-white/80 outline-none transition-colors hover:border-white/20 focus:border-[#14c78b]/50"
+            >
+                {options.map((o) => (
+                    <option key={o.value} value={o.value} className="bg-[#11151c]">
+                        {o.label}
+                    </option>
+                ))}
+            </select>
+            <ChevronDown size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/35" />
+        </div>
+    );
+}
+
+function PageButton({
+    children,
+    onClick,
+    disabled,
+    active,
+    label,
+}: {
+    children: React.ReactNode;
+    onClick: () => void;
+    disabled?: boolean;
+    active?: boolean;
+    label: string;
+}) {
+    return (
+        <button
+            type="button"
+            data-tv-focus
+            aria-label={label}
+            aria-current={active ? "page" : undefined}
+            disabled={disabled}
+            onClick={onClick}
+            className={`tv-focus flex h-10 min-w-10 cursor-pointer items-center justify-center rounded-md border px-2 text-sm tabular-nums transition-colors disabled:cursor-not-allowed disabled:opacity-25 ${active
+                    ? "border-white bg-white font-semibold text-[#0B0F14]"
+                    : "border-white/[0.08] bg-[#11151c] text-white/60 hover:border-white/25 hover:text-white"
+                }`}
+        >
+            {children}
+        </button>
     );
 }
