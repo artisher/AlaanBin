@@ -1,58 +1,30 @@
+import type { ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
+
 export default function ProfileRow({
     label,
     value,
+    icon: Icon,
+    ltr,
 }: {
     label: string;
-    value: React.ReactNode;
+    value: ReactNode;
+    icon?: LucideIcon;
+    ltr?: boolean;
 }) {
     return (
-        <div
-            className="
-            flex
-            items-start
-            justify-between
-            gap-4
-
-            rounded-2xl
-            border
-            border-white/5
-
-            bg-white/[0.03]
-
-            px-6
-            py-4
-
-            transition-all
-            duration-300
-
-            hover:border-[#14c78b]/20
-            hover:bg-white/[0.05]
-            "
-        >
-
-            <span className="text-gray-400 shrink-0">
+        <div className="flex items-center justify-between gap-4 border-b border-white/[0.05] px-5 py-4 last:border-b-0">
+            <span className="flex shrink-0 items-center gap-2.5 text-sm text-white/45">
+                {Icon && <Icon size={16} className="text-white/30" />}
                 {label}
             </span>
 
             <span
-                className="
-                text-white
-                font-semibold
-
-                text-left
-
-               
-
-
-break-all
-                whitespace-normal
-
-                max-w-[65%]
-                "
+                dir={ltr ? "ltr" : "auto"}
+                className="min-w-0 max-w-[65%] break-all text-left text-sm font-medium text-white/90 sm:text-base"
             >
-                {value}
+                {value || <span className="text-white/25">—</span>}
             </span>
-
         </div>
     );
 }
