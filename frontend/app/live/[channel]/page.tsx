@@ -25,10 +25,11 @@ const CHANNELS = {
     "project-leon": { title: "Project Leon", streamUrl: "/api/live/project-leon/index.m3u8", comingSoon: false },
     voa: { title: "صدای آمریکا", streamUrl: "/api/live/voa/index.m3u8", comingSoon: false },
     "iran-international": { title: "ایران اینترنشنال", streamUrl: "/api/live/iran-international/index.m3u8", comingSoon: false },
-    nasim: { title: "شبکه نسیم", comingSoon: true },
-    ifilm: { title: "شبکه آی فیلم", comingSoon: true },
-    namayesh: { title: "شبکه نمایش", comingSoon: true },
-    pooya: { title: "شبکه پویا", comingSoon: true },
+    nasim: { title: "شبکه نسیم", streamUrl: "/live/nasim/index.m3u8", comingSoon: false },
+    ifilm: { title: "شبکه آی فیلم", streamUrl: "/live/ifilm/index.m3u8", comingSoon: false },
+    namayesh: { title: "شبکه نمایش", streamUrl: "/live/namayesh/index.m3u8", comingSoon: false },
+    pooya: { title: "شبکه پویا", streamUrl: "/live/pooya/index.m3u8", comingSoon: false },
+    tehran: { title: "شبکه تهران", streamUrl: "/live/tehran/index.m3u8", comingSoon: false },
 } as const;
 
 type ChannelId = keyof typeof CHANNELS;

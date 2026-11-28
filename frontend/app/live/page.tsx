@@ -36,10 +36,11 @@ const CHANNELS: Channel[] = [
     { id: "project-leon", category: "news", title: "Project Leon", description: "پخش زنده Project Leon" },
     { id: "voa", category: "news", title: "صدای آمریکا", description: "پخش زنده صدای آمریکا فارسی" },
     { id: "iran-international", category: "news", title: "ایران اینترنشنال", description: "پخش زنده ایران اینترنشنال" },
-    { id: "nasim", category: "iran", title: "شبکه نسیم", description: "پخش زنده شبکه نسیم", icon: "/logos/nasim.png", comingSoon: true },
-    { id: "ifilm", category: "iran", title: "شبکه آی فیلم", description: "پخش زنده شبکه آی فیلم", icon: "/logos/ifilm.png", comingSoon: true },
-    { id: "namayesh", category: "iran", title: "شبکه نمایش", description: "پخش زنده شبکه نمایش", icon: "/logos/namayesh.png", comingSoon: true },
-    { id: "pooya", category: "iran", title: "شبکه پویا", description: "پخش زنده شبکه پویا", icon: "/logos/pooya1.png", comingSoon: true },
+    { id: "nasim", category: "iran", title: "شبکه نسیم", description: "پخش زنده شبکه نسیم", icon: "/logos/nasim.png" },
+    { id: "ifilm", category: "iran", title: "شبکه آی فیلم", description: "پخش زنده شبکه آی فیلم", icon: "/logos/ifilm.png" },
+    { id: "namayesh", category: "iran", title: "شبکه نمایش", description: "پخش زنده شبکه نمایش", icon: "/logos/namayesh.png" },
+    { id: "pooya", category: "iran", title: "شبکه پویا", description: "پخش زنده شبکه پویا", icon: "/logos/pooya1.png" },
+    { id: "tehran", category: "iran", title: "شبکه تهران", description: "پخش زنده شبکه تهران" },
 ];
 
 /* Muted accent per category — used only for small details */
