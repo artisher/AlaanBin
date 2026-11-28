@@ -1,274 +1,568 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import toast from "react-hot-toast";
 
 import type { Movie } from "@/types/movies";
 import type { Series } from "@/types/Series";
-import { ContentRow, rowItemClass, wideItemClass } from "./ContentRow";
-import { LandscapeCard } from "./LandscapeCard";
+import { SwiperSlide } from "swiper/react";
+import { ContentRow } from "./ContentRow";
 import { MovieCard } from "./MovieCard";
 import { SeriesCard } from "./SeriesCard";
 import { MovieModal } from "./MovieMedal";
-import { SeriesModal } from "./SeriesModal";
 import { HeroSlider } from "./HeroSlider";
-import { useTvNavigation } from "@/components/useTvNavigation";
+import toast from "react-hot-toast";
+import { SeriesModal } from "./SeriesModal";
 
 type ContentItem = Movie | Series;
 
-const API = process.env.NEXT_PUBLIC_API_URL;
-const HERO_KEY = "alanbin_hero_movies";
-const HERO_TTL = 6 * 60 * 60 * 1000;
-
-async function getList<T>(path: string, key: "movies" | "series"): Promise<T[]> {
-    try {
-        const res = await fetch(`${API}${path}`);
-        if (!res.ok) return [];
-        const data = await res.json();
-        return Array.isArray(data[key]) ? data[key] : [];
-    } catch {
-        return [];
-    }
-}
-
-function pickRandom(movies: Movie[], count = 8) {
-    const list = movies.filter((m) => typeof m.heroImage === "string" && m.heroImage.trim());
-    for (let i = list.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [list[i], list[j]] = [list[j], list[i]];
-    }
-    return list.slice(0, count);
-}
-
-const isMovie = (item: ContentItem): item is Movie => "videoUrl" in item;
-
 export const HomeContent = () => {
-    useTvNavigation();
+    const router = useRouter();
 
-    const [loading, setLoading] = useState(true);
     const [newMovies, setNewMovies] = useState<Movie[]>([]);
     const [newSeries, setNewSeries] = useState<Series[]>([]);
     const [topWeekMovies, setTopWeekMovies] = useState<Movie[]>([]);
     const [topWeekSeries, setTopWeekSeries] = useState<Series[]>([]);
-    const [genres, setGenres] = useState<{ title: string; href: string; items: Movie[] }[]>([]);
+
+    const [comedyMovies, setComedyMovies] = useState<Movie[]>([]);
+    const [dramaMovies, setDramaMovies] = useState<Movie[]>([]);
+    const [romanceMovies, setRomanceMovies] = useState<Movie[]>([]);
+    const [actionMovies, setActionMovies] = useState<Movie[]>([]);
+
+    const [loading, setLoading] = useState(true);
+
     const [heroMovies, setHeroMovies] = useState<Movie[]>([]);
-
     const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
-    const [selectedSeries, setSelectedSeries] = useState<Series | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const [selectedSeries, setSelectedSeries] =
+        useState<Series | null>(null);
+
+    const [isSeriesModalOpen, setIsSeriesModalOpen] =
+        useState(false);
+
+
     const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+    const [loadingFavorites, setLoadingFavorites] = useState(false);
 
-    /* ---------- Content ---------- */
+
+    const getRandomMovies = (movies: Movie[], count = 8) => {
+        const eligibleMovies = movies.filter(
+            movie =>
+                typeof movie.heroImage === "string" &&
+                movie.heroImage.trim().length > 0
+        );
+
+        const shuffled = [...eligibleMovies];
+
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+
+            [shuffled[i], shuffled[j]] = [
+                shuffled[j],
+                shuffled[i],
+            ];
+        }
+
+        return shuffled.slice(0, count);
+    };
     useEffect(() => {
-        (async () => {
-            const [nm, ns, tm, ts, comedy, drama, romance, action] = await Promise.all([
-                getList<Movie>("/api/movies?page=1&limit=12&sort=newest", "movies"),
-                getList<Series>("/api/series?page=1&limit=12&sort=newest", "series"),
-                getList<Movie>("/api/movies?page=1&limit=50&topWeek=true&sort=highRating", "movies"),
-                getList<Series>("/api/series?page=1&limit=8&topWeek=true&sort=highRating", "series"),
-                getList<Movie>("/api/movies?page=1&limit=12&genre=Comedy", "movies"),
-                getList<Movie>("/api/movies?page=1&limit=12&genre=Drama", "movies"),
-                getList<Movie>("/api/movies?page=1&limit=12&genre=Romance", "movies"),
-                getList<Movie>("/api/movies?page=1&limit=12&genre=Action", "movies"),
-            ]);
-
-            setNewMovies(nm);
-            setNewSeries(ns);
-            setTopWeekMovies(tm);
-            setTopWeekSeries(ts);
-            setGenres([
-                { title: "کمدی", href: "/movies?genre=Comedy", items: comedy },
-                { title: "درام", href: "/movies?genre=Drama", items: drama },
-                { title: "عاشقانه", href: "/movies?genre=Romance", items: romance },
-                { title: "اکشن", href: "/movies?genre=Action", items: action },
-            ]);
-            setLoading(false);
-        })();
-    }, []);
-
-    /* ---------- Favorites (was never loaded before) ---------- */
-    useEffect(() => {
-        (async () => {
+        const fetchHomeContent = async () => {
             try {
-                const res = await fetch(`${API}/api/favorites`, { credentials: "include" });
-                if (!res.ok) return;
-                const data = await res.json();
-                const ids = [
-                    ...(Array.isArray(data.favoriteMovies) ? data.favoriteMovies : []),
-                    ...(Array.isArray(data.favoriteSeries) ? data.favoriteSeries : []),
-                ].map((x: { _id: string }) => x._id);
-                setFavoriteIds(ids);
-            } catch (error) {
-                console.error("FETCH FAVORITES ERROR:", error);
-            }
-        })();
-    }, []);
+                const [
+                    newMoviesRes,
+                    newSeriesRes,
+                    topMoviesRes,
+                    topSeriesRes,
+                    comedyRes,
+                    dramaRes,
+                    romanceRes,
+                    actionRes,
+                ] = await Promise.all([
+                    fetch(
+                        `${process.env.NEXT_PUBLIC_API_URL}/api/movies?page=1&limit=8&sort=newest`
+                    ),
 
-    /* ---------- Hero (cached 6h) ---------- */
+                    fetch(
+                        `${process.env.NEXT_PUBLIC_API_URL}/api/series?page=1&limit=8&sort=newest`
+                    ),
+
+                    fetch(
+                        `${process.env.NEXT_PUBLIC_API_URL}/api/movies?page=1&limit=50&topWeek=true&sort=highRating`
+                    ),
+
+                    fetch(
+                        `${process.env.NEXT_PUBLIC_API_URL}/api/series?page=1&limit=8&topWeek=true&sort=highRating`
+                    ),
+
+                    fetch(
+                        `${process.env.NEXT_PUBLIC_API_URL}/api/movies?page=1&limit=8&genre=Comedy`
+                    ),
+
+                    fetch(
+                        `${process.env.NEXT_PUBLIC_API_URL}/api/movies?page=1&limit=8&genre=Drama`
+                    ),
+
+                    fetch(
+                        `${process.env.NEXT_PUBLIC_API_URL}/api/movies?page=1&limit=8&genre=Romance`
+                    ),
+
+                    fetch(
+                        `${process.env.NEXT_PUBLIC_API_URL}/api/movies?page=1&limit=8&genre=Action`
+                    ),
+                ]);
+
+                const [
+                    newMoviesData,
+                    newSeriesData,
+                    topMoviesData,
+                    topSeriesData,
+                    comedyData,
+                    dramaData,
+                    romanceData,
+                    actionData,
+                ] = await Promise.all([
+                    newMoviesRes.json(),
+                    newSeriesRes.json(),
+                    topMoviesRes.json(),
+                    topSeriesRes.json(),
+                    comedyRes.json(),
+                    dramaRes.json(),
+                    romanceRes.json(),
+                    actionRes.json(),
+                ]);
+
+                if (newMoviesRes.ok) {
+                    setNewMovies(newMoviesData.movies ?? []);
+                }
+
+                if (newSeriesRes.ok) {
+                    setNewSeries(newSeriesData.series ?? []);
+                }
+
+                if (topMoviesRes.ok) {
+                    setTopWeekMovies(topMoviesData.movies ?? []);
+                }
+
+                if (topSeriesRes.ok) {
+                    setTopWeekSeries(topSeriesData.series ?? []);
+                }
+
+                if (comedyRes.ok) {
+                    setComedyMovies(comedyData.movies ?? []);
+                }
+
+                if (dramaRes.ok) {
+                    setDramaMovies(dramaData.movies ?? []);
+                }
+
+                if (romanceRes.ok) {
+                    setRomanceMovies(romanceData.movies ?? []);
+                }
+
+                if (actionRes.ok) {
+                    setActionMovies(actionData.movies ?? []);
+                }
+            } catch (error) {
+                console.error("HOME CONTENT ERROR:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchHomeContent();
+    }, []);
+    const fetchFavorites = async () => {
+        try {
+            setLoadingFavorites(true);
+
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites`,
+                {
+                    credentials: "include",
+                }
+            );
+
+            let data: { message?: string; favoriteMovies?: Movie[] } = {};
+
+            try {
+                data = await res.json();
+            } catch {
+                // پاسخ API JSON نبود.
+            }
+
+            if (!res.ok) {
+                throw new Error(
+                    data.message ||
+                    "خطا در دریافت فیلم‌های مورد علاقه."
+                );
+            }
+
+            const movies = Array.isArray(data.favoriteMovies)
+                ? data.favoriteMovies
+                : [];
+
+            setFavoriteIds(
+                movies.map((movie: Movie) => movie._id)
+            );
+        } catch (error) {
+            console.error("FETCH FAVORITES ERROR:", error);
+
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "خطا در دریافت فیلم‌های مورد علاقه."
+            );
+        } finally {
+            setLoadingFavorites(false);
+        }
+    };
     useEffect(() => {
         if (topWeekMovies.length === 0) return;
 
+        const STORAGE_KEY = "alanbin_hero_movies";
+        const EXPIRE_TIME = 6 * 60 * 60 * 1000;
+
         try {
-            const saved = localStorage.getItem(HERO_KEY);
+            const saved = localStorage.getItem(STORAGE_KEY);
+
             if (saved) {
                 const parsed = JSON.parse(saved);
-                if (parsed.timestamp && Date.now() - parsed.timestamp < HERO_TTL && Array.isArray(parsed.ids)) {
+
+                const isExpired =
+                    !parsed.timestamp ||
+                    Date.now() - parsed.timestamp >= EXPIRE_TIME;
+
+                if (!isExpired && Array.isArray(parsed.ids)) {
                     const selected = parsed.ids
-                        .map((id: string) => topWeekMovies.find((m) => m._id === id))
+                        .map((id: string) =>
+                            topWeekMovies.find(movie => movie._id === id)
+                        )
                         .filter(Boolean) as Movie[];
-                    if (selected.length > 0 && selected.every((m) => m.heroImage?.trim())) {
+
+                    if (
+                        selected.length > 0 &&
+                        selected.every(movie => movie.heroImage?.trim())
+                    ) {
                         setHeroMovies(selected);
                         return;
                     }
                 }
             }
         } catch {
-            /* ignore */
+            localStorage.removeItem(STORAGE_KEY);
         }
 
-        const selected = pickRandom(topWeekMovies, 8);
+        const selected = getRandomMovies(topWeekMovies, 8);
+
         setHeroMovies(selected);
-        try {
-            localStorage.setItem(HERO_KEY, JSON.stringify({ ids: selected.map((m) => m._id), timestamp: Date.now() }));
-        } catch {
-            /* storage unavailable */
-        }
+
+        localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({
+                ids: selected.map(movie => movie._id),
+                timestamp: Date.now(),
+            })
+        );
+
     }, [topWeekMovies]);
-
-    /* ---------- Top week: movies + series interleaved ---------- */
-    const topWeekMixed = useMemo(() => {
-        const out: ContentItem[] = [];
-        const max = Math.max(topWeekMovies.length, topWeekSeries.length);
-        for (let i = 0; i < max && out.length < 16; i++) {
-            if (topWeekMovies[i]) out.push(topWeekMovies[i]);
-            if (topWeekSeries[i]) out.push(topWeekSeries[i]);
-        }
-        return out;
-    }, [topWeekMovies, topWeekSeries]);
-
-    const favoriteHandler = async (id: string, contentType: "movie" | "series") => {
+    const favoriteHandler = async (
+        id: string,
+        contentType: "movie" | "series"
+    ) => {
         try {
-            const res = await fetch(`${API}/api/favorites/${contentType}/${id}`, {
-                method: "POST",
-                credentials: "include",
-            });
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${contentType}/${id}`,
+                {
+                    method: "POST",
+                    credentials: "include",
+                }
+            );
+
             const data = await res.json();
-            if (!res.ok || !data.success) {
-                throw new Error(data.message || "خطا در تغییر وضعیت علاقه‌مندی.");
+
+            if (!res.ok) {
+                throw new Error(
+                    data.message || "خطا در تغییر وضعیت علاقه‌مندی."
+                );
             }
-            setFavoriteIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
+            if (!data.success) {
+                throw new Error("تغییر علاقه‌مندی انجام نشد.");
+            }
+
             toast.success("وضعیت علاقه‌مندی تغییر کرد.");
+
+            // دریافت مجدد لیست علاقه‌مندی‌ها
+            router.refresh();
         } catch (error) {
             console.error("FAVORITE ERROR:", error);
-            toast.error(error instanceof Error ? error.message : "خطا در تغییر علاقه‌مندی.");
+
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "خطا در تغییر علاقه‌مندی."
+            );
         }
     };
 
-    const renderItem = (item: ContentItem) => (
-        <div key={item._id} className={rowItemClass}>
-            {isMovie(item) ? (
-                <MovieCard movie={item} onClick={() => setSelectedMovie(item)} />
-            ) : (
-                <SeriesCard series={item} onClick={() => setSelectedSeries(item)} />
-            )}
-        </div>
-    );
-    const renderWide = (item: ContentItem) => (
-        <div key={item._id} className={wideItemClass}>
-            <LandscapeCard
-                title={item.title}
-                image={"heroImage" in item ? item.heroImage : undefined}
-                fallback={item.poster}
-                year={item.year}
-                rating={item.rating}
-                badge={isMovie(item) ? undefined : "سریال"}
-                onClick={() => (isMovie(item) ? setSelectedMovie(item) : setSelectedSeries(item))}
-            />
-        </div>
-    );
-    /* ---------- Loading ---------- */
+
+
+
+    const handleMovieClick = (movie: Movie) => {
+        setSelectedMovie(movie);
+        setIsModalOpen(true);
+    };
+    const handleSeriesClick = (series: Series) => {
+        setSelectedSeries(series);
+        setIsSeriesModalOpen(true);
+    };
+
+    const renderMovieRow = (movies: Movie[]) => {
+        return movies.map((movie) => (
+            <SwiperSlide key={movie._id}>
+                <MovieCard
+                    movie={movie}
+                    onClick={() => handleMovieClick(movie)}
+                />
+            </SwiperSlide>
+        ));
+    };
+
+    const renderSeriesRow = (series: Series[]) => {
+        return series.map((item) => (
+            <SwiperSlide key={item._id}>
+                <SeriesCard
+                    series={item}
+                    onClick={() => handleSeriesClick(item)}
+                />
+            </SwiperSlide>
+        ));
+    };
+    const renderMixedTopWeek = () => {
+        const mixed: ContentItem[] = [
+            ...topWeekMovies,
+            ...topWeekSeries,
+        ];
+
+        return mixed.slice(0, 8).map((item) => {
+            const isMovie = "videoUrl" in item;
+
+            return (
+                <SwiperSlide key={item._id}>
+                    {isMovie ? (
+                        <MovieCard
+                            movie={item as Movie}
+                            onClick={() =>
+                                handleMovieClick(item as Movie)
+                            }
+                        />
+                    ) : (
+                        <SeriesCard
+                            series={item as Series}
+                            onClick={() =>
+                                handleSeriesClick(item as Series)
+                            }
+                        />
+                    )}
+                </SwiperSlide>
+            );
+        });
+    };
+
     if (loading) {
         return (
-            <div>
-                <div className="-mt-16 h-[100svh] min-h-[560px] max-h-[1100px] w-full animate-pulse bg-white/[0.03]" />
-                <div className="space-y-10 px-4 pt-8 sm:px-6 md:px-8 lg:px-10">
-                    {[1, 2, 3].map((row) => (
-                        <div key={row}>
-                            <div className="mb-4 h-5 w-32 animate-pulse rounded bg-white/[0.06]" />
-                            <div className="flex gap-4 overflow-hidden">
-                                {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-                                    <div key={i} className={`${rowItemClass} aspect-[2/3] animate-pulse rounded-xl bg-white/[0.04]`} />
-                                ))}
-                            </div>
+            <div className="space-y-14">
+                {[1, 2, 3].map((row) => (
+                    <section key={row}>
+                        <div className="mb-5 h-7 w-40 animate-pulse rounded bg-white/10" />
+
+                        <div className="flex gap-5 overflow-hidden">
+                            {[1, 2, 3, 4, 5, 6].map((item) => (
+                                <div
+                                    key={item}
+                                    className="h-[330px] w-[205px] shrink-0 animate-pulse rounded-2xl bg-white/5"
+                                />
+                            ))}
                         </div>
-                    ))}
-                </div>
+                    </section>
+                ))}
             </div>
         );
     }
 
-    /* ---------- Page ---------- */
-    return (
-        <>
-            <HeroSlider movies={heroMovies} onMovieClick={setSelectedMovie} />
 
-            <div className="relative z-10 mx-auto max-w-[1800px] space-y-8 px-4 pb-16 sm:space-y-10 sm:px-8 lg:px-14 xl:px-20 tv:max-w-none tv:px-[5vw]">
-                {topWeekMixed.length > 0 && (
-                    <div className="relative z-20 -mt-[30svh] sm:-mt-[28svh]">
-                        <ContentRow bare title="برتر هفته" href="/movies?topWeek=true">
-                            {topWeekMixed.map(renderWide)}
-                        </ContentRow>
+
+    return (<>
+
+        <section className="relative">
+            <HeroSlider
+                movies={heroMovies}
+                onMovieClick={handleMovieClick}
+            />
+
+            {topWeekMovies.length > 0 && (
+                <div className="
+            relative z-20
+            -mt-16
+            sm:-mt-24
+            lg:-mt-[155px]
+        ">
+                    <div className="mx-auto max-w-[1650px] px-3 sm:px-5">
+
+                        <div className="mb-3 sm:mb-4 flex items-center justify-between">
+                            <h2 className="text-xl sm:text-2xl font-bold text-white">
+                                برتر هفته
+                            </h2>
+
+                            <Link
+                                href="/movies?topWeek=true"
+                                className="text-xs sm:text-sm text-gray-400 transition hover:text-[#14c78b]"
+                            >
+                                مشاهده همه
+                            </Link>
+                        </div>
+
+                        <div className="
+                    flex gap-3 sm:gap-5
+                    overflow-x-auto overflow-y-hidden
+                    pb-4
+                    snap-x snap-mandatory
+                    touch-pan-x
+                    overscroll-x-contain
+                    [&::-webkit-scrollbar]:hidden
+                    [scrollbar-width:none]
+                ">
+                            {topWeekMovies.map((movie) => (
+                                <div
+                                    key={movie._id}
+                                    className="
+                                w-[155px]
+                                sm:w-[170px]
+                                md:w-[185px]
+                                lg:w-[205px]
+                                xl:w-[215px]
+                                shrink-0
+                                snap-start
+                            "
+                                >
+                                    <MovieCard
+                                        movie={movie}
+                                        onClick={() => handleMovieClick(movie)}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+
                     </div>
-                )}
+                </div>
+            )}
+        </section>
 
-                {newMovies.length > 0 && (
-                    <ContentRow title="جدیدترین فیلم‌ها" href="/movies?sort=newest">
-                        {newMovies.map(renderItem)}
-                    </ContentRow>
-                )}
 
-                {newSeries.length > 0 && (
-                    <ContentRow title="سریال‌های جدید" href="/series?sort=newest">
-                        {newSeries.map(renderItem)}
-                    </ContentRow>
-                )}
+        <div className="space-y-12 px-4 pt-8 sm:space-y-14 sm:px-6 md:px-8 lg:px-10">
 
-                {genres.map((g) =>
-                    g.items.length > 0 ? (
-                        <ContentRow key={g.href} title={g.title} href={g.href}>
-                            {g.items.map(renderItem)}
-                        </ContentRow>
-                    ) : null
-                )}
+            {/* جدیدترین فیلم‌ها */}
+            {newMovies.length > 0 && (
+                <ContentRow
+                    title="جدیدترین فیلم‌ها"
+                    href="/movies?sort=newest"
+                >
+                    {renderMovieRow(newMovies)}
+                </ContentRow>
+            )}
 
-                {/* Archive */}
-                <section className="border-t border-white/[0.06] pt-12 text-center">
-                    <h2 className="text-2xl font-semibold text-white">دنبال چیز دیگه‌ای هستی؟</h2>
-                    <p className="mt-2 text-sm text-white/40">آرشیو کامل فیلم‌ها و سریال‌های الان‌بین</p>
-                    <div className="mt-6 flex justify-center gap-3">
-                        <Link
-                            href="/movies"
-                            data-tv-focus
-                            className="tv-focus rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-[#0B0F14] transition-transform duration-200 hover:scale-[1.03]"
-                        >
-                            همه فیلم‌ها
-                        </Link>
-                        <Link
-                            href="/series"
-                            data-tv-focus
-                            className="tv-focus rounded-full px-6 py-2.5 text-sm font-semibold text-white ring-1 ring-white/15 transition-colors hover:bg-white/[0.06]"
-                        >
-                            همه سریال‌ها
-                        </Link>
-                    </div>
-                </section>
-            </div>
+            {/* سریال‌های جدید */}
+            {newSeries.length > 0 && (
+                <ContentRow
+                    title="سریال‌های جدید"
+                    href="/series?sort=newest"
+                >
+                    {renderSeriesRow(newSeries)}
+                </ContentRow>
+            )}
 
+
+
+            {/* کمدی */}
+            {comedyMovies.length > 0 && (
+                <ContentRow
+                    title="کمدی"
+                    href="/movies?genre=Comedy"
+                >
+                    {renderMovieRow(comedyMovies)}
+                </ContentRow>
+            )}
+
+            {/* درام */}
+            {dramaMovies.length > 0 && (
+                <ContentRow
+                    title="درام"
+                    href="/movies?genre=Drama"
+                >
+                    {renderMovieRow(dramaMovies)}
+                </ContentRow>
+            )}
+
+            {/* عاشقانه */}
+            {romanceMovies.length > 0 && (
+                <ContentRow
+                    title="عاشقانه"
+                    href="/movies?genre=Romance"
+                >
+                    {renderMovieRow(romanceMovies)}
+                </ContentRow>
+            )}
+
+            {/* اکشن */}
+            {actionMovies.length > 0 && (
+                <ContentRow
+                    title="اکشن"
+                    href="/movies?genre=Action"
+                >
+                    {renderMovieRow(actionMovies)}
+                </ContentRow>
+            )}
+
+            {/* آرشیو کامل */}
+            <section className="pt-2">
+                <div className="rounded-3xl border border-white/10 bg-[#111827] px-6 py-10 text-center md:px-10">
+                    <h2 className="text-2xl font-bold text-white">
+                        همه فیلم‌ها
+                    </h2>
+
+                    <p className="mt-3 text-sm text-gray-400">
+                        آرشیو کامل فیلم‌های الان بین
+                    </p>
+
+                    <Link
+                        href="/movies"
+                        className="
+                            mt-6 inline-flex
+                            items-center justify-center
+                            rounded-xl
+                            bg-[#14c78b]
+                            px-6 py-3
+                            font-semibold
+                            text-black
+                            transition
+                            hover:bg-[#19dc9b]
+                        "
+                    >
+                        مشاهده همه فیلم‌ها
+                    </Link>
+                </div>
+
+            </section>
             {selectedMovie && (
                 <MovieModal
                     movie={selectedMovie}
-                    isOpen
-                    onClose={() => setSelectedMovie(null)}
+                    isOpen={isModalOpen}
+                    onClose={() => {
+                        setIsModalOpen(false);
+                        setSelectedMovie(null);
+                    }}
                     favoriteHandler={(id) => favoriteHandler(id, "movie")}
                     isFavorite={favoriteIds.includes(selectedMovie._id)}
                 />
@@ -276,12 +570,15 @@ export const HomeContent = () => {
             {selectedSeries && (
                 <SeriesModal
                     series={selectedSeries}
-                    isOpen
-                    onClose={() => setSelectedSeries(null)}
+                    isOpen={isSeriesModalOpen}
+                    onClose={() => {
+                        setIsSeriesModalOpen(false);
+                        setSelectedSeries(null);
+                    }}
                     favoriteHandler={(id) => favoriteHandler(id, "series")}
                     isFavorite={favoriteIds.includes(selectedSeries._id)}
                 />
             )}
-        </>
-    );
+        </div>
+    </>);
 };

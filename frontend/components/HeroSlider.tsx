@@ -1,142 +1,201 @@
+
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Play, Star, Flame } from "lucide-react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, EffectFade, Pagination } from "swiper/modules";
+import { Star } from "lucide-react";
+
+import "swiper/css";
+import "swiper/css/effect-fade";
+import "swiper/css/pagination";
+
 import type { Movie } from "@/types/movies";
-import { resolvePoster } from "./PosterCard";
 
 interface HeroSliderProps {
     movies: Movie[];
     onMovieClick: (movie: Movie) => void;
 }
 
-const INTERVAL = 5000;
-
-export const HeroSlider = ({ movies, onMovieClick }: HeroSliderProps) => {
-    const slides = movies.slice(0, 8);
-    const count = slides.length;
-    const [index, setIndex] = useState(0);
-    const [focused, setFocused] = useState(false);
-    const touchX = useRef<number | null>(null);
-
-    const go = (dir: 1 | -1) => setIndex((i) => (i + dir + count) % count);
-
-    useEffect(() => {
-        if (count < 2 || focused) return;
-        const t = setTimeout(() => setIndex((i) => (i + 1) % count), INTERVAL);
-        return () => clearTimeout(t);
-    }, [index, count, focused]);
-
-    if (!count) return null;
-
-    const movie = slides[index] ?? slides[0];
-    const nextIndex = (index + 1) % count;
-    const prevIndex = (index - 1 + count) % count;
+export const HeroSlider = ({
+    movies,
+    onMovieClick,
+}: HeroSliderProps) => {
+    if (!movies.length) return null;
 
     return (
-        <section
-            className="relative -mt-16 h-[100svh] min-h-[560px] max-h-[1100px] w-full overflow-hidden bg-[#0B0F14] tv:max-h-none"
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
-            onTouchEnd={(e) => {
-                if (touchX.current === null) return;
-                const dx = e.changedTouches[0].clientX - touchX.current;
-                touchX.current = null;
-                if (Math.abs(dx) < 50) return;
-                go(dx < 0 ? 1 : -1);
-            }}
-        >
-            {/* Images: only current, next, previous */}
-            {slides.map((m, i) =>
-                i === index || i === nextIndex || i === prevIndex ? (
-                    <img
-                        key={m._id}
-                        src={resolvePoster(m.heroImage || m.poster)}
-                        alt=""
-                        decoding="async"
-                        fetchPriority={i === 0 ? "high" : "auto"}
-                        className={`absolute inset-0 h-full w-full object-cover object-[30%_center] transition-opacity duration-700 lg:object-center ${i === index ? "opacity-100" : "opacity-0"
-                            }`}
-                    />
-                ) : null
-            )}
+        <section className="relative -mt-16 w-full overflow-hidden">
+            <Swiper
+                modules={[Autoplay, EffectFade, Pagination]}
+                effect="fade"
+                fadeEffect={{ crossFade: true }}
+                autoplay={{
+                    delay: 6000,
+                    disableOnInteraction: false,
+                }}
+                pagination={{ clickable: true }}
+                loop={movies.length > 1}
+                className="hero-swiper"
+            >
+                {movies.slice(0, 8).map((movie) => (
+                    <SwiperSlide key={movie._id}>
+                        <div
+                            className="
+                           relative isolate
+                          h-[clamp(620px,78svh,760px)]
+                          sm:h-[80svh]
+                          sm:min-h-[620px]
+                          sm:max-h-[850px]
 
-            {/* Gradients: top (for navbar), bottom (for overlapping row), side (for text) */}
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#0B0F14]/80 to-transparent" />
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-[#0B0F14] via-[#0B0F14]/70 to-transparent" />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-[#0B0F14]/70 via-transparent to-transparent" />
+                           lg:h-[clamp(760px,85svh,1800px)]
+                           lg:max-h-none
 
-            {/* Content — bottom right */}
-            <div className="absolute bottom-[34%] right-5 left-5 z-10 max-w-xl sm:right-10 sm:left-auto lg:right-16 xl:right-20 tv:right-[5vw] tv:max-w-3xl">
-                <div className="mb-3 flex items-center gap-1.5 text-xs font-medium text-white/80 sm:text-sm">
-                    <Flame size={15} className="text-[#14c78b]" />
-                    برتر هفته
-                </div>
+                           w-full overflow-hidden
+                          "
+                        >
+                            {/* Hero Image */}
+                            <img
+                                src={movie.heroImage || movie.poster}
+                                alt={movie.title}
+                                className="
+        absolute inset-0
+        h-full w-full
+        object-cover
 
-                <h1 className="text-4xl font-black leading-[1.1] tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)] sm:text-5xl lg:text-6xl tv:text-8xl [overflow-wrap:anywhere]">
-                    {movie.title}
-                </h1>
+        object-[15%_center]
+        sm:object-[35%_35%]
+        md:object-[40%_35%]
+        lg:object-center
+    "
+                            />
 
-                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/70 sm:text-base">
-                    {movie.year && <span>{movie.year}</span>}
-                    {movie.genre?.length ? (
-                        <>
-                            <span className="text-white/25">|</span>
-                            <span>{movie.genre.slice(0, 2).join("، ")}</span>
-                        </>
-                    ) : null}
-                    {movie.rating ? (
-                        <>
-                            <span className="text-white/25">|</span>
-                            <span className="flex items-center gap-1.5 text-white">
-                                <Star size={15} className="fill-[#14c78b] text-[#14c78b]" />
-                                {movie.rating}
-                            </span>
-                        </>
-                    ) : null}
-                </div>
+                            {/* Main Gradient */}
+                            <div
+                                className="
+                                    pointer-events-none
+                                    absolute inset-0
+                                    bg-gradient-to-t
+                                    from-[#0B0F14]
+                                    via-[#0B0F14]/35
+                                    to-[#0B0F14]/10
+                                "
+                            />
 
-                {movie.description && (
-                    <p className="mt-3 line-clamp-2 max-w-lg text-sm leading-7 text-white/60 sm:text-base tv:text-lg">
-                        {movie.description}
-                    </p>
-                )}
+                            {/* Side Gradient */}
+                            <div
+                                className="
+                                    pointer-events-none
+                                    absolute inset-0
+                                    bg-gradient-to-l
+                                    from-[#0B0F14]/75
+                                    via-transparent
+                                    to-transparent
+                                "
+                            />
 
-                <button
-                    type="button"
-                    data-tv-focus
-                    onClick={() => onMovieClick(movie)}
-                    className="tv-focus mt-6 inline-flex items-center gap-2.5 rounded-lg bg-[#14c78b] px-7 py-3 text-sm font-bold text-[#0B0F14] transition-transform duration-200 hover:scale-[1.03] focus-visible:scale-[1.05] sm:text-base tv:px-10 tv:py-4 tv:text-lg"
-                >
-                    <Play size={18} fill="currentColor" />
-                    تماشا و اطلاعات بیشتر
-                </button>
-            </div>
+                            {/* Extra Mobile Gradient */}
+                            <div
+                                className="
+    pointer-events-none
+    absolute inset-x-0 bottom-0
+    h-[65%]
+    bg-gradient-to-t
+    from-[#0B0F14]
+    via-[#0B0F14]/75
+    to-transparent
+    md:hidden
+"
+                            />
 
-            {/* Arrows — bottom left, like Filimo */}
-            {count > 1 && (
-                <div className="absolute bottom-[34%] left-5 z-20 hidden gap-2 sm:left-10 md:flex lg:left-16 xl:left-20">
-                    <button
-                        type="button"
-                        tabIndex={-1}
-                        aria-label="اسلاید قبلی"
-                        onClick={() => go(-1)}
-                        className="flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white ring-1 ring-white/15 transition-colors hover:bg-white hover:text-black"
-                    >
-                        <ChevronRight size={22} />
-                    </button>
-                    <button
-                        type="button"
-                        tabIndex={-1}
-                        aria-label="اسلاید بعدی"
-                        onClick={() => go(1)}
-                        className="flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white ring-1 ring-white/15 transition-colors hover:bg-white hover:text-black"
-                    >
-                        <ChevronLeft size={22} />
-                    </button>
-                </div>
-            )}
+                            {/* Movie Content */}
+
+                            <div
+                                className="
+        absolute z-10
+        inset-x-4 bottom-32
+        flex flex-col items-end gap-3
+
+        sm:inset-x-8 sm:bottom-36
+
+        md:inset-x-auto
+        md:right-12 md:bottom-44
+        md:max-w-[48%]
+
+        lg:right-16 lg:bottom-44
+        lg:max-w-[45%]
+
+        xl:right-24 xl:max-w-[42%]
+        2xl:right-32 2xl:max-w-[40%]
+    "
+                            >
+                                {/* Title */}
+                                <h1
+                                    className="
+            w-full text-right
+            text-3xl font-black
+            leading-tight tracking-tight
+            text-white
+            drop-shadow-[0_4px_18px_rgba(0,0,0,0.9)]
+            sm:text-4xl
+            md:text-5xl
+            lg:text-6xl
+            2xl:text-7xl
+            [overflow-wrap:anywhere]
+        "
+                                >
+                                    {movie.title}
+                                </h1>
+
+                                {/* Metadata */}
+                                <div className="
+        flex w-full flex-wrap
+        items-center justify-end
+        gap-x-3 gap-y-2
+        text-sm font-medium
+        text-gray-200
+        sm:text-base
+        lg:gap-x-4 lg:text-lg
+    ">
+                                    <span>{movie.year}</span>
+                                    <span className="text-white/40">•</span>
+
+                                    <span className="max-w-[160px] truncate sm:max-w-[200px]">
+                                        {movie.genre?.slice(0, 2).join("، ")}
+                                    </span>
+
+                                    <span className="text-white/40">•</span>
+
+                                    <span className="flex items-center gap-1.5 font-bold text-yellow-400">
+                                        <Star size={17} fill="currentColor" />
+                                        {movie.rating}
+                                    </span>
+                                </div>
+
+                                {/* Button */}
+                                <button
+                                    onClick={() => onMovieClick(movie)}
+                                    className="
+            mt-1 w-full
+            rounded-xl
+            bg-[#14C78B]
+            px-6 py-3
+            text-sm font-bold text-black
+            shadow-[0_8px_30px_rgba(20,199,139,0.25)]
+            transition-all duration-300
+            hover:-translate-y-1
+            hover:bg-[#18d995]
+            active:scale-[0.98]
+            sm:w-auto sm:px-7 sm:py-3.5
+            md:px-8 md:py-4 md:text-base
+        "
+                                >
+                                    اطلاعات بیشتر
+                                </button>
+                            </div>
+
+                        </div>
+                    </SwiperSlide>
+                ))}
+            </Swiper>
         </section>
     );
 };

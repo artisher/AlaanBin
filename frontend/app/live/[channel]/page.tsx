@@ -5,11 +5,14 @@ import TvNav from "../../../components/TvNav";
 
 const CHANNELS = {
     tv1: { title: "شبکه ۱", streamUrl: "https://alanbin.com/live/tv1/index.m3u8", comingSoon: false },
+    "tv1-backup": { title: "شبکه ۱ (پشتیبان)", streamUrl: "https://alanbin.com/live/tv1-backup/index.m3u8", comingSoon: false },
     tv2: { title: "شبکه ۲", streamUrl: "https://alanbin.com/live/tv2/index.m3u8", comingSoon: false },
+    "tv2-backup": { title: "شبکه ۲ (پشتیبان)", streamUrl: "https://alanbin.com/live/tv2-backup/index.m3u8", comingSoon: false },
     tv3: { title: "شبکه ۳", streamUrl: "https://alanbin.com/live/tv3/index.m3u8", comingSoon: false },
     "tv3-backup": { title: "شبکه ۳ (پشتیبان)", streamUrl: "https://alanbin.com/live/tv3-backup/index.m3u8", comingSoon: false },
     varzesh: { title: "شبکه ورزش", streamUrl: "https://alanbin.com/live/varzesh/index.m3u8", comingSoon: false },
     irinn: { title: "شبکه خبر", streamUrl: "https://alanbin.com/live/irinn/index.m3u8", comingSoon: false },
+    "irinn-backup": { title: "شبکه خبر (پشتیبان)", streamUrl: "https://alanbin.com/live/irinn-backup/index.m3u8", comingSoon: false },
     fifa: { title: "FIFA+", streamUrl: "https://alanbin.com/api/live/fifa/index.m3u8", comingSoon: false },
     euronews: { title: "Euronews", streamUrl: "https://alanbin.com/api/live/euronews/index.m3u8", comingSoon: false },
     "persiana-music": { title: "Persiana Music", streamUrl: "https://alanbin.com/api/live/persiana-music/index.m3u8", comingSoon: false },
@@ -29,6 +32,13 @@ const CHANNELS = {
 
 type ChannelId = keyof typeof CHANNELS;
 type PageProps = { params: Promise<{ channel: string }> };
+
+const BACKUP_OF: Record<string, string> = {
+    "tv1-backup": "tv1",
+    "tv2-backup": "tv2",
+    "tv3-backup": "tv3",
+    "irinn-backup": "irinn",
+};
 
 const SESSION_CHANNELS = ["tv1", "tv2", "tv3", "varzesh", "irinn"] as const;
 
@@ -75,8 +85,8 @@ export default async function LiveChannelPage({ params }: PageProps) {
 
     if (!("streamUrl" in selected)) notFound();
 
-    const sessionType = (SESSION_CHANNELS as readonly string[]).includes(channel === "tv3-backup" ? "tv3" : channel)
-        ? ((channel === "tv3-backup" ? "tv3" : channel) as (typeof SESSION_CHANNELS)[number])
+    const sessionType = (SESSION_CHANNELS as readonly string[]).includes((BACKUP_OF[channel] ?? channel))
+        ? (((BACKUP_OF[channel] ?? channel)) as (typeof SESSION_CHANNELS)[number])
         : undefined;
 
     const playable = (Object.keys(CHANNELS) as ChannelId[]).filter((id) => !CHANNELS[id].comingSoon);

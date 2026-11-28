@@ -1,83 +1,180 @@
+
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { ReactNode, useRef } from "react";
+import { Swiper } from "swiper/react";
+import type { Swiper as SwiperType } from "swiper";
 
-/** Portrait poster width */
-export const rowItemClass =
-    "w-[150px] shrink-0 snap-start sm:w-[175px] md:w-[195px] lg:w-[215px] xl:w-[235px] tv:w-[280px]";
-
-/** Wide 16:9 card width (featured row on top of hero) */
-export const wideItemClass =
-    "w-[260px] shrink-0 snap-start sm:w-[300px] md:w-[330px] lg:w-[360px] xl:w-[390px] tv:w-[480px]";
+import "swiper/css";
 
 interface ContentRowProps {
     title: string;
-    href?: string;
-    bare?: boolean;
+    href: string;
     children: ReactNode;
 }
 
-export const ContentRow = ({ title, href, bare, children }: ContentRowProps) => {
-    const ref = useRef<HTMLDivElement>(null);
-
-    const scroll = (dir: 1 | -1) => {
-        const el = ref.current;
-        if (!el) return;
-        el.scrollBy({ left: -dir * el.clientWidth * 0.8, behavior: "smooth" });
-    };
+export const ContentRow = ({
+    title,
+    href,
+    children,
+}: ContentRowProps) => {
+    const swiperRef = useRef<SwiperType | null>(null);
 
     return (
-        <section
-            className={`group/row relative ${bare ? "" : "rounded-2xl bg-white/[0.02] p-4 ring-1 ring-white/[0.06] sm:p-5 lg:p-6 tv:p-8"
-                }`}
-        >
-            <div className="mb-2 flex items-center justify-between gap-4 px-1">
-                <div className="flex items-center gap-2.5">
-                    <span className="h-4 w-[3px] rounded-full bg-[#14c78b]" />
-                    <h2 className="text-lg font-semibold text-white sm:text-xl tv:text-2xl">{title}</h2>
+        <section className="relative w-full">
+            {/* Header */}
+            <div className="mb-5 flex items-center justify-between gap-4">
+                <div className="flex min-w-0 items-center gap-3">
+                    {/* Accent */}
+                    <div className="h-7 w-1 shrink-0 rounded-full bg-[#14c78b] shadow-[0_0_12px_rgba(20,199,139,0.35)]" />
+
+                    <h2 className="truncate text-lg font-bold text-white sm:text-xl md:text-2xl">
+                        {title}
+                    </h2>
                 </div>
 
-                {href && (
-                    <Link
-                        href={href}
-                        data-tv-focus
-                        className="tv-focus flex items-center gap-1 rounded-full px-3 py-1.5 text-sm text-white/50 transition-colors hover:text-[#14c78b]"
-                    >
-                        مشاهده همه
-                        <ChevronLeft size={16} />
-                    </Link>
-                )}
+                <Link
+                    href={href}
+                    className="
+                        group
+                        flex shrink-0 items-center gap-1.5
+                        rounded-full
+                        border border-white/10
+                        bg-white/[0.04]
+                        px-3 py-1.5
+                        text-xs font-medium
+                        text-gray-300
+                        backdrop-blur-sm
+                        transition-all duration-200
+
+                        hover:border-[#14c78b]/30
+                        hover:bg-[#14c78b]/10
+                        hover:text-[#14c78b]
+
+                        sm:px-4 sm:py-2
+                        sm:text-sm
+                    "
+                >
+                    <span>مشاهده همه</span>
+
+                    <ChevronLeft
+                        size={16}
+                        className="
+                            transition-transform duration-200
+                            group-hover:-translate-x-1
+                            sm:h-[18px] sm:w-[18px]
+                        "
+                    />
+                </Link>
             </div>
 
-            <div className="relative">
-                <div
-                    ref={ref}
-                    className="no-scrollbar flex snap-x gap-3 overflow-x-auto scroll-smooth px-1 py-3 sm:gap-4 tv:gap-6"
+            {/* Content */}
+            <div
+                className="
+                    relative
+                    rounded-2xl
+                    border border-white/[0.045]
+                    bg-white/[0.015]
+                    px-2 py-4
+                    sm:px-3 sm:py-5
+                    md:px-4
+                "
+            >
+                <Swiper
+                    onSwiper={(swiper: SwiperType) => {
+                        swiperRef.current = swiper;
+                    }}
+                    spaceBetween={10}
+                    slidesPerView={2.15}
+                    breakpoints={{
+                        480: {
+                            slidesPerView: 2.5,
+                            spaceBetween: 12,
+                        },
+                        640: {
+                            slidesPerView: 3,
+                            spaceBetween: 14,
+                        },
+                        768: {
+                            slidesPerView: 4,
+                            spaceBetween: 16,
+                        },
+                        1024: {
+                            slidesPerView: 5,
+                            spaceBetween: 18,
+                        },
+                        1280: {
+                            slidesPerView: 6,
+                            spaceBetween: 20,
+                        },
+                        1536: {
+                            slidesPerView: 7,
+                            spaceBetween: 20,
+                        },
+                    }}
                 >
                     {children}
-                </div>
+                </Swiper>
 
+                {/* Previous */}
                 <button
                     type="button"
-                    tabIndex={-1}
+                    onClick={() => swiperRef.current?.slidePrev()}
+                    className="
+                        absolute right-1 top-1/2 z-20
+                        flex h-9 w-9 -translate-y-1/2
+                        items-center justify-center
+                        rounded-full
+                        border border-white/10
+                        bg-black/75
+                        text-white
+                        shadow-lg
+                        backdrop-blur-md
+                        transition-all duration-200
+
+                        hover:border-[#14c78b]/40
+                        hover:bg-[#14c78b]
+                        hover:text-black
+
+                        sm:right-2 sm:h-10 sm:w-10
+                        md:h-11 md:w-11
+                    "
                     aria-label="قبلی"
-                    onClick={() => scroll(-1)}
-                    className="absolute -right-3 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#0B0F14] text-white opacity-0 ring-1 ring-white/10 transition-opacity duration-200 hover:bg-white hover:text-black group-hover/row:opacity-100 md:flex"
                 >
-                    <ChevronRight size={20} />
+                    <ChevronRight size={18} className="sm:h-5 sm:w-5" />
                 </button>
+
+                {/* Next */}
                 <button
                     type="button"
-                    tabIndex={-1}
+                    onClick={() => swiperRef.current?.slideNext()}
+                    className="
+                        absolute left-1 top-1/2 z-20
+                        flex h-9 w-9 -translate-y-1/2
+                        items-center justify-center
+                        rounded-full
+                        border border-white/10
+                        bg-black/75
+                        text-white
+                        shadow-lg
+                        backdrop-blur-md
+                        transition-all duration-200
+
+                        hover:border-[#14c78b]/40
+                        hover:bg-[#14c78b]
+                        hover:text-black
+
+                        sm:left-2 sm:h-10 sm:w-10
+                        md:h-11 md:w-11
+                    "
                     aria-label="بعدی"
-                    onClick={() => scroll(1)}
-                    className="absolute -left-3 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#0B0F14] text-white opacity-0 ring-1 ring-white/10 transition-opacity duration-200 hover:bg-white hover:text-black group-hover/row:opacity-100 md:flex"
                 >
-                    <ChevronLeft size={20} />
+                    <ChevronLeft size={18} className="sm:h-5 sm:w-5" />
                 </button>
             </div>
         </section>
     );
 };
+
