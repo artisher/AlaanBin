@@ -17,6 +17,7 @@ const CHANNELS: Channel[] = [
     { id: "tv1", category: "iran", title: "شبکه ۱", description: "پخش زنده شبکه یک سیما", icon: "/logos/1.png" },
     { id: "tv2", category: "iran", title: "شبکه ۲", description: "پخش زنده شبکه دو سیما", icon: "/logos/2.png" },
     { id: "tv3", category: "iran", title: "شبکه ۳", description: "پخش زنده شبکه سه سیما", icon: "/logos/3.png" },
+    { id: "tv3-backup", category: "iran", title: "شبکه ۳ (پشتیبان)", description: "پخش زنده شبکه سه سیما - سرور پشتیبان", icon: "/logos/3.png" },
     { id: "varzesh", category: "sports", title: "شبکه ورزش", description: "پخش زنده شبکه ورزش", icon: "/logos/varzesh.png" },
     { id: "irinn", category: "iran", title: "شبکه خبر", description: "پخش زنده شبکه خبر", icon: "/logos/khabar.png" },
     { id: "fifa", category: "sports", title: "FIFA+", description: "پخش زنده شبکه FIFA" },
