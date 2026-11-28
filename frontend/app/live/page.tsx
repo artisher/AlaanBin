@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
+import { Tv, Trophy, Globe, Music, Clapperboard, LayoutGrid, Server, type LucideIcon } from "lucide-react";
 import { useTvNavigation } from "../../components/useTvNavigation";
 
 type Channel = {
@@ -41,96 +42,106 @@ const CHANNELS: Channel[] = [
     { id: "pooya", category: "iran", title: "شبکه پویا", description: "پخش زنده شبکه پویا", icon: "/logos/pooya1.png", comingSoon: true },
 ];
 
-const CATEGORIES = [
-    { id: "all", label: "همه", emoji: "✦" },
-    { id: "iran", label: "داخلی ایران", emoji: "📺" },
-    { id: "sports", label: "ورزشی", emoji: "⚽" },
-    { id: "news", label: "خبری و بین‌المللی", emoji: "🌍" },
-    { id: "music", label: "موسیقی", emoji: "🎵" },
-    { id: "entertainment", label: "سرگرمی", emoji: "🎬" },
-    { id: "backup", label: "سرورهای پشتیبان", emoji: "🛟" },
+/* Muted accent per category — used only for small details */
+const CATEGORIES: { id: string; label: string; icon: LucideIcon; accent: string }[] = [
+    { id: "all", label: "همه", icon: LayoutGrid, accent: "#14c78b" },
+    { id: "iran", label: "داخلی ایران", icon: Tv, accent: "#14c78b" },
+    { id: "sports", label: "ورزشی", icon: Trophy, accent: "#e3a64a" },
+    { id: "news", label: "خبری و بین‌المللی", icon: Globe, accent: "#5fa8e8" },
+    { id: "music", label: "موسیقی", icon: Music, accent: "#a98bf5" },
+    { id: "entertainment", label: "سرگرمی", icon: Clapperboard, accent: "#e879a6" },
+    { id: "backup", label: "سرورهای پشتیبان", icon: Server, accent: "#8b9bb0" },
 ];
 
-const CATEGORY_STYLE: Record<string, { from: string; to: string; tag: string }> = {
-    iran: { from: "#161b22", to: "#0f1318", tag: "#14c78b" },
-    sports: { from: "#161b22", to: "#0f1318", tag: "#14c78b" },
-    news: { from: "#161b22", to: "#0f1318", tag: "#14c78b" },
-    music: { from: "#161b22", to: "#0f1318", tag: "#14c78b" },
-    entertainment: { from: "#161b22", to: "#0f1318", tag: "#14c78b" },
-    backup: { from: "#161b22", to: "#0f1318", tag: "#14c78b" },
-};
+const ACCENT: Record<string, string> = Object.fromEntries(CATEGORIES.map((c) => [c.id, c.accent]));
 
-const FEATURED_IDS = ["tv3", "varzesh", "irinn"];
+/* Main channels (without backups) — used for numbering and counts */
+const MAIN_CHANNELS = CHANNELS.filter((c) => c.category !== "backup");
+const mainIdOf = (id: string) => id.replace(/-backup$/, "");
+const channelNumber = (id: string) => MAIN_CHANNELS.findIndex((c) => c.id === mainIdOf(id)) + 1;
+
+const fa = (n: number) => n.toLocaleString("fa-IR");
 
 export default function LivePage() {
     useTvNavigation();
-    const [activeCategory, setActiveCategory] = useState("all");
+    const [active, setActive] = useState("all");
 
     const counts = useMemo(() => {
-        const map: Record<string, number> = { all: CHANNELS.length };
+        const map: Record<string, number> = { all: MAIN_CHANNELS.length };
         for (const c of CHANNELS) map[c.category] = (map[c.category] ?? 0) + 1;
         return map;
     }, []);
 
-    const sections = CATEGORIES.filter(
-        (c) => c.id !== "all" && (activeCategory === "all" || c.id === activeCategory)
-    )
+    const liveCount = MAIN_CHANNELS.filter((c) => !c.comingSoon).length;
+
+    const sections = CATEGORIES.filter((c) => c.id !== "all" && (active === "all" || c.id === active))
         .map((c) => ({ ...c, channels: CHANNELS.filter((ch) => ch.category === c.id) }))
         .filter((s) => s.channels.length > 0);
 
-    const featured = CHANNELS.filter((c) => FEATURED_IDS.includes(c.id));
-
     return (
-        <main dir="rtl" className="min-h-screen bg-[#07090D] text-white">
+        <main dir="rtl" className="relative min-h-screen overflow-hidden bg-[#0B0F14] text-white">
+            {/* Background: CSS only, no images */}
             <div
                 aria-hidden
-                className="pointer-events-none fixed inset-x-0 top-0 h-[420px]"
-                style={{ background: "radial-gradient(ellipse 70% 100% at 50% 0%, rgba(20,199,139,0.16), transparent 70%)" }}
+                className="pointer-events-none absolute inset-x-0 top-0 h-[560px]"
+                style={{
+                    backgroundImage: "radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)",
+                    backgroundSize: "22px 22px",
+                    maskImage: "linear-gradient(to bottom, #000 0%, transparent 100%)",
+                    WebkitMaskImage: "linear-gradient(to bottom, #000 0%, transparent 100%)",
+                }}
+            />
+            <div
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-0 h-[520px]"
+                style={{ background: "radial-gradient(ellipse 55% 100% at 85% 0%, rgba(20,199,139,0.13), transparent 70%)" }}
             />
 
-            <div className="relative mx-auto max-w-[1600px] px-5 py-8 md:px-10 md:py-12 tv:px-[5vw] tv:py-[4vh]">
-                <header className="mb-10">
-                    <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#14c78b]/15 px-3 py-1.5">
-                        <span className="h-2 w-2 animate-pulse rounded-full bg-[#14c78b]" />
-                        <span className="text-xs font-bold tracking-wider text-[#14c78b]">LIVE · پخش زنده</span>
+            <div className="relative mx-auto max-w-[1600px] px-5 py-10 sm:px-8 md:py-14 lg:px-14 tv:max-w-none tv:px-[5vw]">
+                {/* Header */}
+                <header className="mb-10 flex flex-wrap items-end justify-between gap-6 border-b border-white/[0.06] pb-8">
+                    <div>
+                        <div className="mb-4 inline-flex items-center gap-2 rounded-md border border-white/[0.08] bg-white/[0.03] px-2.5 py-1">
+                            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
+                            <span className="text-[11px] font-semibold tracking-[0.15em] text-white/60">LIVE TV</span>
+                        </div>
+                        <h1 className="text-3xl font-bold tracking-tight md:text-4xl tv:text-5xl">پخش زنده</h1>
+                        <p className="mt-2 text-sm text-white/45 md:text-base">شبکه‌های ایرانی و بین‌المللی، بدون وقفه.</p>
                     </div>
-                    <h1 className="text-4xl font-black leading-tight md:text-5xl tv:text-6xl">
-                        شبکه‌های <span className="text-[#14c78b]">تلویزیونی</span>
-                    </h1>
-                    <p className="mt-3 text-base text-gray-400 md:text-lg">
-                        {counts.all} شبکه، بدون وقفه، هر جا که هستید.
-                    </p>
+
+                    <div className="flex gap-8 text-right">
+                        <div>
+                            <div className="text-2xl font-bold tabular-nums tv:text-3xl">{fa(liveCount)}</div>
+                            <div className="mt-0.5 text-xs text-white/40">شبکه فعال</div>
+                        </div>
+                        <div className="w-px bg-white/[0.08]" />
+                        <div>
+                            <div className="text-2xl font-bold tabular-nums tv:text-3xl">{fa(counts.backup ?? 0)}</div>
+                            <div className="mt-0.5 text-xs text-white/40">سرور پشتیبان</div>
+                        </div>
+                    </div>
                 </header>
 
-                {activeCategory === "all" && (
-                    <section className="mb-12">
-                        <h2 className="mb-4 text-lg font-bold text-gray-300">پربیننده‌ها</h2>
-                        <div className="grid gap-5 md:grid-cols-3">
-                            {featured.map((ch) => (
-                                <FeaturedCard key={ch.id} channel={ch} />
-                            ))}
-                        </div>
-                    </section>
-                )}
-
-                <nav className="sticky top-0 z-20 -mx-5 mb-10 bg-[#07090D] px-5 py-3 md:-mx-10 md:px-10">
-                    <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1">
+                {/* Tabs */}
+                <nav className="sticky top-0 z-20 -mx-5 mb-10 bg-[#0B0F14]/95 px-5 py-3 sm:-mx-8 sm:px-8 lg:-mx-14 lg:px-14">
+                    <div className="no-scrollbar flex gap-2 overflow-x-auto">
                         {CATEGORIES.map((cat) => {
-                            const active = activeCategory === cat.id;
+                            const isActive = active === cat.id;
+                            const Icon = cat.icon;
                             return (
                                 <button
                                     key={cat.id}
                                     data-tv-focus
-                                    onClick={() => setActiveCategory(cat.id)}
-                                    className={`tv-focus flex shrink-0 items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition-[background-color,color] duration-200 md:text-base ${active
-                                        ? "bg-[#14c78b] text-[#07090D]"
-                                        : "bg-white/[0.06] text-gray-300 hover:bg-white/10 hover:text-white"
+                                    onClick={() => setActive(cat.id)}
+                                    className={`tv-focus flex shrink-0 items-center gap-2 rounded-md border px-3.5 py-2 text-sm font-medium transition-colors duration-150 ${isActive
+                                            ? "border-white bg-white text-[#0B0F14]"
+                                            : "border-white/[0.08] bg-white/[0.02] text-white/65 hover:border-white/20 hover:text-white"
                                         }`}
                                 >
-                                    <span>{cat.emoji}</span>
+                                    <Icon size={15} style={{ color: isActive ? undefined : cat.accent }} />
                                     {cat.label}
-                                    <span className={`rounded-full px-2 py-0.5 text-xs ${active ? "bg-black/15" : "bg-white/10"}`}>
-                                        {counts[cat.id] ?? 0}
+                                    <span className={`text-xs tabular-nums ${isActive ? "text-black/50" : "text-white/30"}`}>
+                                        {fa(counts[cat.id] ?? 0)}
                                     </span>
                                 </button>
                             );
@@ -138,110 +149,109 @@ export default function LivePage() {
                     </div>
                 </nav>
 
-                <div className="space-y-14">
-                    {sections.map((section) => (
-                        <section key={section.id} style={{ contentVisibility: "auto", containIntrinsicSize: "600px" }}>
-                            <div className="mb-5 flex items-center gap-3">
-                                <span className="h-6 w-1.5 rounded-full" style={{ background: CATEGORY_STYLE[section.id]?.tag }} />
-                                <h2 className="text-2xl font-bold tv:text-3xl">{section.label}</h2>
-                                <span className="text-sm text-gray-500">{section.channels.length} شبکه</span>
-                            </div>
+                {/* Sections */}
+                <div className="space-y-12">
+                    {sections.map((section) => {
+                        const Icon = section.icon;
+                        return (
+                            <section key={section.id} style={{ contentVisibility: "auto", containIntrinsicSize: "500px" }}>
+                                <div className="mb-4 flex items-center gap-3">
+                                    <Icon size={18} style={{ color: section.accent }} />
+                                    <h2 className="text-lg font-semibold md:text-xl tv:text-2xl">{section.label}</h2>
+                                    <span className="text-xs tabular-nums text-white/30">{fa(section.channels.length)}</span>
+                                    <span className="h-px flex-1 bg-gradient-to-l from-white/[0.08] to-transparent" />
+                                </div>
 
-                            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 tv:gap-6">
-                                {section.channels.map((ch) => (
-                                    <ChannelCard key={ch.id} channel={ch} />
-                                ))}
-                            </div>
-                        </section>
-                    ))}
+                                {section.id === "backup" && (
+                                    <p className="-mt-2 mb-4 text-xs text-white/35">
+                                        اگر پخش اصلی قطع بود یا کند بود، از این سرورها استفاده کنید.
+                                    </p>
+                                )}
+
+                                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 tv:gap-5">
+                                    {section.channels.map((ch) => (
+                                        <ChannelCard key={ch.id} channel={ch} number={channelNumber(ch.id)} />
+                                    ))}
+                                </div>
+                            </section>
+                        );
+                    })}
                 </div>
             </div>
         </main>
     );
 }
 
-function channelHref(ch: Channel) {
-    return ch.comingSoon ? `/live/${ch.id}?comingSoon=true` : `/live/${ch.id}`;
-}
+function ChannelCard({ channel, number }: { channel: Channel; number: number }) {
+    const accent = ACCENT[channel.category] ?? "#14c78b";
+    const isBackup = channel.category === "backup";
+    const href = channel.comingSoon ? `/live/${channel.id}?comingSoon=true` : `/live/${channel.id}`;
 
-function Logo({ channel, size }: { channel: Channel; size: "md" | "lg" }) {
-    const box = size === "lg" ? "h-20 w-20" : "h-16 w-16";
-    const img = size === "lg" ? "h-14 w-14" : "h-11 w-11";
-    return (
-        <div className={`${box} flex items-center justify-center rounded-2xl bg-white/[0.07] ring-1 ring-white/10`}>
-            {channel.icon ? (
-                <img src={channel.icon} alt={channel.title} loading="lazy" decoding="async" className={`${img} object-contain`} />
-            ) : (
-                <span className="text-lg font-black text-white/90" dir="ltr">
-                    {channel.title.replace(/[^A-Za-z0-9+]/g, "").slice(0, 3) || channel.title.slice(0, 2)}
-                </span>
-            )}
-        </div>
-    );
-}
-
-function ChannelCard({ channel }: { channel: Channel }) {
-    const s = CATEGORY_STYLE[channel.category] ?? CATEGORY_STYLE.iran;
     return (
         <Link
-            href={channelHref(channel)}
+            href={href}
             data-tv-focus
-            className="tv-focus group relative flex aspect-[4/3] flex-col justify-between overflow-hidden rounded-2xl p-4 ring-1 ring-white/[0.08] transition-transform duration-200 will-change-transform hover:scale-[1.04] focus-visible:scale-[1.06] md:p-5"
-            style={{ background: `linear-gradient(145deg, ${s.from}, ${s.to})` }}
+            style={
+                {
+                    "--accent-soft": `${accent}66`,
+                    background: `linear-gradient(180deg, ${accent}0d 0%, transparent 55%), #11151c`,
+                } as CSSProperties
+            }
+            className={`tv-focus group relative flex flex-col overflow-hidden rounded-lg border border-white/[0.07] p-4 transition-[transform,border-color] duration-200 will-change-transform hover:-translate-y-0.5 hover:border-[var(--accent-soft)] focus-visible:-translate-y-0.5 focus-visible:border-[var(--accent-soft)] md:p-5 ${channel.comingSoon ? "opacity-55" : ""
+                }`}
         >
+            {/* Accent line */}
+            <span
+                aria-hidden
+                className="absolute inset-x-0 top-0 h-[2px] opacity-50 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100"
+                style={{ background: accent }}
+            />
+
             <div className="flex items-start justify-between">
-                <Logo channel={channel} size="md" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-md border border-white/[0.06] bg-white/[0.04] tv:h-14 tv:w-14">
+                    {channel.icon ? (
+                        <img
+                            src={channel.icon}
+                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                            className="h-9 w-9 object-contain tv:h-11 tv:w-11"
+                        />
+                    ) : (
+                        <span className="text-sm font-bold text-white/85" dir="ltr">
+                            {channel.title.replace(/[^A-Za-z0-9+]/g, "").slice(0, 3) || channel.title.slice(0, 2)}
+                        </span>
+                    )}
+                </div>
+
+                <span className="font-mono text-[11px] tabular-nums text-white/25" dir="ltr">
+                    CH {String(number).padStart(2, "0")}
+                    {isBackup && <span className="text-white/40"> · B</span>}
+                </span>
+            </div>
+
+            <h3 className="mt-5 truncate text-base font-semibold md:text-lg tv:text-xl">{channel.title}</h3>
+            <p className="mt-1 truncate text-xs text-white/40 md:text-sm">{channel.description}</p>
+
+            <div className="mt-4 flex items-center justify-between border-t border-white/[0.05] pt-3">
                 {channel.comingSoon ? (
-                    <span className="rounded-md bg-white/10 px-2 py-1 text-[10px] font-bold text-gray-300">به‌زودی</span>
+                    <span className="text-[11px] font-medium text-white/50">به‌زودی</span>
                 ) : (
-                    <span className="flex items-center gap-1.5 rounded-md bg-[#14c78b] text-[#07090D] px-2 py-1 text-[10px] font-black tracking-wider">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#07090D]" />
-                        LIVE
+                    <span className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wider text-white/60">
+                        <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                        {isBackup ? "BACKUP" : "LIVE"}
+                    </span>
+                )}
+
+                {!channel.comingSoon && (
+                    <span
+                        className="translate-x-1 text-xs font-medium opacity-0 transition-[opacity,transform] duration-200 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
+                        style={{ color: accent }}
+                    >
+                        ← تماشا
                     </span>
                 )}
             </div>
-
-            <div>
-                <h3 className={`text-lg font-bold md:text-xl ${channel.comingSoon ? "text-gray-400" : ""}`}>{channel.title}</h3>
-                <p className="mt-1 line-clamp-1 text-xs text-gray-400 md:text-sm">{channel.description}</p>
-            </div>
-
-            {!channel.comingSoon && (
-                <span
-                    className="absolute bottom-4 left-4 flex h-10 w-10 translate-y-2 items-center justify-center rounded-full opacity-0 transition-[opacity,transform] duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100"
-                    style={{ background: s.tag }}
-                >
-                    <svg viewBox="0 0 24 24" className="h-4 w-4 fill-[#07090D]"><path d="M8 5v14l11-7z" /></svg>
-                </span>
-            )}
-        </Link>
-    );
-}
-
-function FeaturedCard({ channel }: { channel: Channel }) {
-    const s = CATEGORY_STYLE[channel.category] ?? CATEGORY_STYLE.iran;
-    return (
-        <Link
-            href={channelHref(channel)}
-            data-tv-focus
-            className="tv-focus group relative flex items-center gap-5 overflow-hidden rounded-3xl p-6 ring-1 ring-white/10 transition-transform duration-200 will-change-transform hover:scale-[1.02] focus-visible:scale-[1.04]"
-            style={{ background: `linear-gradient(120deg, ${s.from}, #07090D 85%)` }}
-        >
-            <Logo channel={channel} size="lg" />
-            <div className="min-w-0 flex-1">
-                <span className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold text-[#14c78b]">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#14c78b]" />
-                    در حال پخش
-                </span>
-                <h3 className="text-2xl font-black">{channel.title}</h3>
-                <p className="mt-1 truncate text-sm text-gray-400">{channel.description}</p>
-            </div>
-            <span
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-transform duration-200 group-hover:scale-110 group-focus-visible:scale-110"
-                style={{ background: s.tag }}
-            >
-                <svg viewBox="0 0 24 24" className="h-5 w-5 fill-[#07090D]"><path d="M8 5v14l11-7z" /></svg>
-            </span>
         </Link>
     );
 }
