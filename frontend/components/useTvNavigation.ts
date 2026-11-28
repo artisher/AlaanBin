@@ -25,10 +25,10 @@ export function useTvNavigation() {
             if (typing && (e.key === "ArrowLeft" || e.key === "ArrowRight")) return;
             // <select> handles up/down itself
             if (el?.tagName === "SELECT" && (e.key === "ArrowUp" || e.key === "ArrowDown")) return;
-            const scope: ParentNode = document.querySelector("[data-tv-modal]") ?? document;
+          const scope: ParentNode = document.querySelector("[data-tv-modal]") ?? document;
             const items = Array.from(
                 scope.querySelectorAll<HTMLElement>("[data-tv-focus]")
-            ).filter((el) => el.offsetParent !== null);
+            ).filter((el) => el.offsetParent !== null)
             if (items.length === 0) return;
 
             const current = document.activeElement as HTMLElement | null;
