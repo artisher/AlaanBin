@@ -446,7 +446,7 @@ export default function LivePlayer({
 
                         {playerError === "SUBSCRIPTION_REQUIRED" && (
                             <a
-                                href="/"
+                                href="/subscription"
                                 className="inline-flex rounded-lg bg-[#14c78b] px-6 py-3 font-bold text-[#0B0F14] transition hover:bg-[#10b981]"
                             >
                                 تهیه اشتراک
