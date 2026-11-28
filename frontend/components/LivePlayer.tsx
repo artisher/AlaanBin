@@ -34,6 +34,8 @@ export default function LivePlayer({
 
         if (!video) return;
 
+        setPlayerError(null);
+
         let hls: Hls | null = null;
 
         let cancelled = false;
@@ -46,6 +48,17 @@ export default function LivePlayer({
 
         const MAX_RECOVERIES = 5;
 
+
+        const checkAccess = async (): Promise<PlayerError | null> => {
+            try {
+                const r = await fetch("/api/live/access", { credentials: "include", cache: "no-store" });
+                if (r.status === 401) return "AUTH_REQUIRED";
+                if (r.status === 403) return "SUBSCRIPTION_REQUIRED";
+                return null;
+            } catch {
+                return null;
+            }
+        };
 
         const createPlayer = async (
             playlistUrl: string
@@ -79,6 +92,21 @@ export default function LivePlayer({
 
 
             player.attachMedia(video);
+
+            player.on(Hls.Events.ERROR, (_, data) => {
+                if (!data.fatal) return;
+                const code = data.response?.code;
+                if (sessionType === "varzesh" && code === 451) return;
+                setPlayerError(
+                    code === 401 ? "AUTH_REQUIRED"
+                    : code === 403 ? "SUBSCRIPTION_REQUIRED"
+                    : "PLAYBACK_ERROR"
+                );
+                if (hls) {
+                    hls.destroy();
+                    hls = null;
+                }
+            });
 
 
             /*
@@ -258,6 +286,13 @@ export default function LivePlayer({
 
             try {
 
+                const accessError = await checkAccess();
+                if (cancelled) return;
+                if (accessError) {
+                    setPlayerError(accessError);
+                    return;
+                }
+
                 /*
                  * ============================
                  * شبکه‌های بدون session
@@ -386,7 +421,7 @@ export default function LivePlayer({
         <div className="relative w-full aspect-video rounded-xl bg-black overflow-hidden">
 
             {playerError ? (
-                <div className="absolute inset-0 flex items-center justify-center bg-[#0B0F14] px-5 text-center">
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0B0F14] px-5 text-center">
                     <div className="max-w-md">
 
                         <div className="mb-4 text-4xl">
@@ -429,7 +464,8 @@ export default function LivePlayer({
 
                     </div>
                 </div>
-            ) : (
+            ) : null}
+            {(
                 <video
                     ref={videoRef}
                     controls

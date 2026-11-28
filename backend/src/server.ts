@@ -54,6 +54,11 @@ app.use(
 ); // اجازه دسترسی از فرانت
 app.use(express.json()); // خواندن داده‌های JSON
 app.use(cookieParser());
+
+// Live access check: login + active subscription (used by nginx auth_request and LivePlayer)
+app.get("/api/live/access", checkStreamAccess, (_req, res) => {
+    res.status(204).end();
+});
 app.use(
     "/api/admin/monitoring",
     monitoringRoutes
